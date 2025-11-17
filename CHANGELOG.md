@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2025-11-17
+
+### Added
+- **planning**: complete P001-P003 executor assignment and agent creation (d3d2379)
+- complete Phases 7-9 - deployment, logging, documentation (1aeaf11)
+- implement structured logging with Pino (Phase 8, T117-T134) (e122303)
+- **api**: implement Health Check API and Telegram notifier (f94e949)
+- **infra**: create VDS server provisioning scripts (9662ed1)
+- **database**: implement complete Prisma schema (0240f51)
+- **setup**: complete Phase 3 - developer environment (2a82a68)
+- **setup**: complete Phase 2 - foundational packages (af90070)
+
 ## [0.1.1] - 2025-11-17
 
 ## [1.1.2] - 2025-11-14
