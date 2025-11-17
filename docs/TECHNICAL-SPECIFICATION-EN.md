@@ -34,13 +34,14 @@ SkillTree is a Telegram-based career guidance platform that:
 - Node.js 18+ / TypeScript
 - Framework: NestJS or Express
 - Telegram Bot API (grammY or node-telegram-bot-api)
-- Database: PostgreSQL 15+ (Supabase)
+- Database: PostgreSQL 15+ (self-hosted)
 - ORM: Prisma or TypeORM
 
 **AI/ML:**
-- OpenAI GPT-4 API (text generation)
+- OpenRouter API (multi-model support: GPT-4, Claude, Gemini)
 - Token estimation: tiktoken
 - Prompt engineering for personalized reports
+- Cost optimization via model selection
 
 **Frontend (Telegram Web App):**
 - React 18+ / Next.js 14+
@@ -59,13 +60,17 @@ SkillTree is a Telegram-based career guidance platform that:
 **Integrations:**
 - AmoCRM API v4
 - Telegram Bot API
-- OpenAI API
+- OpenRouter API
 
-**Infrastructure:**
-- Hosting: Vercel (frontend) + Railway/Render (backend)
-- Database: Supabase (PostgreSQL + Auth + Storage)
-- Cache: Redis (optional, for rate limiting)
-- Queue: BullMQ (optional, for async processing)
+**Infrastructure (Self-Hosted on FirstVDS):**
+- VDS Server: FirstVDS (Ubuntu 22.04 LTS)
+- Reverse Proxy: Caddy 2.x (automatic HTTPS)
+- Database: PostgreSQL 15+ (self-hosted)
+- Cache: Redis 7+ (for rate limiting & sessions)
+- Queue: BullMQ (for async processing)
+- Process Manager: PM2 or systemd
+- Deployment: Git pull + auto-deploy hooks
+- Monitoring: Optional (Prometheus + Grafana or similar)
 
 ---
 
@@ -75,13 +80,51 @@ SkillTree is a Telegram-based career guidance platform that:
 
 **Goal:** Launch functional bot with basic registration, testing, AI analysis, and lead generation.
 
-#### Phase 1.1: Project Setup & Infrastructure (3-5 days)
+#### Phase 1.1: Project Setup & Infrastructure (5-7 days)
+**Server Setup:**
+- Provision FirstVDS server (Ubuntu 22.04 LTS)
+- Install Caddy 2.x with automatic HTTPS
+- Setup PostgreSQL 15+ (with secure configuration)
+- Install Redis 7+ (persistence enabled)
+- Configure firewall (UFW: ports 80, 443, 22 only)
+- Setup SSH key authentication (disable password auth)
+
+**Application Setup:**
 - Initialize monorepo structure (Turborepo or Nx)
-- Setup PostgreSQL database schema (Prisma)
-- Configure Telegram Bot (webhook + ngrok for dev)
-- Setup environment variables & secrets management
-- Configure CI/CD pipeline (GitHub Actions)
-- **Deliverable:** Working dev environment
+- Setup Prisma ORM with PostgreSQL schema
+- Configure Telegram Bot (webhook for production, polling for dev)
+- Setup environment variables & secrets management (.env + vault)
+- Configure PM2 for process management
+- Setup Git deployment hooks (GitHub webhook → auto-deploy)
+
+**Caddy Configuration:**
+```caddy
+skilltree.app {
+    reverse_proxy localhost:3000
+    encode gzip
+    log {
+        output file /var/log/caddy/access.log
+    }
+}
+
+api.skilltree.app {
+    reverse_proxy localhost:4000
+    encode gzip
+}
+
+admin.skilltree.app {
+    reverse_proxy localhost:5000
+    encode gzip
+}
+```
+
+**Deployment Flow:**
+1. Push to GitHub main branch
+2. GitHub webhook triggers deployment script on VDS
+3. Script pulls latest code, installs deps, runs migrations
+4. PM2 restarts services with zero-downtime
+
+- **Deliverable:** Fully configured VDS with CI/CD pipeline
 
 #### Phase 1.2: User Registration System (4-6 days)
 **Features:**
@@ -183,10 +226,12 @@ TABLE answers (
 #### Phase 1.4: AI Analysis Engine (5-7 days)
 **Features:**
 - Answer aggregation & scoring algorithm
-- OpenAI GPT-4 integration:
+- OpenRouter API integration:
+  - Multi-model support (GPT-4, Claude 3.5 Sonnet, Gemini Pro)
   - Prompt engineering for personalized reports
   - Token management (700-1000 word output)
-  - Error handling & retry logic
+  - Cost optimization: model selection based on complexity
+  - Error handling & retry logic with fallback models
 - Report generation:
   - Top 3 strengths (with percentages)
   - Growth areas
@@ -194,6 +239,12 @@ TABLE answers (
   - Top 5 recommended universities (with reasoning)
 - Report storage in database
 - **Deliverable:** AI-powered personalized reports
+
+**OpenRouter Configuration:**
+- Primary model: `openai/gpt-4-turbo` or `anthropic/claude-3.5-sonnet`
+- Fallback model: `google/gemini-pro-1.5`
+- Cost tracking per generation
+- Rate limiting protection
 
 **Report Structure (JSON):**
 ```json
@@ -450,10 +501,11 @@ TABLE referrals (
 - Rate limiting (prevent spam)
 - Input sanitization (SQL injection prevention)
 
-### OpenAI API
-- Token usage limits
-- Cost monitoring
+### OpenRouter API
+- Token usage limits per user
+- Cost monitoring and budget alerts
 - Fallback responses if API fails
+- Model selection based on load and cost
 
 ---
 
@@ -477,22 +529,149 @@ TABLE referrals (
 ## 🚀 Deployment Strategy
 
 ### Development Environment
-- Local: ngrok for Telegram webhook testing
-- Database: Supabase (dev project)
+- Local development: `localhost:3000` (frontend), `localhost:4000` (backend)
+- Telegram webhook: ngrok tunnel for local testing
+- Database: PostgreSQL (Docker container or local install)
+- Redis: Docker container or local install
 - Environment: `.env.local`
 
-### Staging Environment
-- Frontend: Vercel (preview deployments)
-- Backend: Railway/Render (staging instance)
-- Database: Supabase (staging project)
-- Domain: `staging.skilltree.app`
+### Production Environment (FirstVDS Server)
+**Server Specifications:**
+- Provider: FirstVDS
+- OS: Ubuntu 22.04 LTS
+- RAM: 4GB minimum (8GB recommended)
+- Storage: 50GB SSD minimum
+- CPU: 2 cores minimum
 
-### Production Environment
-- Frontend: Vercel (production)
-- Backend: Railway/Render (production instance)
-- Database: Supabase (production project)
-- Domain: `skilltree.app` (or subdomain)
-- Monitoring: Sentry, LogRocket, or similar
+**Architecture:**
+```
+Internet
+    ↓
+Caddy (ports 80/443)
+    ↓
+    ├─→ Frontend (Next.js) :3000 → skilltree.app
+    ├─→ Backend API (NestJS) :4000 → api.skilltree.app
+    └─→ Admin Panel (Next.js) :5000 → admin.skilltree.app
+    ↓
+PostgreSQL :5432 (localhost only)
+Redis :6379 (localhost only)
+```
+
+**Deployment Process:**
+1. **Initial Setup:**
+   - SSH into FirstVDS server
+   - Install dependencies: Node.js 18+, PostgreSQL 15+, Redis 7+, Caddy 2.x, PM2
+   - Clone repository from GitHub
+   - Configure environment variables
+   - Run database migrations
+   - Start services with PM2
+
+2. **Continuous Deployment (GitHub Webhook):**
+   ```bash
+   # /var/www/skilltree/deploy.sh
+   #!/bin/bash
+   cd /var/www/skilltree
+   git pull origin main
+   npm install
+   npm run build
+   npx prisma migrate deploy
+   pm2 reload ecosystem.config.js --update-env
+   ```
+
+3. **PM2 Process Manager:**
+   ```javascript
+   // ecosystem.config.js
+   module.exports = {
+     apps: [
+       {
+         name: 'skilltree-api',
+         script: 'dist/apps/api/main.js',
+         instances: 2,
+         exec_mode: 'cluster',
+         env: {
+           NODE_ENV: 'production',
+           PORT: 4000
+         }
+       },
+       {
+         name: 'skilltree-frontend',
+         script: 'node_modules/.bin/next',
+         args: 'start -p 3000',
+         env: {
+           NODE_ENV: 'production'
+         }
+       },
+       {
+         name: 'skilltree-admin',
+         script: 'node_modules/.bin/next',
+         args: 'start -p 5000',
+         cwd: './apps/admin',
+         env: {
+           NODE_ENV: 'production'
+         }
+       }
+     ]
+   }
+   ```
+
+4. **Caddy Configuration:**
+   ```caddy
+   # /etc/caddy/Caddyfile
+
+   skilltree.app {
+       reverse_proxy localhost:3000
+       encode gzip
+       log {
+           output file /var/log/caddy/skilltree-frontend.log
+       }
+   }
+
+   api.skilltree.app {
+       reverse_proxy localhost:4000
+       encode gzip
+       header {
+           Access-Control-Allow-Origin https://skilltree.app
+           Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+       }
+       log {
+           output file /var/log/caddy/skilltree-api.log
+       }
+   }
+
+   admin.skilltree.app {
+       reverse_proxy localhost:5000
+       encode gzip
+       basicauth {
+           admin $2a$14$hashed_password_here
+       }
+       log {
+           output file /var/log/caddy/skilltree-admin.log
+       }
+   }
+   ```
+
+5. **GitHub Webhook Setup:**
+   - Create deployment endpoint: `POST /api/deploy` (authenticated)
+   - GitHub webhook triggers on push to `main`
+   - Deployment script executes automatically
+
+6. **Backup Strategy:**
+   - Daily PostgreSQL dumps (automated cron job)
+   - Store backups in `/var/backups/skilltree/`
+   - Optional: sync to cloud storage (AWS S3, Backblaze B2)
+
+7. **Monitoring:**
+   - PM2 monitoring: `pm2 monit`
+   - Logs: Caddy access logs + PM2 logs
+   - Optional: Setup Grafana + Prometheus for advanced metrics
+
+**Security Hardening:**
+- UFW firewall: allow only 22 (SSH), 80 (HTTP), 443 (HTTPS)
+- SSH: key-only authentication, disable root login
+- PostgreSQL: localhost-only connections
+- Redis: localhost-only, requirepass enabled
+- Environment variables: stored in `.env` (not in repo)
+- Regular security updates: `apt update && apt upgrade`
 
 ---
 
@@ -543,7 +722,7 @@ TABLE referrals (
 
 | Phase | Duration | Features |
 |-------|----------|----------|
-| **Phase 1.1** | 3-5 days | Project setup & infrastructure |
+| **Phase 1.1** | 5-7 days | VDS setup + project infrastructure |
 | **Phase 1.2** | 4-6 days | User registration |
 | **Phase 1.3** | 7-10 days | Assessment system (55 questions) |
 | **Phase 1.4** | 5-7 days | AI analysis engine |
@@ -562,12 +741,22 @@ TABLE referrals (
 
 ## 💰 Operational Costs (Monthly Estimates)
 
-- Hosting (Vercel + Railway): $25-50
-- Database (Supabase Pro): $25
-- OpenAI API (300 users @ $0.03-0.05 each): $9-15
-- SendGrid (email): $0-15 (free tier or basic)
-- Domain: $1/month
-- **Total:** ~$60-100/month
+- **FirstVDS Server:** ₽1,500-3,000/month (~$15-30)
+  - 4GB RAM, 2 CPU cores, 50GB SSD
+- **Domain (.app or .ru):** ₽100-500/month (~$1-5)
+- **OpenRouter API** (300 users):
+  - GPT-4 Turbo: $0.01-0.03/report = $3-9/month
+  - Claude 3.5 Sonnet: $0.015-0.024/report = $4.5-7.2/month
+  - Mix strategy: ~$5-10/month
+- **SendGrid (email):** $0-15/month (free tier for <100 emails/day, or Essentials plan)
+- **Backups (optional cloud storage):** ₽300-500/month (~$3-5)
+- **Total:** ~₽2,500-4,500/month (~$25-50/month)
+
+**Cost Advantages of Self-Hosting:**
+- No Vercel/Railway fees ($25-50/month saved)
+- No Supabase Pro fees ($25/month saved)
+- Full control over infrastructure
+- Predictable costs
 
 ---
 
