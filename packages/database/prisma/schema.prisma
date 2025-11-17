@@ -1,0 +1,13 @@
+// Prisma schema for SkillTree database
+// Documentation: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Placeholder - schema will be implemented in Phase 4: User Story 2

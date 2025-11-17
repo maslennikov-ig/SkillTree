@@ -135,3 +135,10 @@ Follow command-specific instructions. See `docs/Agents Ecosystem/AGENT-ORCHESTRA
 - Architecture: `docs/Agents Ecosystem/ARCHITECTURE.md`
 - Quality gates: `docs/Agents Ecosystem/QUALITY-GATES-SPECIFICATION.md`
 - Report templates: `docs/Agents Ecosystem/REPORT-TEMPLATE-STANDARD.md`
+
+## Active Technologies
+- Node.js 18+ with TypeScript 5+ + Turborepo (monorepo), NestJS (API framework), grammY (Telegram bot), Prisma (ORM), PM2 (process manager), Caddy 2.x (reverse proxy), Redis 7+ (cache/rate limiting) (001-project-setup)
+- PostgreSQL 15+ (Supabase Cloud), Redis 7+ (localhost), Supabase Storage (future: images/cards) (001-project-setup)
+
+## Recent Changes
+- 001-project-setup: Added Node.js 18+ with TypeScript 5+ + Turborepo (monorepo), NestJS (API framework), grammY (Telegram bot), Prisma (ORM), PM2 (process manager), Caddy 2.x (reverse proxy), Redis 7+ (cache/rate limiting)

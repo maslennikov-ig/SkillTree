@@ -51,6 +51,9 @@ temp/
 coverage/
 .nyc_output/
 
+# Turborepo
+.turbo/
+
 # Misc
 *.pem
 .vercel

@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-This document defines the **canonical 2-level architecture** for AI agents. After Phase 2 refactoring, we use a simplified hierarchy:
+This document defines the **canonical 2-level architecture** for AI agents in MegaCampus2. After Phase 2 refactoring, we use a simplified hierarchy:
 
 ```
 User → /health {domain} → Domain Orchestrator (L1)
