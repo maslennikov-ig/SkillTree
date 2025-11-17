@@ -1,14 +1,22 @@
-import { Controller, Get, HttpStatus, HttpException } from '@nestjs/common';
-import { prisma } from '@skilltree/database';
+import {
+  Controller,
+  Get,
+  HttpStatus,
+  HttpException,
+  Req,
+} from "@nestjs/common";
+import type { Request } from "express";
+import { prisma } from "@skilltree/database";
+import { logger } from "../../common/logger";
 
 interface ServiceStatus {
-  status: 'connected' | 'disconnected' | 'degraded';
+  status: "connected" | "disconnected" | "degraded";
   responseTime?: number;
   error?: string;
 }
 
 interface HealthResponse {
-  status: 'healthy' | 'degraded' | 'unhealthy';
+  status: "healthy" | "degraded" | "unhealthy";
   uptime: number;
   timestamp: string;
   services: {
@@ -20,20 +28,51 @@ interface HealthResponse {
 /**
  * Health check controller for monitoring system status
  * Provides endpoints for health checks, readiness probes, and liveness probes
+ *
+ * Endpoints:
+ * - GET /health - Full health check (returns 200 if healthy, 503 otherwise)
+ * - GET /health/ready - Readiness probe (returns 200 only if ALL services ready)
+ * - GET /health/live - Liveness probe (returns 200 if app running, even if degraded)
+ *
+ * All requests are logged with structured logging including correlation ID,
+ * response times, and service status details.
  */
-@Controller('health')
+@Controller("health")
 export class HealthController {
   private startTime = Date.now();
 
   /**
    * Main health check endpoint
    * Returns 200 if healthy, 503 if degraded/unhealthy
+   * Used for deployment verification and monitoring
    */
   @Get()
-  async getHealth(): Promise<HealthResponse> {
+  async getHealth(@Req() request: Request): Promise<HealthResponse> {
+    const startTime = Date.now();
     const healthResponse = await this.checkHealth();
+    const responseTime = Date.now() - startTime;
 
-    if (healthResponse.status !== 'healthy') {
+    // Log health check result
+    logger.info(
+      {
+        correlationId: request.correlationId,
+        status: healthResponse.status,
+        responseTimeMs: responseTime,
+        services: healthResponse.services,
+      },
+      "Health check completed",
+    );
+
+    if (healthResponse.status !== "healthy") {
+      logger.warn(
+        {
+          correlationId: request.correlationId,
+          status: healthResponse.status,
+          services: healthResponse.services,
+        },
+        "Health check returned non-healthy status",
+      );
+
       throw new HttpException(healthResponse, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
@@ -44,15 +83,25 @@ export class HealthController {
    * Readiness probe - returns 200 only if ALL services ready
    * Used by load balancers and orchestrators to determine traffic routing
    */
-  @Get('ready')
-  async getReadiness(): Promise<{ ready: boolean }> {
+  @Get("ready")
+  async getReadiness(@Req() request: Request): Promise<{ ready: boolean }> {
     const healthResponse = await this.checkHealth();
 
     const isReady =
-      healthResponse.services.database.status === 'connected' &&
-      healthResponse.services.redis.status === 'connected';
+      healthResponse.services.database.status === "connected" &&
+      healthResponse.services.redis.status === "connected";
 
     if (!isReady) {
+      logger.info(
+        {
+          correlationId: request.correlationId,
+          ready: false,
+          database: healthResponse.services.database.status,
+          redis: healthResponse.services.redis.status,
+        },
+        "Readiness probe returned false",
+      );
+
       throw new HttpException({ ready: false }, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
@@ -62,9 +111,15 @@ export class HealthController {
   /**
    * Liveness probe - returns 200 if application is running
    * Even returns 200 in degraded mode (e.g., Redis down but app still functional)
+   * Used to determine if pod should be restarted
    */
-  @Get('live')
-  async getLiveness(): Promise<{ alive: boolean }> {
+  @Get("live")
+  async getLiveness(@Req() request: Request): Promise<{ alive: boolean }> {
+    logger.debug(
+      { correlationId: request.correlationId },
+      "Liveness probe check",
+    );
+
     // Application is alive if this endpoint can respond
     return { alive: true };
   }
@@ -78,22 +133,22 @@ export class HealthController {
     const redisStatus = await this.checkRedis();
 
     // Determine overall status
-    let overallStatus: 'healthy' | 'degraded' | 'unhealthy';
+    let overallStatus: "healthy" | "degraded" | "unhealthy";
 
     if (
-      databaseStatus.status === 'connected' &&
-      redisStatus.status === 'connected'
+      databaseStatus.status === "connected" &&
+      redisStatus.status === "connected"
     ) {
-      overallStatus = 'healthy';
+      overallStatus = "healthy";
     } else if (
-      databaseStatus.status === 'connected' &&
-      redisStatus.status === 'disconnected'
+      databaseStatus.status === "connected" &&
+      redisStatus.status === "disconnected"
     ) {
       // Redis down but database up = degraded (app can run without caching)
-      overallStatus = 'degraded';
+      overallStatus = "degraded";
     } else {
       // Database down = unhealthy (app cannot function)
-      overallStatus = 'unhealthy';
+      overallStatus = "unhealthy";
     }
 
     return {
@@ -120,13 +175,24 @@ export class HealthController {
       const responseTime = Date.now() - startTime;
 
       return {
-        status: 'connected',
+        status: "connected",
         responseTime,
       };
     } catch (error) {
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
+
+      logger.error(
+        {
+          error: errorMessage,
+          stack: error instanceof Error ? error.stack : undefined,
+        },
+        "Database health check failed",
+      );
+
       return {
-        status: 'disconnected',
-        error: error instanceof Error ? error.message : 'Unknown error',
+        status: "disconnected",
+        error: errorMessage,
       };
     }
   }
@@ -145,8 +211,8 @@ export class HealthController {
 
     if (!redisUrl) {
       return {
-        status: 'disconnected',
-        error: 'REDIS_URL not configured (optional service)',
+        status: "disconnected",
+        error: "REDIS_URL not configured (optional service)",
       };
     }
 
@@ -154,8 +220,8 @@ export class HealthController {
     // Example: await redisClient.ping()
 
     return {
-      status: 'disconnected',
-      error: 'Redis client not yet configured (future implementation)',
+      status: "disconnected",
+      error: "Redis client not yet configured (future implementation)",
     };
   }
 }

@@ -72,17 +72,25 @@ module.exports = {
         PORT: 4000
       },
 
-      // Log configuration
+      // Log configuration with rotation
       error_file: '/opt/skilltree/logs/api-error.log',
       out_file: '/opt/skilltree/logs/api-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      max_size: '10M',        // Rotate log when it reaches 10MB
+      retain: 7,              // Keep 7 rotated log files (7 days)
 
       // Auto-restart on crash (max 10 restarts in 1 minute before giving up)
       max_restarts: 10,
       min_uptime: '10s',
 
       // Memory monitoring (restart if exceeds 500MB)
-      max_memory_restart: '500M'
+      max_memory_restart: '500M',
+
+      // Process event handlers for monitoring
+      events: {
+        exit: 'scripts/pm2-handlers/api-crash.js',
+        error: 'scripts/pm2-handlers/api-crash.js'
+      }
     },
 
     /**
@@ -113,15 +121,23 @@ module.exports = {
         NODE_ENV: 'production'
       },
 
-      // Log configuration
+      // Log configuration with rotation
       error_file: '/opt/skilltree/logs/bot-error.log',
       out_file: '/opt/skilltree/logs/bot-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      max_size: '10M',        // Rotate log when it reaches 10MB
+      retain: 7,              // Keep 7 rotated log files
 
       // Auto-restart configuration
       max_restarts: 10,
       min_uptime: '10s',
-      max_memory_restart: '300M'
+      max_memory_restart: '300M',
+
+      // Process event handlers for monitoring
+      events: {
+        exit: 'scripts/pm2-handlers/bot-crash.js',
+        error: 'scripts/pm2-handlers/bot-crash.js'
+      }
     },
 
     /**
@@ -155,15 +171,23 @@ module.exports = {
         HOSTNAME: '0.0.0.0'
       },
 
-      // Log configuration
+      // Log configuration with rotation
       error_file: '/opt/skilltree/logs/frontend-error.log',
       out_file: '/opt/skilltree/logs/frontend-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      max_size: '10M',        // Rotate log when it reaches 10MB
+      retain: 7,              // Keep 7 rotated log files
 
       // Auto-restart configuration
       max_restarts: 10,
       min_uptime: '10s',
-      max_memory_restart: '400M'
+      max_memory_restart: '400M',
+
+      // Process event handlers for monitoring
+      events: {
+        exit: 'scripts/pm2-handlers/frontend-crash.js',
+        error: 'scripts/pm2-handlers/frontend-crash.js'
+      }
     },
 
     /**
@@ -195,15 +219,23 @@ module.exports = {
         HOSTNAME: '0.0.0.0'
       },
 
-      // Log configuration
+      // Log configuration with rotation
       error_file: '/opt/skilltree/logs/admin-error.log',
       out_file: '/opt/skilltree/logs/admin-out.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      max_size: '10M',        // Rotate log when it reaches 10MB
+      retain: 7,              // Keep 7 rotated log files
 
       // Auto-restart configuration
       max_restarts: 10,
       min_uptime: '10s',
-      max_memory_restart: '300M'
+      max_memory_restart: '300M',
+
+      // Process event handlers for monitoring
+      events: {
+        exit: 'scripts/pm2-handlers/admin-crash.js',
+        error: 'scripts/pm2-handlers/admin-crash.js'
+      }
     }
   ],
 

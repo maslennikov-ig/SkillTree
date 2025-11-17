@@ -1,4 +1,4 @@
-import { Bot } from 'grammy';
+import { Bot } from "grammy";
 
 /**
  * Telegram notification service for critical system alerts
@@ -15,7 +15,7 @@ export class TelegramNotifier {
 
     if (!token || !chatId) {
       console.warn(
-        '⚠️  Telegram credentials missing (TELEGRAM_BOT_TOKEN or ADMIN_CHAT_ID) - notifications disabled',
+        "⚠️  Telegram credentials missing (TELEGRAM_BOT_TOKEN or ADMIN_CHAT_ID) - notifications disabled",
       );
       return;
     }
@@ -24,9 +24,9 @@ export class TelegramNotifier {
       this.bot = new Bot(token);
       this.adminChatId = chatId;
       this.initialized = true;
-      console.log('✅ Telegram notifier initialized successfully');
+      console.log("✅ Telegram notifier initialized successfully");
     } catch (error) {
-      console.error('❌ Failed to initialize Telegram notifier:', error);
+      console.error("❌ Failed to initialize Telegram notifier:", error);
     }
   }
 
@@ -37,7 +37,7 @@ export class TelegramNotifier {
   async sendAlert(message: string): Promise<void> {
     if (!this.initialized || !this.bot || !this.adminChatId) {
       console.warn(
-        '⚠️  Telegram notifier not initialized - skipping alert:',
+        "⚠️  Telegram notifier not initialized - skipping alert:",
         message,
       );
       return;
@@ -49,17 +49,16 @@ export class TelegramNotifier {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         await this.bot.api.sendMessage(this.adminChatId, message, {
-          parse_mode: 'Markdown',
+          parse_mode: "HTML",
         });
-        console.log(`✅ Telegram alert sent successfully (attempt ${attempt + 1})`);
+        console.log(
+          `✅ Telegram alert sent successfully (attempt ${attempt + 1})`,
+        );
         return;
       } catch (error) {
         const isLastAttempt = attempt === 2;
         if (isLastAttempt) {
-          console.error(
-            '❌ Telegram alert failed after 3 retries:',
-            error,
-          );
+          console.error("❌ Telegram alert failed after 3 retries:", error);
           return;
         }
         console.warn(
@@ -70,6 +69,87 @@ export class TelegramNotifier {
         );
       }
     }
+  }
+
+  /**
+   * Format deployment success message
+   * @param commitId - Git commit SHA
+   * @param commitMessage - Commit message
+   * @returns Formatted Telegram message
+   */
+  formatDeploymentSuccess(commitId: string, commitMessage: string): string {
+    return (
+      `<b>✅ Deployment Successful</b>\n\n` +
+      `<b>Commit:</b> <code>${commitId.substring(0, 7)}</code>\n` +
+      `<b>Message:</b> ${commitMessage}\n` +
+      `<b>Time:</b> ${new Date().toISOString()}\n\n` +
+      `All services are healthy and running.`
+    );
+  }
+
+  /**
+   * Format deployment failure message
+   * @param error - Error message
+   * @param commitId - Git commit SHA
+   * @returns Formatted Telegram message
+   */
+  formatDeploymentFailure(error: string, commitId?: string): string {
+    let message =
+      `<b>❌ Deployment Failed</b>\n\n` +
+      `<b>Error:</b> ${error}\n` +
+      `<b>Time:</b> ${new Date().toISOString()}\n\n` +
+      `Check logs at /opt/skilltree/logs/ for details.`;
+
+    if (commitId) {
+      message =
+        `<b>Commit:</b> <code>${commitId.substring(0, 7)}</code>\n\n` + message;
+    }
+
+    return message;
+  }
+
+  /**
+   * Format rollback notification message
+   * @param commitId - Git commit SHA being rolled back to
+   * @returns Formatted Telegram message
+   */
+  formatRollbackNotification(commitId: string): string {
+    return (
+      `<b>⚠️ Automatic Rollback Triggered</b>\n\n` +
+      `<b>Rolled back to:</b> <code>${commitId.substring(0, 7)}</code>\n` +
+      `<b>Time:</b> ${new Date().toISOString()}\n\n` +
+      `Services have been restored to previous version.`
+    );
+  }
+
+  /**
+   * Format process crash notification
+   * @param processName - Name of crashed process
+   * @param error - Error message
+   * @returns Formatted Telegram message
+   */
+  formatProcessCrash(processName: string, error: string): string {
+    return (
+      `<b>🔴 Process Crash Alert</b>\n\n` +
+      `<b>Process:</b> ${processName}\n` +
+      `<b>Error:</b> ${error}\n` +
+      `<b>Time:</b> ${new Date().toISOString()}\n\n` +
+      `Check PM2 logs: <code>pm2 logs ${processName}</code>`
+    );
+  }
+
+  /**
+   * Format disk space warning
+   * @param diskUsagePercent - Disk usage percentage
+   * @returns Formatted Telegram message
+   */
+  formatDiskSpaceWarning(diskUsagePercent: number): string {
+    return (
+      `<b>⚠️ Disk Space Warning</b>\n\n` +
+      `<b>Usage:</b> ${diskUsagePercent}%\n` +
+      `<b>Time:</b> ${new Date().toISOString()}\n\n` +
+      `Disk usage is above 80%. Consider cleaning up old logs.`
+    );
   }
 }
 
