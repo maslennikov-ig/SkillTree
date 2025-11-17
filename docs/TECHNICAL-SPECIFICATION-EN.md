@@ -34,8 +34,9 @@ SkillTree is a Telegram-based career guidance platform that:
 - Node.js 18+ / TypeScript
 - Framework: NestJS or Express
 - Telegram Bot API (grammY or node-telegram-bot-api)
-- Database: PostgreSQL 15+ (self-hosted)
+- Database: PostgreSQL 15+ (Supabase Cloud)
 - ORM: Prisma or TypeORM
+- Auth: Supabase Auth (optional for admin panel)
 
 **AI/ML:**
 - OpenRouter API (multi-model support: GPT-4, Claude, Gemini)
@@ -62,12 +63,13 @@ SkillTree is a Telegram-based career guidance platform that:
 - Telegram Bot API
 - OpenRouter API
 
-**Infrastructure (Self-Hosted on FirstVDS):**
+**Infrastructure (Hybrid: FirstVDS + Supabase Cloud):**
 - VDS Server: FirstVDS (Ubuntu 22.04 LTS)
 - Reverse Proxy: Caddy 2.x (automatic HTTPS)
-- Database: PostgreSQL 15+ (self-hosted)
-- Cache: Redis 7+ (for rate limiting & sessions)
-- Queue: BullMQ (for async processing)
+- Database: Supabase Cloud (PostgreSQL 15+ managed)
+- Storage: Supabase Storage (for images, optional)
+- Cache: Redis 7+ on VDS (for rate limiting & sessions)
+- Queue: BullMQ on VDS (for async processing)
 - Process Manager: PM2 or systemd
 - Deployment: Git pull + auto-deploy hooks
 - Monitoring: Optional (Prometheus + Grafana or similar)
@@ -81,21 +83,47 @@ SkillTree is a Telegram-based career guidance platform that:
 **Goal:** Launch functional bot with basic registration, testing, AI analysis, and lead generation.
 
 #### Phase 1.1: Project Setup & Infrastructure (5-7 days)
-**Server Setup:**
+**Server Setup (FirstVDS):**
 - Provision FirstVDS server (Ubuntu 22.04 LTS)
 - Install Caddy 2.x with automatic HTTPS
-- Setup PostgreSQL 15+ (with secure configuration)
 - Install Redis 7+ (persistence enabled)
 - Configure firewall (UFW: ports 80, 443, 22 only)
 - Setup SSH key authentication (disable password auth)
 
+**Supabase Cloud Setup:**
+- Create Supabase project (MegaCampusAI or new project)
+- Configure database connection settings
+- Setup RLS policies (if needed)
+- Optional: Configure Supabase Storage for image uploads
+- Get connection strings and API keys
+
 **Application Setup:**
 - Initialize monorepo structure (Turborepo or Nx)
-- Setup Prisma ORM with PostgreSQL schema
+- Setup Prisma ORM with Supabase PostgreSQL connection
 - Configure Telegram Bot (webhook for production, polling for dev)
 - Setup environment variables & secrets management (.env + vault)
 - Configure PM2 for process management
 - Setup Git deployment hooks (GitHub webhook → auto-deploy)
+
+**Environment Variables:**
+```bash
+# Supabase
+SUPABASE_PROJECT_URL=https://xxx.supabase.co
+SUPABASE_ANON_KEY=eyJhbGci...
+SUPABASE_SERVICE_KEY=eyJhbGci...
+DATABASE_URL=postgresql://postgres:[password]@db.xxx.supabase.co:5432/postgres
+
+# OpenRouter
+OPENROUTER_API_KEY=sk-or-v1-...
+
+# Telegram
+TELEGRAM_BOT_TOKEN=123456:ABC...
+TELEGRAM_WEBHOOK_URL=https://api.skilltree.app/webhook
+
+# Other services
+AMOCRM_API_KEY=...
+SENDGRID_API_KEY=...
+```
 
 **Caddy Configuration:**
 ```caddy
@@ -531,7 +559,7 @@ TABLE referrals (
 ### Development Environment
 - Local development: `localhost:3000` (frontend), `localhost:4000` (backend)
 - Telegram webhook: ngrok tunnel for local testing
-- Database: PostgreSQL (Docker container or local install)
+- Database: Supabase Cloud (dev project or local Supabase)
 - Redis: Docker container or local install
 - Environment: `.env.local`
 
@@ -547,22 +575,22 @@ TABLE referrals (
 ```
 Internet
     ↓
-Caddy (ports 80/443)
+Caddy (ports 80/443) ← FirstVDS
     ↓
     ├─→ Frontend (Next.js) :3000 → skilltree.app
     ├─→ Backend API (NestJS) :4000 → api.skilltree.app
     └─→ Admin Panel (Next.js) :5000 → admin.skilltree.app
     ↓
-PostgreSQL :5432 (localhost only)
-Redis :6379 (localhost only)
+    ├─→ Redis :6379 (localhost only, on VDS)
+    └─→ Supabase Cloud ← PostgreSQL (managed, external)
 ```
 
 **Deployment Process:**
 1. **Initial Setup:**
    - SSH into FirstVDS server
-   - Install dependencies: Node.js 18+, PostgreSQL 15+, Redis 7+, Caddy 2.x, PM2
+   - Install dependencies: Node.js 18+, Redis 7+, Caddy 2.x, PM2
    - Clone repository from GitHub
-   - Configure environment variables
+   - Configure environment variables (including Supabase connection)
    - Run database migrations
    - Start services with PM2
 
@@ -668,10 +696,11 @@ Redis :6379 (localhost only)
 **Security Hardening:**
 - UFW firewall: allow only 22 (SSH), 80 (HTTP), 443 (HTTPS)
 - SSH: key-only authentication, disable root login
-- PostgreSQL: localhost-only connections
+- Supabase: Row Level Security (RLS) policies enabled
 - Redis: localhost-only, requirepass enabled
 - Environment variables: stored in `.env` (not in repo)
 - Regular security updates: `apt update && apt upgrade`
+- Supabase connection: use service key only in backend, never expose to frontend
 
 ---
 
@@ -741,22 +770,33 @@ Redis :6379 (localhost only)
 
 ## 💰 Operational Costs (Monthly Estimates)
 
+**Infrastructure:**
 - **FirstVDS Server:** ₽1,500-3,000/month (~$15-30)
   - 4GB RAM, 2 CPU cores, 50GB SSD
+- **Supabase Cloud:**
+  - Free tier: $0 (500MB database, 50,000 monthly active users)
+  - Pro tier: $25/month (8GB database, 100,000 monthly active users)
+  - Start with free tier, upgrade when needed
 - **Domain (.app or .ru):** ₽100-500/month (~$1-5)
-- **OpenRouter API** (300 users):
+
+**API Services:**
+- **OpenRouter API** (300 users @ 1 report each):
   - GPT-4 Turbo: $0.01-0.03/report = $3-9/month
   - Claude 3.5 Sonnet: $0.015-0.024/report = $4.5-7.2/month
   - Mix strategy: ~$5-10/month
 - **SendGrid (email):** $0-15/month (free tier for <100 emails/day, or Essentials plan)
-- **Backups (optional cloud storage):** ₽300-500/month (~$3-5)
-- **Total:** ~₽2,500-4,500/month (~$25-50/month)
 
-**Cost Advantages of Self-Hosting:**
-- No Vercel/Railway fees ($25-50/month saved)
-- No Supabase Pro fees ($25/month saved)
-- Full control over infrastructure
-- Predictable costs
+**Optional:**
+- **Backups (cloud storage):** ₽300-500/month (~$3-5)
+
+**Total (Starting):** ~₽1,600-3,500/month (~$16-38/month) with Supabase free tier
+**Total (Scaled):** ~₽4,100-6,000/month (~$41-63/month) with Supabase Pro
+
+**Cost Benefits of Hybrid Approach:**
+- Managed database (Supabase) = no maintenance overhead
+- Self-hosted application = full control + cost savings vs Vercel/Railway
+- Supabase free tier = great for MVP/testing phase
+- Predictable scaling costs
 
 ---
 
