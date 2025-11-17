@@ -75,11 +75,11 @@ Monorepo structure (from plan.md):
 
 - [X] T001 [EXECUTOR: monorepo-setup-specialist] [SEQUENTIAL] Create root directory structure per plan.md (apps/, packages/, scripts/, docs/, .claude/, .specify/) → Artifacts: [apps/](../../../apps/), [packages/](../../../packages/), [docs/](../../../docs/), [scripts/](../../../scripts/)
 - [X] T002 [EXECUTOR: monorepo-setup-specialist] [SEQUENTIAL] Initialize root package.json with workspace configuration and shared scripts → Artifacts: [package.json](../../../package.json)
-- [ ] T003 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create pnpm-workspace.yaml defining workspace packages (apps/*, packages/*)
-- [ ] T004 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create turbo.json with pipeline configuration for build, dev, type-check tasks
-- [ ] T005 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create root tsconfig.json with shared TypeScript configuration
-- [ ] T006 [EXECUTOR: MAIN] [PARALLEL-GROUP-1] Create .gitignore with node_modules, dist, .env, .turbo, build artifacts
-- [ ] T007 [EXECUTOR: MAIN] [PARALLEL-GROUP-1] Create .env.example with required variables: DATABASE_URL (with ?sslmode=require), SUPABASE_URL, SUPABASE_ANON_KEY, REDIS_URL, GITHUB_WEBHOOK_SECRET, NODE_ENV, PORT, TELEGRAM_BOT_TOKEN, ADMIN_CHAT_ID - include descriptive comments for each
+- [X] T003 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create pnpm-workspace.yaml defining workspace packages (apps/*, packages/*) → Artifacts: [pnpm-workspace.yaml](../../../pnpm-workspace.yaml)
+- [X] T004 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create turbo.json with pipeline configuration for build, dev, type-check tasks → Artifacts: [turbo.json](../../../turbo.json)
+- [X] T005 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create root tsconfig.json with shared TypeScript configuration → Artifacts: [tsconfig.json](../../../tsconfig.json)
+- [X] T006 [EXECUTOR: MAIN] [PARALLEL-GROUP-1] Create .gitignore with node_modules, dist, .env, .turbo, build artifacts → Artifacts: [.gitignore](../../../.gitignore)
+- [X] T007 [EXECUTOR: MAIN] [PARALLEL-GROUP-1] Create .env.example with required variables: DATABASE_URL (with ?sslmode=require), SUPABASE_URL, SUPABASE_ANON_KEY, REDIS_URL, GITHUB_WEBHOOK_SECRET, NODE_ENV, PORT, TELEGRAM_BOT_TOKEN, ADMIN_CHAT_ID - include descriptive comments for each → Artifacts: [.env.example](../../../.env.example)
 - [ ] T008 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-2] Setup ESLint configuration in packages/config/eslint-config/
 - [ ] T009 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-2] Setup Prettier configuration in packages/config/prettier-config/
 - [ ] T010 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-2] Setup shared TypeScript config bases in packages/config/typescript-config/
