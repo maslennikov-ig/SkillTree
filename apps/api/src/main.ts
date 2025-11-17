@@ -3,7 +3,6 @@ import { AppModule } from "./app.module";
 import { prisma } from "@skilltree/database";
 import { logger, loggerService } from "./common/logger";
 import { HttpExceptionFilter } from "./common/filters/http-exception.filter";
-import { CorrelationIdMiddleware } from "./common/middleware/correlation-id.middleware";
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, {
@@ -12,9 +11,6 @@ async function bootstrap(): Promise<void> {
 
   // Apply global exception filter
   app.useGlobalFilters(new HttpExceptionFilter());
-
-  // Apply correlation ID middleware
-  app.use(CorrelationIdMiddleware.prototype);
 
   // Database connection with retry logic (exponential backoff)
   const maxRetries = 3;
