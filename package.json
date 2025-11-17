@@ -1,8 +1,8 @@
 {
-  "name": "skilltree-monorepo",
+  "name": "repa-maks-monorepo",
   "version": "0.1.2",
   "private": true,
-  "description": "SkillTree - AI-Powered Career Guidance Telegram Bot",
+  "description": "RepaMaks - Telegram bot and course generation platform",
   "engines": {
     "node": ">=18.0.0",
     "pnpm": ">=8.0.0"

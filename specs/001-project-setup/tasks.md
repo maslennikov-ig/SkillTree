@@ -73,8 +73,8 @@ Monorepo structure (from plan.md):
 
 **Purpose**: Initialize monorepo structure and root-level configuration
 
-- [ ] T001 [EXECUTOR: monorepo-setup-specialist] [SEQUENTIAL] Create root directory structure per plan.md (apps/, packages/, scripts/, docs/, .claude/, .specify/)
-- [ ] T002 [EXECUTOR: monorepo-setup-specialist] [SEQUENTIAL] Initialize root package.json with workspace configuration and shared scripts
+- [X] T001 [EXECUTOR: monorepo-setup-specialist] [SEQUENTIAL] Create root directory structure per plan.md (apps/, packages/, scripts/, docs/, .claude/, .specify/) → Artifacts: [apps/](../../../apps/), [packages/](../../../packages/), [docs/](../../../docs/), [scripts/](../../../scripts/)
+- [X] T002 [EXECUTOR: monorepo-setup-specialist] [SEQUENTIAL] Initialize root package.json with workspace configuration and shared scripts → Artifacts: [package.json](../../../package.json)
 - [ ] T003 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create pnpm-workspace.yaml defining workspace packages (apps/*, packages/*)
 - [ ] T004 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create turbo.json with pipeline configuration for build, dev, type-check tasks
 - [ ] T005 [EXECUTOR: monorepo-setup-specialist] [PARALLEL-GROUP-1] Create root tsconfig.json with shared TypeScript configuration
