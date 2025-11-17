@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.3] - 2025-11-17
+
+### Added
+- **setup**: complete Phase 1 - monorepo setup (T008-T010) (9267632)
+- **setup**: complete T003-T007 core configuration (8833f07)
+- **setup**: complete T001-T002 monorepo initialization (1be653f)
+
 ## [0.1.2] - 2025-11-17
 
 ### Added
