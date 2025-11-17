@@ -10,4 +10,134 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Placeholder - schema will be implemented in Phase 4: User Story 2
+// ============================================================================
+// Core User Authentication
+// ============================================================================
+
+model User {
+  id               String   @id @default(cuid())
+  telegramId       BigInt   @unique
+  telegramUsername String?
+  firstName        String?
+  lastName         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Relations
+  student Student?
+  parent  Parent?
+
+  @@index([telegramId])
+}
+
+// ============================================================================
+// Student and Parent Profiles
+// ============================================================================
+
+model Student {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  age       Int
+  grade     Int
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  testSessions    TestSession[]
+  parentRelations ParentStudent[]
+
+  @@index([userId])
+}
+
+model Parent {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  email     String?
+  phone     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  children ParentStudent[]
+
+  @@index([userId])
+  @@index([email])
+}
+
+// ============================================================================
+// Parent-Student Relationships (Junction Table)
+// ============================================================================
+
+model ParentStudent {
+  id        String   @id @default(cuid())
+  parentId  String
+  studentId String
+  createdAt DateTime @default(now())
+
+  // Relations
+  parent  Parent  @relation(fields: [parentId], references: [id], onDelete: Cascade)
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([parentId, studentId])
+  @@index([parentId])
+  @@index([studentId])
+}
+
+// ============================================================================
+// Test Sessions and Questions
+// ============================================================================
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+model TestSession {
+  id          String        @id @default(cuid())
+  studentId   String
+  status      SessionStatus @default(IN_PROGRESS)
+  startedAt   DateTime      @default(now())
+  completedAt DateTime?
+
+  // Relations
+  student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@index([studentId])
+  @@index([status])
+}
+
+model Question {
+  id         String   @id @default(cuid())
+  text       String
+  category   String
+  orderIndex Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  answers Answer[]
+
+  @@index([category])
+  @@index([orderIndex])
+}
+
+model Answer {
+  id         String   @id @default(cuid())
+  sessionId  String
+  questionId String
+  answerText String
+  answeredAt DateTime @default(now())
+
+  // Relations
+  session  TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  question Question    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, questionId])
+  @@index([sessionId])
+  @@index([questionId])
+}
