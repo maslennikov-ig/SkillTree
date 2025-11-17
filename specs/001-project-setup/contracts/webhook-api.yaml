@@ -1,0 +1,202 @@
+openapi: 3.0.3
+info:
+  title: SkillTree Webhook API
+  description: GitHub webhook endpoint for automated deployment
+  version: 1.0.0
+  contact:
+    name: Igor Maslennikov
+    email: igor@maslennikov.dev
+
+servers:
+  - url: https://api.skilltree.app
+    description: Production API
+
+tags:
+  - name: Webhook
+    description: CI/CD webhook endpoints
+
+paths:
+  /webhook/deploy:
+    post:
+      summary: Handle GitHub push webhook
+      description: Receives GitHub webhook events and triggers deployment for main branch pushes
+      operationId: handleGitHubWebhook
+      tags:
+        - Webhook
+      security:
+        - GitHubSignature: []
+      parameters:
+        - name: X-Hub-Signature-256
+          in: header
+          required: true
+          schema:
+            type: string
+          description: HMAC SHA-256 signature for payload verification
+          example: "sha256=abc123..."
+        - name: X-GitHub-Event
+          in: header
+          required: true
+          schema:
+            type: string
+          description: GitHub event type
+          example: "push"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GitHubPushPayload'
+            examples:
+              mainPush:
+                value:
+                  ref: "refs/heads/main"
+                  repository:
+                    name: "repa-maks"
+                    full_name: "skilltree/repa-maks"
+                  pusher:
+                    name: "igor"
+                    email: "igor@maslennikov.dev"
+                  head_commit:
+                    id: "abc123def456"
+                    message: "Add new feature"
+                    timestamp: "2025-01-17T12:00:00Z"
+      responses:
+        '200':
+          description: Webhook processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookResponse'
+              examples:
+                triggered:
+                  value:
+                    message: "Deployment triggered"
+                    commit: "abc123def456"
+                    branch: "main"
+                ignored:
+                  value:
+                    message: "Ignored: not main branch"
+                    branch: "feature/test"
+        '401':
+          description: Unauthorized (invalid signature)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Invalid signature"
+                message: "Webhook signature verification failed"
+        '400':
+          description: Bad request (malformed payload)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error: "Bad request"
+                message: "Missing required field: ref"
+
+components:
+  securitySchemes:
+    GitHubSignature:
+      type: apiKey
+      in: header
+      name: X-Hub-Signature-256
+      description: HMAC SHA-256 signature using shared secret
+
+  schemas:
+    GitHubPushPayload:
+      type: object
+      required:
+        - ref
+        - repository
+        - pusher
+        - head_commit
+      properties:
+        ref:
+          type: string
+          description: Git reference (branch or tag)
+          example: "refs/heads/main"
+        repository:
+          type: object
+          required:
+            - name
+            - full_name
+          properties:
+            name:
+              type: string
+              example: "repa-maks"
+            full_name:
+              type: string
+              example: "skilltree/repa-maks"
+        pusher:
+          type: object
+          required:
+            - name
+            - email
+          properties:
+            name:
+              type: string
+              example: "igor"
+            email:
+              type: string
+              format: email
+              example: "igor@maslennikov.dev"
+        head_commit:
+          type: object
+          required:
+            - id
+            - message
+            - timestamp
+          properties:
+            id:
+              type: string
+              description: Commit SHA
+              example: "abc123def456"
+            message:
+              type: string
+              description: Commit message
+              example: "Add new feature"
+            timestamp:
+              type: string
+              format: date-time
+              description: Commit timestamp (ISO 8601)
+              example: "2025-01-17T12:00:00Z"
+
+    WebhookResponse:
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: Human-readable response message
+          example: "Deployment triggered"
+        commit:
+          type: string
+          description: Commit SHA being deployed (present only when deployment triggered)
+          example: "abc123def456"
+        branch:
+          type: string
+          description: Branch name
+          example: "main"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Error type
+          example: "Invalid signature"
+        message:
+          type: string
+          description: Detailed error message
+          example: "Webhook signature verification failed"
+        timestamp:
+          type: string
+          format: date-time
+          description: Error timestamp (ISO 8601)
+          example: "2025-01-17T12:00:00.000Z"

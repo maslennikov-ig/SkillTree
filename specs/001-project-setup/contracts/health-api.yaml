@@ -1,0 +1,184 @@
+openapi: 3.0.3
+info:
+  title: SkillTree Health Check API
+  description: Health monitoring endpoints for infrastructure validation
+  version: 1.0.0
+  contact:
+    name: Igor Maslennikov
+    email: igor@maslennikov.dev
+
+servers:
+  - url: https://api.skilltree.app
+    description: Production API
+  - url: http://localhost:4000
+    description: Local development
+
+tags:
+  - name: Health
+    description: System health monitoring endpoints
+
+paths:
+  /health:
+    get:
+      summary: Get system health status
+      description: Returns comprehensive health status including database connectivity, Redis connectivity, and system uptime
+      operationId: getHealth
+      tags:
+        - Health
+      responses:
+        '200':
+          description: System is healthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                healthy:
+                  value:
+                    status: "healthy"
+                    uptime: 3600
+                    timestamp: "2025-01-17T12:00:00.000Z"
+                    services:
+                      database:
+                        status: "connected"
+                        responseTime: 15
+                      redis:
+                        status: "connected"
+                        responseTime: 2
+        '503':
+          description: Service unavailable (degraded state)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                degraded:
+                  value:
+                    status: "degraded"
+                    uptime: 3600
+                    timestamp: "2025-01-17T12:00:00.000Z"
+                    services:
+                      database:
+                        status: "connected"
+                        responseTime: 15
+                      redis:
+                        status: "disconnected"
+                        error: "Connection refused"
+
+  /health/ready:
+    get:
+      summary: Readiness probe
+      description: Kubernetes-style readiness check (returns 200 only if ALL services ready)
+      operationId: getReadiness
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service ready to accept traffic
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                    example: true
+        '503':
+          description: Service not ready
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ready:
+                    type: boolean
+                    example: false
+
+  /health/live:
+    get:
+      summary: Liveness probe
+      description: Kubernetes-style liveness check (returns 200 if application is running, even if degraded)
+      operationId: getLiveness
+      tags:
+        - Health
+      responses:
+        '200':
+          description: Service is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  alive:
+                    type: boolean
+                    example: true
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - uptime
+        - timestamp
+        - services
+      properties:
+        status:
+          type: string
+          enum: [healthy, degraded, unhealthy]
+          description: Overall system health status
+          example: "healthy"
+        uptime:
+          type: integer
+          description: System uptime in seconds
+          example: 3600
+        timestamp:
+          type: string
+          format: date-time
+          description: Current server timestamp (ISO 8601)
+          example: "2025-01-17T12:00:00.000Z"
+        services:
+          type: object
+          description: Status of dependent services
+          required:
+            - database
+            - redis
+          properties:
+            database:
+              $ref: '#/components/schemas/ServiceStatus'
+            redis:
+              $ref: '#/components/schemas/ServiceStatus'
+
+    ServiceStatus:
+      type: object
+      required:
+        - status
+      properties:
+        status:
+          type: string
+          enum: [connected, disconnected, degraded]
+          description: Connection status
+          example: "connected"
+        responseTime:
+          type: integer
+          description: Response time in milliseconds (present only when connected)
+          example: 15
+        error:
+          type: string
+          description: Error message (present only when disconnected)
+          example: "Connection refused"
+
+  responses:
+    Healthy:
+      description: Service is healthy
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthResponse'
+
+    Degraded:
+      description: Service is degraded but operational
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/HealthResponse'

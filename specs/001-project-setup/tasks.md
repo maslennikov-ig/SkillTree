@@ -1,0 +1,562 @@
+# Tasks: Project Setup & Infrastructure
+
+**Input**: Design documents from `/specs/001-project-setup/`
+**Prerequisites**: plan.md (technical context), spec.md (user stories), research.md (best practices), data-model.md (database schema), contracts/ (API specs)
+
+**Tests**: Not included - infrastructure validation via manual smoke tests per spec.md
+
+**Organization**: Tasks grouped by user story to enable independent implementation and testing.
+
+## Format: `[ID] [P?] [Story] Description`
+
+- **[P]**: Can run in parallel (different files, no dependencies)
+- **[Story]**: User story label (US1, US2, US3, US4, US5)
+- File paths use monorepo structure from plan.md
+
+## Path Conventions
+
+Monorepo structure (from plan.md):
+- **Root**: `turbo.json`, `package.json`, `pnpm-workspace.yaml`
+- **Apps**: `apps/api/`, `apps/bot/`, `apps/frontend/`, `apps/admin/`
+- **Packages**: `packages/database/`, `packages/shared/`, `packages/config/`
+- **Scripts**: `scripts/deploy.sh`, `scripts/setup-server.sh`, `scripts/rollback.sh`
+- **VDS Paths**: `/opt/skilltree/`, `/etc/caddy/`, `/etc/redis/`
+
+---
+
+## Phase 0: Planning
+
+### P001: Task Analysis & Executor Assignment
+**Description**: Analyze tasks, assign executors (MAIN for trivial only, existing if 100% match, FUTURE otherwise)
+**Executor**: MAIN
+**Dependencies**: None
+**Rules**:
+- [EXECUTOR: MAIN] - ONLY trivial (1-2 line fixes, simple imports, single npm install)
+- Existing subagents - ONLY if 100% match (thorough examination)
+- [EXECUTOR: future-agent-name] - If no 100% match (preferred)
+**Output**:
+- All tasks annotated with [EXECUTOR: name] or [EXECUTOR: future-agent-name]
+- All tasks marked [SEQUENTIAL] or [PARALLEL-GROUP-X]
+- List of FUTURE agents to create
+**Artifacts**: Updated tasks.md
+
+### P002: Research Task Resolution
+**Description**: Identify and resolve research questions (simple: solve now, complex: create prompts)
+**Executor**: MAIN
+**Dependencies**: P001
+**Output**:
+- Simple research: documented findings (already complete in research.md)
+- Complex research: N/A (all research completed in Phase 1)
+**Artifacts**: research.md (already exists)
+
+### P003: Meta-Agent Subagent Creation (if needed)
+**Description**: Create FUTURE agents using meta-agent-v3, then ask user to restart claude-code
+**Executor**: meta-agent-v3
+**Dependencies**: P001
+**Execution**: Launch N meta-agent-v3 calls in single message (1 FUTURE agent = 1 call)
+**Tasks**: [List FUTURE agents from P001]
+**Post-Creation**: Ask user to restart claude-code
+**Artifacts**: .claude/agents/{domain}/{type}/{name}.md
+
+---
+
+## Phase 1: Setup (Shared Infrastructure)
+
+**Purpose**: Initialize monorepo structure and root-level configuration
+
+- [ ] T001 Create root directory structure per plan.md (apps/, packages/, scripts/, docs/, .claude/, .specify/)
+- [ ] T002 Initialize root package.json with workspace configuration and shared scripts
+- [ ] T003 [P] Create pnpm-workspace.yaml defining workspace packages (apps/*, packages/*)
+- [ ] T004 [P] Create turbo.json with pipeline configuration for build, dev, type-check tasks
+- [ ] T005 [P] Create root tsconfig.json with shared TypeScript configuration
+- [ ] T006 [P] Create .gitignore with node_modules, dist, .env, .turbo, build artifacts
+- [ ] T007 [P] Create .env.example with required variables: DATABASE_URL (with ?sslmode=require), SUPABASE_URL, SUPABASE_ANON_KEY, REDIS_URL, GITHUB_WEBHOOK_SECRET, NODE_ENV, PORT, TELEGRAM_BOT_TOKEN, ADMIN_CHAT_ID - include descriptive comments for each
+- [ ] T008 [P] Setup ESLint configuration in packages/config/eslint-config/
+- [ ] T009 [P] Setup Prettier configuration in packages/config/prettier-config/
+- [ ] T010 [P] Setup shared TypeScript config bases in packages/config/typescript-config/
+
+**Checkpoint**: Monorepo root structure ready
+
+---
+
+## Phase 2: Foundational (Blocking Prerequisites)
+
+**Purpose**: Core packages that MUST be complete before ANY user story can be implemented
+
+**CRITICAL**: No user story work can begin until this phase is complete
+
+- [ ] T011 Create packages/shared/ structure with package.json, tsconfig.json, src/ directories
+- [ ] T012 [P] Setup packages/shared/src/types/ for common TypeScript interfaces
+- [ ] T013 [P] Setup packages/shared/src/utils/ for utility functions
+- [ ] T014 [P] Setup packages/shared/src/constants/ for shared constants
+- [ ] T015 Create packages/database/ structure with package.json, tsconfig.json, prisma/ directory
+- [ ] T016 Add Prisma dependencies to packages/database/package.json (@prisma/client, prisma as devDependency)
+- [ ] T017 Create packages/database/prisma/schema.prisma with datasource and generator configuration
+- [ ] T018 Create packages/database/src/index.ts that re-exports PrismaClient
+- [ ] T019 Create apps/api/ structure with package.json, tsconfig.json, src/modules/, src/common/, test/
+- [ ] T020 [P] Add NestJS dependencies to apps/api/package.json (@nestjs/core, @nestjs/common, @nestjs/platform-express)
+- [ ] T021 [P] Add workspace dependencies to apps/api: @skilltree/database, @skilltree/shared
+- [ ] T022 Create apps/api/src/main.ts with NestJS bootstrap and PM2 ready signal (process.send('ready'))
+- [ ] T022.5 Implement database connection retry logic in apps/api/src/main.ts with exponential backoff (max 3 attempts: delays 1s, 2s, 4s), exit with error code 1 if all retries fail
+- [ ] T023 [P] Create apps/api/src/app.module.ts with basic module structure
+- [ ] T024 Install all workspace dependencies with pnpm install from root
+
+**Checkpoint**: Foundation ready - user story implementation can now begin in parallel
+
+---
+
+## Phase 3: User Story 1 - Developer Environment Setup (Priority: P1) **MVP**
+
+**Goal**: Working local development environment for building SkillTree bot features immediately after cloning
+
+**Independent Test**: Clone repository, run `pnpm install`, start dev server with `pnpm dev`, verify application starts without errors and health endpoint returns 200 OK
+
+### Implementation for User Story 1
+
+- [ ] T025 [P] [US1] Add dev script to root package.json that runs "turbo run dev --parallel"
+- [ ] T026 [P] [US1] Add build script to root package.json that runs "turbo run build"
+- [ ] T027 [P] [US1] Add type-check script to root package.json that runs "turbo run type-check"
+- [ ] T028 [P] [US1] Configure turbo.json pipeline with "dev" task (cache: false, persistent: true)
+- [ ] T029 [P] [US1] Configure turbo.json pipeline with "build" task (dependsOn: ["^build"], outputs: ["dist/**", ".next/**"])
+- [ ] T030 [P] [US1] Configure turbo.json pipeline with "type-check" task (dependsOn: ["^build"])
+- [ ] T031 [US1] Add dev script to apps/api/package.json that runs "nest start --watch"
+- [ ] T032 [US1] Add build script to apps/api/package.json that runs "nest build"
+- [ ] T033 [US1] Add type-check script to apps/api/package.json that runs "tsc --noEmit"
+- [ ] T034 [US1] Configure apps/api/tsconfig.json with strict mode, noUncheckedIndexedAccess, paths for workspace dependencies
+- [ ] T035 [US1] Add packages/database to apps/api dependencies and verify imports work
+- [ ] T036 [US1] Add packages/shared to apps/api dependencies and verify imports work
+- [ ] T037 [US1] Setup Husky pre-commit hooks in root: npx husky install, add .husky/pre-commit script
+- [ ] T038 [US1] Configure lint-staged in root package.json to run type-check and eslint on staged .ts files
+- [ ] T039 [US1] Verify pnpm dev starts API server on port 4000 without errors
+- [ ] T040 [US1] Verify pnpm build compiles all packages successfully
+- [ ] T041 [US1] Verify pnpm type-check passes with no TypeScript errors
+
+**Checkpoint**: User Story 1 complete - developer can clone, install, and run dev server successfully
+
+---
+
+## Phase 4: User Story 2 - Database Schema Initialization (Priority: P1)
+
+**Goal**: Database schema ready with all tables and relationships for feature development
+
+**Independent Test**: Run `pnpm db:migrate` command, verify Prisma schema applied to Supabase, check tables exist in Supabase Studio
+
+### Implementation for User Story 2
+
+- [ ] T042 [P] [US2] Define User model in packages/database/prisma/schema.prisma (id, telegramId, telegramUsername, firstName, lastName, createdAt, updatedAt)
+- [ ] T043 [P] [US2] Define Student model in packages/database/prisma/schema.prisma (id, userId FK, age, grade, phone, createdAt, updatedAt)
+- [ ] T044 [P] [US2] Define Parent model in packages/database/prisma/schema.prisma (id, userId FK, email, phone, createdAt, updatedAt)
+- [ ] T045 [P] [US2] Define ParentStudent junction model in packages/database/prisma/schema.prisma (id, parentId FK, studentId FK, createdAt)
+- [ ] T046 [P] [US2] Define TestSession model in packages/database/prisma/schema.prisma (id, studentId FK, status enum, startedAt, completedAt)
+- [ ] T047 [P] [US2] Define Question model in packages/database/prisma/schema.prisma (id, text, category, orderIndex, createdAt, updatedAt)
+- [ ] T048 [P] [US2] Define Answer model in packages/database/prisma/schema.prisma (id, sessionId FK, questionId FK, answerText, answeredAt)
+- [ ] T049 [US2] Add SessionStatus enum to packages/database/prisma/schema.prisma (IN_PROGRESS, COMPLETED, ABANDONED)
+- [ ] T050 [US2] Add indexes to schema: User.telegramId, Student.userId, Parent.userId, Parent.email, TestSession.studentId/status, Question.category/orderIndex, Answer.sessionId/questionId
+- [ ] T051 [US2] Add unique constraints: User.telegramId, Student.userId, Parent.userId, ParentStudent(parentId, studentId), Answer(sessionId, questionId)
+- [ ] T052 [US2] Configure cascade deletes: User → Student/Parent → TestSession → Answer, Student → ParentStudent
+- [ ] T053 [US2] Add db:generate script to packages/database/package.json: "prisma generate"
+- [ ] T054 [US2] Add db:migrate script to packages/database/package.json: "prisma migrate dev"
+- [ ] T055 [US2] Add db:push script to root package.json that runs "pnpm --filter @skilltree/database db:migrate"
+- [ ] T056 [US2] Run npx prisma migrate dev --name init to create initial migration
+- [ ] T057 [US2] Run npx prisma generate to generate Prisma Client
+- [ ] T058 [US2] Verify schema in Supabase Studio shows 7 tables with correct relationships
+- [ ] T059 [US2] Test database connection in apps/api/src/main.ts with PrismaClient.$connect()
+- [ ] T059.5 [US2] Verify DATABASE_URL in .env.example includes ?sslmode=require parameter for SSL/TLS encryption (add comment if missing)
+
+**Checkpoint**: User Story 2 complete - database schema deployed to Supabase with all tables and relationships
+
+---
+
+## Phase 5: User Story 3 - VDS Server Provisioning (Priority: P1)
+
+**Goal**: Properly configured VDS server for secure production deployment with automatic HTTPS
+
+**Independent Test**: SSH into VDS, verify Node.js/Caddy/Redis installed, check `ufw status` shows correct firewall rules, confirm Caddy serves HTTPS
+
+### Implementation for User Story 3
+
+- [ ] T060 [P] [US3] Create scripts/setup-server.sh with shebang and error handling (set -e)
+- [ ] T061 [US3] Add Node.js 18.x installation to setup-server.sh via NodeSource repository
+- [ ] T062 [US3] Add pnpm and PM2 global installation to setup-server.sh (npm install -g pnpm pm2)
+- [ ] T063 [US3] Add Redis 7.x installation to setup-server.sh via apt-get
+- [ ] T064 [US3] Configure Redis in setup-server.sh: bind to localhost, require password via sed commands
+- [ ] T065 [US3] Add Redis service enable and start to setup-server.sh (systemctl enable/start redis-server)
+- [ ] T066 [US3] Add Caddy 2.x installation to setup-server.sh via Cloudsmith repository
+- [ ] T067 [US3] Add UFW firewall setup to setup-server.sh: allow 22, 80, 443 only, enable with --force
+- [ ] T067.5 [US3] Disable SSH password authentication in setup-server.sh: edit /etc/ssh/sshd_config (PasswordAuthentication no, PubkeyAuthentication yes), restart sshd
+- [ ] T068 [US3] Add application directory creation to setup-server.sh: mkdir -p /opt/skilltree/{logs,backups}
+- [ ] T069 [US3] Create /etc/caddy/Caddyfile with reverse proxy configuration for skilltree.app → localhost:3000
+- [ ] T070 [US3] Add api.skilltree.app reverse proxy to Caddyfile → localhost:4000 with gzip encoding
+- [ ] T071 [US3] Add admin.skilltree.app reverse proxy to Caddyfile → localhost:3001 with gzip encoding
+- [ ] T072 [US3] Add Caddy access logging to Caddyfile for each domain (/var/log/caddy/{service}.log)
+- [ ] T073 [US3] Add Caddy service reload to setup-server.sh (systemctl reload caddy)
+- [ ] T074 [US3] Create ecosystem.config.js in root with PM2 configuration for api service
+- [ ] T075 [US3] Configure api process in ecosystem.config.js: name='api', script='./apps/api/dist/main.js', instances=2, exec_mode='cluster', wait_ready=true
+- [ ] T076 [US3] Add environment variables to api config in ecosystem.config.js: NODE_ENV='production', PORT=4000
+- [ ] T077 [US3] Add graceful shutdown settings to ecosystem.config.js: listen_timeout=10000, kill_timeout=5000
+- [ ] T078 [US3] Document manual deployment steps in quickstart.md for VDS provisioning
+- [ ] T079 [US3] Test setup-server.sh in local Ubuntu VM or dry-run mode
+- [ ] T080 [US3] Verify script creates /opt/skilltree directory structure
+- [ ] T081 [US3] Verify Redis listens on localhost:6379 with password authentication
+- [ ] T082 [US3] Verify UFW status shows only SSH (22), HTTP (80), HTTPS (443) allowed
+- [ ] T082.5 [US3] Install and configure fail2ban in setup-server.sh: apt-get install fail2ban, configure SSH jail (maxretry=3, bantime=600), enable service
+
+**Checkpoint**: User Story 3 complete - VDS server provisioned with all services installed and configured
+
+---
+
+## Phase 6: User Story 1 + 2 + 3 Integration - Health Check API (Foundational for P2 Stories)
+
+**Goal**: Health check endpoint functional to support deployment verification and monitoring
+
+**Dependencies**: US1 (API) + US2 (Database) for local development; US3 (VDS) required only for production deployment verification
+
+**Independent Test**: curl http://localhost:4000/health returns 200 OK with JSON status (local); curl https://api.skilltree.app/health returns 200 OK (production)
+
+### Implementation for Health Check
+
+- [ ] T083 [P] [US1+2+3] Create apps/api/src/modules/health/ directory structure
+- [ ] T084 [P] [US1+2+3] Create HealthController in apps/api/src/modules/health/health.controller.ts with @Controller('health')
+- [ ] T085 [US1+2+3] Implement GET /health endpoint that checks database connectivity with PrismaClient.$queryRaw
+- [ ] T086 [US1+2+3] Add Redis connectivity check to /health endpoint (optional, allow degraded mode)
+- [ ] T087 [US1+2+3] Return HealthResponse JSON with status, uptime, timestamp, services{database, redis}
+- [ ] T088 [US1+2+3] Implement GET /health/ready endpoint that returns 200 only if ALL services ready
+- [ ] T089 [US1+2+3] Implement GET /health/live endpoint that returns 200 if application running (even degraded)
+- [ ] T090 [US1+2+3] Add HealthModule to apps/api/src/modules/health/health.module.ts
+- [ ] T091 [US1+2+3] Import HealthModule in apps/api/src/app.module.ts
+- [ ] T092 [US1+2+3] Verify health endpoint responds in <100ms per performance requirement
+- [ ] T093 [US1+2+3] Test degraded mode: stop Redis, verify /health returns 503 but /health/live returns 200
+
+**Checkpoint**: Health check API functional - can verify deployments and monitor system status
+
+---
+
+## Phase 6.5: Notification Infrastructure (Required for Deployment Pipeline)
+
+**Goal**: Telegram notification service ready for deployment failure alerts
+
+**Dependencies**: Phase 6 (Health Check) - uses common logger infrastructure
+
+**Independent Test**: Trigger test notification, verify message sent to Telegram admin chat
+
+### Implementation for Telegram Notifications
+
+- [ ] T117.5 [P] [US5] Install grammy Telegram bot library in apps/api: pnpm add grammy
+- [ ] T118.5 [US5] Create apps/api/src/common/telegram-notifier.ts with Bot instance and sendAlert(message: string) method using TELEGRAM_BOT_TOKEN and ADMIN_CHAT_ID from env
+- [ ] T093.5 [US5] Add error handling in telegram-notifier.ts for missing environment variables (log warning, don't crash app)
+- [ ] T093.6 [US5] Add retry logic to telegram-notifier.ts: 3 attempts with exponential backoff (1s, 2s, 4s) on send failures
+
+**Checkpoint**: Telegram notification service functional - deployment pipeline can send alerts
+
+---
+
+## Phase 7: User Story 4 - Continuous Deployment Pipeline (Priority: P2)
+
+**Goal**: Automatic deployment when pushing to main branch with zero downtime and rollback capability
+
+**Independent Test**: Push commit to main, verify webhook triggers deployment, PM2 reloads services, new version live
+
+### Implementation for User Story 4
+
+- [ ] T094 [P] [US4] Create apps/api/src/modules/webhook/ directory structure
+- [ ] T095 [US4] Create WebhookController in apps/api/src/modules/webhook/webhook.controller.ts with @Controller('webhook')
+- [ ] T096 [US4] Implement POST /webhook/deploy endpoint with @Headers('x-hub-signature-256') parameter
+- [ ] T097 [US4] Add HMAC SHA-256 signature verification in webhook handler using crypto.createHmac
+- [ ] T098 [US4] Filter for refs/heads/main in webhook payload, ignore other branches
+- [ ] T099 [US4] Trigger deployment script asynchronously with child_process.exec('/opt/skilltree/scripts/deploy.sh')
+- [ ] T100 [US4] Add error handling for deployment failures, call telegram-notifier.sendAlert() with deployment error details
+- [ ] T101 [US4] Create WebhookModule in apps/api/src/modules/webhook/webhook.module.ts
+- [ ] T102 [US4] Import WebhookModule in apps/api/src/app.module.ts
+- [ ] T103 [P] [US4] Create scripts/deploy.sh with logging to /opt/skilltree/logs/deploy-YYYYMMDD-HHMMSS.log
+- [ ] T104 [US4] Add git pull origin main to deploy.sh
+- [ ] T105 [US4] Add pnpm install --frozen-lockfile to deploy.sh
+- [ ] T106 [US4] Add pnpm build to deploy.sh
+- [ ] T107 [US4] Add database migration step to deploy.sh: cd packages/database && pnpm prisma migrate deploy
+- [ ] T108 [US4] Add PM2 reload ecosystem.config.js to deploy.sh for zero-downtime restart
+- [ ] T109 [US4] Add health check verification to deploy.sh: curl https://api.skilltree.app/health
+- [ ] T110 [US4] Implement rollback logic in deploy.sh: if health check fails, git reset --hard to previous commit
+- [ ] T111 [US4] Add rollback verification in deploy.sh: after rollback, verify health endpoint returns 200 OK
+- [ ] T112 [US4] Create scripts/rollback.sh for manual rollback with commit SHA parameter
+- [ ] T113 [US4] Make scripts executable: chmod +x scripts/deploy.sh scripts/rollback.sh scripts/setup-server.sh
+- [ ] T114 [US4] Document GitHub webhook configuration in quickstart.md (URL, secret, events)
+- [ ] T115 [US4] Test webhook signature verification with sample GitHub payload
+- [ ] T116 [US4] Verify deploy.sh completes in <3 minutes per performance requirement
+
+**Checkpoint**: User Story 4 complete - automatic deployment pipeline functional with rollback capability
+
+---
+
+## Phase 8: User Story 5 - Monitoring and Logging (Priority: P3)
+
+**Goal**: Centralized logging and health monitoring for production issue debugging
+
+**Independent Test**: Generate test error, check PM2 logs, verify Caddy logs, test health endpoint returns system status
+
+### Implementation for User Story 5
+
+- [ ] T117 [P] [US5] Install Pino logger in apps/api: pnpm add pino pino-pretty
+- [ ] T118 [US5] Create apps/api/src/common/logger.ts with Pino configuration (JSON format, level from env)
+- [ ] T119 [US5] Configure Pino with timestamp, level, message, stack trace, request context fields
+- [ ] T120 [US5] Add correlation ID middleware in apps/api/src/common/middleware/correlation-id.middleware.ts
+- [ ] T121 [US5] Attach correlation ID to Pino logger context for all requests
+- [ ] T122 [US5] Add global exception filter in apps/api/src/common/filters/http-exception.filter.ts
+- [ ] T123 [US5] Log all exceptions with Pino including stack trace and request details
+- [ ] T124 [US5] Replace console.log calls with Pino logger in apps/api/src/main.ts
+- [ ] T125 [US5] Add structured logging to health check endpoints
+- [ ] T126 [US5] Add structured logging to webhook deployment endpoint
+- [ ] T127 [US5] Configure PM2 log rotation in ecosystem.config.js: max_size=10M, retain=7
+- [ ] T127.5 [US5] Add PM2 process crash webhook to ecosystem.config.js: on error event, call Node.js script that sends Telegram alert with process name and error
+- [ ] T128 [US5] Update Caddyfile to enable access logging with IP, method, path, status, response time, user agent
+- [ ] T129 [US5] Configure log rotation for Caddy in /etc/logrotate.d/caddy (daily, rotate 7 days)
+- [ ] T129.5 [US5] Create scripts/check-disk-space.sh that checks df usage, sends Telegram alert if >80%, add to crontab (hourly check)
+- [ ] T130 [US5] Add uptime calculation to health endpoint response
+- [ ] T131 [US5] Add database response time to health endpoint (measure query execution time)
+- [ ] T132 [US5] Add Redis response time to health endpoint (measure ping time)
+- [ ] T133 [US5] Test error logging: throw test error, verify PM2 logs show structured JSON with stack trace
+- [ ] T134 [US5] Verify Caddy access logs capture all required fields
+
+**Checkpoint**: User Story 5 complete - logging and monitoring infrastructure fully functional
+
+---
+
+## Phase 9: Polish & Cross-Cutting Concerns
+
+**Purpose**: Documentation, validation, and final touches
+
+- [ ] T135 [P] Create comprehensive README.md in root with project overview, setup instructions, architecture diagram
+- [ ] T136 [P] Document monorepo structure in README.md with directory explanations
+- [ ] T137 [P] Document npm scripts in README.md (dev, build, type-check, db:push, db:migrate)
+- [ ] T138 [P] Create docs/architecture/monorepo-structure.md with detailed architecture documentation
+- [ ] T139 [P] Create docs/deployment/vds-provisioning.md with VDS setup guide
+- [ ] T140 [P] Create docs/deployment/github-webhook.md with webhook configuration guide
+- [ ] T141 [P] Update .env.example with all environment variables from User Stories 1-5
+- [ ] T142 [P] Add comments to .env.example explaining each variable and where to get values
+- [ ] T143 Validate quickstart.md steps match actual implementation (local dev + VDS provisioning)
+- [ ] T144 Run through quickstart.md local dev steps in fresh clone to verify accuracy
+- [ ] T145 Verify all acceptance scenarios from spec.md User Story 1 pass
+- [ ] T146 Verify all acceptance scenarios from spec.md User Story 2 pass (database tables exist)
+- [ ] T147 Verify all acceptance scenarios from spec.md User Story 3 pass (VDS services running)
+- [ ] T148 Verify all acceptance scenarios from spec.md User Story 4 pass (deployment pipeline works)
+- [ ] T149 Verify all acceptance scenarios from spec.md User Story 5 pass (logging captures errors)
+- [ ] T150 Run pnpm type-check across entire monorepo, ensure no errors
+- [ ] T151 Run pnpm build across entire monorepo, ensure all packages compile
+- [ ] T152 Security review: verify no hardcoded credentials, all secrets in .env
+- [ ] T153 Review all edge cases from spec.md, ensure handling documented
+- [ ] T154 Final smoke test: clone fresh repo, follow quickstart.md, verify all user stories work
+
+---
+
+## Dependencies & Execution Order
+
+### Phase Dependencies
+
+- **Phase 0: Planning**: No dependencies - analyze and assign executors first
+- **Phase 1: Setup**: Depends on Phase 0 - monorepo initialization
+- **Phase 2: Foundational**: Depends on Phase 1 - BLOCKS all user stories
+- **Phase 3: US1 (Dev Environment)**: Depends on Phase 2 - can start after foundational complete
+- **Phase 4: US2 (Database)**: Depends on Phase 2 - can start in parallel with US1
+- **Phase 5: US3 (VDS Server)**: Depends on Phase 2 - can start in parallel with US1/US2
+- **Phase 6: Health Check**: Depends on US1+US2+US3 - integrates all three
+- **Phase 6.5: Notification Infrastructure**: Depends on Phase 6 - BLOCKS Phase 7 (deployment pipeline needs notifications)
+- **Phase 7: US4 (Deployment)**: Depends on Phase 6.5 - needs health check + notifications for deployment alerts
+- **Phase 8: US5 (Monitoring)**: Depends on Phase 6 - can start after health check (logger infrastructure)
+- **Phase 9: Polish**: Depends on all user stories complete
+
+### User Story Dependencies
+
+- **User Story 1 (P1)**: Foundational → Can start immediately after Phase 2
+- **User Story 2 (P1)**: Foundational → Independent of US1, can run in parallel
+- **User Story 3 (P1)**: Foundational → Independent of US1/US2, can run in parallel
+- **Health Check Integration**: Requires US1+US2+US3 complete
+- **User Story 4 (P2)**: Requires Health Check (for deployment verification)
+- **User Story 5 (P3)**: Requires Health Check (for monitoring endpoints)
+
+### Within Each User Story
+
+**User Story 1 (Dev Environment)**:
+1. Root scripts (T025-T030) can run in parallel [P]
+2. API scripts (T031-T033) can run in parallel [P]
+3. TypeScript config (T034) before dependency setup
+4. Husky setup (T037-T038) independent
+5. Verification tasks (T039-T041) sequential
+
+**User Story 2 (Database)**:
+1. All model definitions (T042-T048) can run in parallel [P]
+2. Enum definition (T049) independent
+3. Indexes/constraints (T050-T052) after models
+4. Scripts (T053-T055) can run in parallel [P]
+5. Migration/generation (T056-T057) sequential
+6. Verification (T058-T059) after migration
+
+**User Story 3 (VDS Server)**:
+1. Setup script sections can be written in parallel (Node.js, Redis, Caddy, UFW)
+2. Caddyfile configuration (T069-T072) can run in parallel [P]
+3. PM2 ecosystem config (T074-T077) independent
+4. Verification tasks (T080-T082) sequential
+
+**User Story 4 (Deployment)**:
+1. Webhook controller (T094-T102) and deploy script (T103-T112) can develop in parallel
+2. Within webhook: signature verification before deployment trigger
+3. Within deploy script: sequential steps (pull → install → build → migrate → reload → verify)
+
+**User Story 5 (Monitoring)**:
+1. Pino logger setup (T117-T119) before usage in endpoints
+2. Middleware (T120-T121) and exception filter (T122-T123) can run in parallel [P]
+3. Logging integration (T124-T126) after logger setup
+4. PM2/Caddy log config (T127-T129) independent
+5. Health endpoint enhancements (T130-T132) can run in parallel [P]
+
+### Parallel Opportunities
+
+**Phase 1 (Setup)** - All tasks marked [P] can run in parallel:
+- T003 (pnpm-workspace.yaml), T004 (turbo.json), T005 (tsconfig.json), T006 (.gitignore), T007 (.env.example), T008 (ESLint), T009 (Prettier), T010 (TypeScript configs)
+
+**Phase 2 (Foundational)** - Parallel groups:
+- Group A: packages/shared structure (T011-T014)
+- Group B: packages/database structure (T015-T018) - independent of Group A
+- Group C: apps/api dependencies (T020-T021) - after T019
+
+**Phase 3 (US1)** - Parallel groups:
+- Group A: Root scripts (T025-T030)
+- Group B: API scripts (T031-T033) - independent of Group A
+
+**Phase 4 (US2)** - All model definitions (T042-T048) in parallel:
+```bash
+# Launch all models together:
+Task: "Define User model in packages/database/prisma/schema.prisma"
+Task: "Define Student model in packages/database/prisma/schema.prisma"
+Task: "Define Parent model in packages/database/prisma/schema.prisma"
+Task: "Define ParentStudent junction model in packages/database/prisma/schema.prisma"
+Task: "Define TestSession model in packages/database/prisma/schema.prisma"
+Task: "Define Question model in packages/database/prisma/schema.prisma"
+Task: "Define Answer model in packages/database/prisma/schema.prisma"
+```
+
+**Phase 5 (US3)** - Setup script sections can develop in parallel:
+- Node.js installation (T061-T062)
+- Redis installation/config (T063-T065)
+- Caddy installation (T066)
+- UFW firewall (T067)
+- Caddyfile domains (T069-T072)
+
+**Phase 6 (Health Check)** - Controller and endpoints (T084, T086-T089) can run in parallel [P]
+
+**Phase 7 (US4)** - Webhook controller and deploy script can develop in parallel
+
+**Phase 8 (US5)** - Logger setup, middleware, exception filter can run in parallel
+
+**Phase 9 (Polish)** - All documentation tasks (T135-T142) can run in parallel [P]
+
+---
+
+## Parallel Example: User Story 2 (Database Models)
+
+```bash
+# Launch all 7 model definitions together in single message:
+Task: "Define User model in packages/database/prisma/schema.prisma (id, telegramId, telegramUsername, firstName, lastName, createdAt, updatedAt)"
+Task: "Define Student model in packages/database/prisma/schema.prisma (id, userId FK, age, grade, phone, createdAt, updatedAt)"
+Task: "Define Parent model in packages/database/prisma/schema.prisma (id, userId FK, email, phone, createdAt, updatedAt)"
+Task: "Define ParentStudent junction model in packages/database/prisma/schema.prisma (id, parentId FK, studentId FK, createdAt)"
+Task: "Define TestSession model in packages/database/prisma/schema.prisma (id, studentId FK, status enum, startedAt, completedAt)"
+Task: "Define Question model in packages/database/prisma/schema.prisma (id, text, category, orderIndex, createdAt, updatedAt)"
+Task: "Define Answer model in packages/database/prisma/schema.prisma (id, sessionId FK, questionId FK, answerText, answeredAt)"
+```
+
+---
+
+## Implementation Strategy
+
+### MVP First (User Stories 1+2+3 Only)
+
+1. Complete Phase 0: Planning (executor assignment, agent creation if needed)
+2. Complete Phase 1: Setup (monorepo initialization)
+3. Complete Phase 2: Foundational (core packages)
+4. Complete Phase 3: User Story 1 (dev environment) → **VALIDATE independently**
+5. Complete Phase 4: User Story 2 (database) → **VALIDATE independently**
+6. Complete Phase 5: User Story 3 (VDS server) → **VALIDATE independently**
+7. Complete Phase 6: Health Check integration → **VALIDATE health endpoint**
+8. **STOP and VALIDATE**: Test all P1 user stories, verify quickstart.md works
+9. Deploy MVP to production VDS
+
+### Incremental Delivery
+
+1. **Foundation** (Phase 1+2) → Monorepo ready
+2. **MVP** (Phase 3+4+5+6) → Dev environment + Database + VDS + Health Check
+   - Test independently: Clone, install, run dev, deploy to VDS
+   - Each story independently testable per spec.md
+3. **Deployment** (Phase 7) → Add CD pipeline
+   - Test independently: Push to main, verify auto-deploy
+4. **Monitoring** (Phase 8) → Add logging and monitoring
+   - Test independently: Generate error, check logs
+5. **Polish** (Phase 9) → Documentation and final validation
+
+### Parallel Team Strategy
+
+With multiple developers:
+
+1. **Team completes Phase 0+1+2 together** (Setup + Foundational)
+2. **Once Phase 2 done, parallelize P1 stories**:
+   - Developer A: User Story 1 (Dev Environment) - T025-T041
+   - Developer B: User Story 2 (Database) - T042-T059
+   - Developer C: User Story 3 (VDS Server) - T060-T082
+3. **Integrate**: Developer A completes Health Check (T083-T093) - depends on all three
+4. **Sequential P2/P3**:
+   - Developer A: User Story 4 (Deployment) - T094-T116
+   - Developer B: User Story 5 (Monitoring) - T117-T134
+5. **Polish together**: All developers on Phase 9 validation
+
+---
+
+## Task Summary
+
+**Total Tasks**: 161 (T001-T154 + 7 added tasks with decimal IDs)
+
+**Added Tasks** (from specification analysis):
+- T022.5: Database connection retry with exponential backoff
+- T059.5: Verify SSL/TLS in DATABASE_URL
+- T067.5: Disable SSH password authentication
+- T082.5: Install and configure fail2ban
+- T117.5: Install grammy library
+- T118.5: Create Telegram notifier service
+- T127.5: PM2 crash webhook for Telegram alerts
+- T129.5: Disk space monitoring with Telegram alerts
+
+**Tasks per Phase**:
+- Phase 0: Planning (3 tasks - P001, P002, P003)
+- Phase 1: Setup (10 tasks - T001-T010)
+- Phase 2: Foundational (15 tasks - T011-T024 + T022.5)
+- Phase 3: User Story 1 (17 tasks - T025-T041)
+- Phase 4: User Story 2 (19 tasks - T042-T059 + T059.5)
+- Phase 5: User Story 3 (25 tasks - T060-T082 + T067.5 + T082.5)
+- Phase 6: Health Check Integration (11 tasks - T083-T093)
+- Phase 7: User Story 4 (23 tasks - T094-T116)
+- Phase 8: User Story 5 (22 tasks - T117-T134 + T117.5 + T118.5 + T127.5 + T129.5)
+- Phase 9: Polish (20 tasks - T135-T154)
+
+**Parallel Opportunities**: 70 tasks marked [P] can run in parallel within their phase (added T117.5)
+
+**Independent Tests**:
+- US1: Clone → install → dev server → health check
+- US2: db:migrate → verify tables in Supabase Studio
+- US3: SSH → verify services → firewall → HTTPS
+- US4: Push to main → webhook → deploy → verify live
+- US5: Generate error → check logs → verify structured JSON
+
+**MVP Scope**: Phases 0-6 (User Stories 1+2+3 + Health Check) = 82 tasks (updated with added security and infrastructure tasks)
+
+---
+
+## Notes
+
+- All tasks follow strict checklist format: `- [ ] [ID] [P?] [Story?] Description with file path`
+- [P] tasks = different files, no dependencies, can run in parallel
+- [Story] label (US1-US5) maps task to specific user story for traceability
+- Each user story independently completable and testable per spec.md
+- No automated tests - infrastructure validated via manual smoke tests
+- Commit after each task or logical group with `/push patch`
+- Stop at any checkpoint to validate story independently
+- All file paths use monorepo structure from plan.md
+- Environment variables never committed (use .env.example template)
+- TypeScript strict mode enforced across all packages
+- Zero-downtime deployments via PM2 cluster mode
+- Automatic rollback on health check failure

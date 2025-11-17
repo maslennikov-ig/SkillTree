@@ -1,0 +1,38 @@
+{
+  "name": "skilltree-monorepo",
+  "version": "0.1.1",
+  "private": true,
+  "description": "SkillTree - AI-Powered Career Guidance Telegram Bot",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.0",
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "type-check": "turbo run type-check",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "clean": "turbo run clean && rm -rf node_modules .turbo",
+    "db:generate": "pnpm --filter @skilltree/database db:generate",
+    "db:migrate": "pnpm --filter @skilltree/database db:migrate",
+    "db:push": "pnpm --filter @skilltree/database db:push",
+    "db:studio": "pnpm --filter @skilltree/database db:studio",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "husky": "^8.0.3",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.0",
+    "turbo": "^1.11.0",
+    "typescript": "^5.3.0"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  }
+}
