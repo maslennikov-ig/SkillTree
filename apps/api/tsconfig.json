@@ -2,11 +2,9 @@
   "extends": "@skilltree/typescript-config/node.json",
   "compilerOptions": {
     "outDir": "./dist",
+    "rootDir": "./src",
     "baseUrl": "./",
-    "paths": {
-      "@skilltree/database": ["../../packages/database/src"],
-      "@skilltree/shared": ["../../packages/shared/src"]
-    }
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
