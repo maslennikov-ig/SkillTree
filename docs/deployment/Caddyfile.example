@@ -1,0 +1,244 @@
+###############################################################################
+# Caddy 2.x Reverse Proxy Configuration for SkillTree Production
+#
+# Location: /etc/caddy/Caddyfile
+#
+# Purpose:
+#   - Automatic HTTPS with Let's Encrypt certificates
+#   - Reverse proxy for 3 Node.js services (frontend, API, admin)
+#   - Gzip compression for performance
+#   - Access logging for monitoring
+#
+# Prerequisites:
+#   1. DNS A records pointing domains to server IP:
+#      - skilltree.app → YOUR_SERVER_IP
+#      - api.skilltree.app → YOUR_SERVER_IP
+#      - admin.skilltree.app → YOUR_SERVER_IP
+#   2. Firewall allows ports 80 (HTTP) and 443 (HTTPS)
+#   3. PM2 services running on localhost:3000, 4000, 3001
+#
+# Installation:
+#   1. Copy this file to /etc/caddy/Caddyfile
+#   2. Replace YOUR_DOMAIN placeholders with actual domain names
+#   3. Validate: caddy validate --config /etc/caddy/Caddyfile
+#   4. Reload: systemctl reload caddy
+#
+# Automatic HTTPS:
+#   Caddy will automatically obtain and renew Let's Encrypt certificates
+#   when domains resolve to server IP. First request may take 10-30 seconds
+#   while certificates are provisioned.
+#
+# Monitoring:
+#   - Access logs: /var/log/caddy/{service}.log
+#   - Caddy logs: journalctl -u caddy -f
+#
+###############################################################################
+
+###############################################################################
+# FRONTEND: Telegram Web App (Next.js)
+#
+# Domain: skilltree.app (REPLACE WITH YOUR DOMAIN)
+# Upstream: localhost:3000 (PM2 managed Next.js app)
+#
+# Features:
+#   - Automatic HTTPS with Let's Encrypt
+#   - Gzip compression for static assets
+#   - Access logging for analytics
+###############################################################################
+
+skilltree.app {
+    # Reverse proxy to Next.js frontend on port 3000
+    reverse_proxy localhost:3000
+
+    # Enable gzip compression for text-based responses
+    # Reduces bandwidth usage by 60-80% for HTML/CSS/JS
+    encode gzip
+
+    # Access logging to file
+    log {
+        output file /var/log/caddy/frontend.log
+        format json
+    }
+}
+
+###############################################################################
+# API BACKEND: NestJS REST API
+#
+# Domain: api.skilltree.app (REPLACE WITH YOUR DOMAIN)
+# Upstream: localhost:4000 (PM2 managed NestJS app)
+#
+# Features:
+#   - Automatic HTTPS with Let's Encrypt
+#   - Gzip compression for JSON responses
+#   - Access logging for request tracking
+#   - Health check endpoint: /health
+###############################################################################
+
+api.skilltree.app {
+    # Reverse proxy to NestJS API on port 4000
+    reverse_proxy localhost:4000
+
+    # Enable gzip compression for JSON responses
+    encode gzip
+
+    # Access logging to file
+    log {
+        output file /var/log/caddy/api.log
+        format json
+    }
+}
+
+###############################################################################
+# ADMIN DASHBOARD: Next.js Admin Panel
+#
+# Domain: admin.skilltree.app (REPLACE WITH YOUR DOMAIN)
+# Upstream: localhost:3001 (PM2 managed Next.js app)
+#
+# Features:
+#   - Automatic HTTPS with Let's Encrypt
+#   - Gzip compression for static assets
+#   - Access logging for admin activity tracking
+###############################################################################
+
+admin.skilltree.app {
+    # Reverse proxy to Next.js admin dashboard on port 3001
+    reverse_proxy localhost:3001
+
+    # Enable gzip compression
+    encode gzip
+
+    # Access logging to file
+    log {
+        output file /var/log/caddy/admin.log
+        format json
+    }
+}
+
+###############################################################################
+# OPTIONAL: HTTP to HTTPS Redirect (Automatic by Default)
+#
+# Caddy automatically redirects HTTP → HTTPS for all domains above.
+# No additional configuration needed!
+###############################################################################
+
+###############################################################################
+# OPTIONAL: Custom Error Pages (Future Enhancement)
+#
+# Uncomment to enable custom error pages:
+#
+# skilltree.app {
+#     reverse_proxy localhost:3000
+#     encode gzip
+#
+#     handle_errors {
+#         @502-504 {
+#             expression {http.error.status_code} in [502, 503, 504]
+#         }
+#         rewrite @502-504 /errors/{http.error.status_code}.html
+#         file_server
+#     }
+# }
+###############################################################################
+
+###############################################################################
+# OPTIONAL: Rate Limiting (Future Enhancement)
+#
+# Requires rate_limit plugin. Not included in default Caddy build.
+# See: https://github.com/mholt/caddy-ratelimit
+###############################################################################
+
+###############################################################################
+# TROUBLESHOOTING
+#
+# 1. HTTPS certificate fails to provision:
+#    - Verify DNS A records point to server: dig YOUR_DOMAIN
+#    - Check firewall allows port 80: ufw status
+#    - Check Caddy logs: journalctl -u caddy -f
+#    - Verify Let's Encrypt rate limits not exceeded
+#
+# 2. 502 Bad Gateway errors:
+#    - Check upstream service is running: pm2 status
+#    - Verify port numbers match PM2 config
+#    - Check app logs: pm2 logs [app-name]
+#
+# 3. Slow HTTPS handshake on first request:
+#    - Normal behavior while obtaining certificate
+#    - Subsequent requests will be fast
+#    - Certificate cached for 90 days
+#
+# 4. Access logs not appearing:
+#    - Create log directory: mkdir -p /var/log/caddy
+#    - Set permissions: chown -R caddy:caddy /var/log/caddy
+#    - Reload Caddy: systemctl reload caddy
+#
+###############################################################################
+
+###############################################################################
+# VALIDATION AND DEPLOYMENT
+#
+# After editing this file:
+#
+# 1. Validate syntax:
+#    caddy validate --config /etc/caddy/Caddyfile
+#
+# 2. Test configuration (dry run):
+#    caddy run --config /etc/caddy/Caddyfile
+#    (Press Ctrl+C to stop after verification)
+#
+# 3. Deploy to production:
+#    sudo systemctl reload caddy
+#
+# 4. Verify HTTPS working:
+#    curl -I https://YOUR_DOMAIN
+#    (Should see HTTP/2 200 OK)
+#
+# 5. Monitor logs:
+#    journalctl -u caddy -f
+#
+###############################################################################
+
+###############################################################################
+# SECURITY NOTES
+#
+# - Caddy automatically enables HTTP/2 and modern TLS settings
+# - Strong cipher suites selected by default
+# - OCSP stapling enabled automatically
+# - Security headers recommended (add via header directive if needed):
+#
+# skilltree.app {
+#     header {
+#         Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+#         X-Content-Type-Options "nosniff"
+#         X-Frame-Options "SAMEORIGIN"
+#         Referrer-Policy "strict-origin-when-cross-origin"
+#     }
+#     reverse_proxy localhost:3000
+#     encode gzip
+# }
+#
+###############################################################################
+
+###############################################################################
+# PERFORMANCE TUNING (Future Enhancement)
+#
+# For high-traffic scenarios, consider:
+#
+# 1. Enable HTTP/3 (QUIC):
+#    {
+#        servers {
+#            protocol {
+#                experimental_http3
+#            }
+#        }
+#    }
+#
+# 2. Increase connection limits:
+#    {
+#        servers {
+#            max_header_bytes 16KB
+#        }
+#    }
+#
+# 3. Enable caching (requires cache plugin)
+#
+###############################################################################
