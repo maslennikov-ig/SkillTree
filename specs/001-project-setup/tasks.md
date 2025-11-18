@@ -3,6 +3,11 @@
 **Input**: Design documents from `/specs/001-project-setup/`
 **Prerequisites**: plan.md (technical context), spec.md (user stories), research.md (best practices), data-model.md (database schema), contracts/ (API specs)
 
+**Future Features Prerequisites** (for next phases - testing, results, gamification):
+- [gamification-strategy.md](./gamification-strategy.md) - Complete gamification implementation strategy (progressive weekly streak, 14 badge types, referral mechanics)
+- [results-strategy.md](./results-strategy.md) - Results visualization strategy (radar charts, parent email reports, shareable cards, dual-persona messaging)
+- [research/EdTech Career Guidance App: Strategic Research Report.md](./research/EdTech%20Career%20Guidance%20App%3A%20Strategic%20Research%20Report.md) - Comprehensive EdTech research (1,083 lines)
+
 **Tests**: Not included - infrastructure validation via manual smoke tests per spec.md
 
 **Organization**: Tasks grouped by user story to enable independent implementation and testing.
@@ -151,6 +156,8 @@ Monorepo structure (from plan.md):
 **Goal**: Database schema ready with all tables and relationships for feature development
 
 **Independent Test**: Run `pnpm db:migrate` command, verify Prisma schema applied to Supabase, check tables exist in Supabase Studio
+
+**Note**: Schema already includes gamification tables (DailyStreak, Achievement, ReferralTracking) prepared for future features. See [data-model.md](./data-model.md) for complete specification.
 
 ### Implementation for User Story 2
 
@@ -571,3 +578,42 @@ With multiple developers:
 - TypeScript strict mode enforced across all packages
 - Zero-downtime deployments via PM2 cluster mode
 - Automatic rollback on health check failure
+
+---
+
+## Future Phases (Post-Infrastructure)
+
+**Next Features** (will be specified in separate feature branches):
+
+### Career Testing Feature
+**Prerequisites**:
+- [gamification-strategy.md](./gamification-strategy.md) - Progressive weekly streak, badges, referrals
+- [results-strategy.md](./results-strategy.md) - Radar charts, email reports, shareable cards
+- [data-model.md](./data-model.md) - Complete schema (already includes gamification tables)
+
+**Key Components**:
+- Question flow & state management (55 questions, 5 sections)
+- Gamification logic (points, badges, streaks)
+- Results calculation & visualization (radar charts)
+- Parent email reporting (SendGrid integration)
+- Referral tracking & viral mechanics
+
+### Bot Features
+**Prerequisites**:
+- gamification-strategy.md (Section 2: Progressive Weekly Streak)
+- research/EdTech Career Guidance App: Strategic Research Report.md
+
+**Key Components**:
+- Telegram bot conversation flow (grammY)
+- Daily streak check-in detection
+- Badge unlock notifications
+- Share results cards generation
+
+### Admin Dashboard
+**Prerequisites**:
+- results-strategy.md (Section 7: Success Metrics)
+
+**Key Components**:
+- Analytics dashboard (completion rates, viral coefficient)
+- User management & CRM
+- Parent email campaign management
