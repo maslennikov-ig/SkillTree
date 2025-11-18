@@ -31,6 +31,7 @@ This 1,083-line research report covers:
 
 **Related Documents**:
 - [gamification-strategy.md](./gamification-strategy.md) - Detailed implementation strategy based on research
+- [results-strategy.md](./results-strategy.md) - Results visualization, radar charts, parent email reports
 - [data-model.md](./data-model.md) - Database schema including gamification tables
 
 ---
