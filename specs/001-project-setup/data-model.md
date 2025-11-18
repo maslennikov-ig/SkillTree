@@ -13,17 +13,20 @@ Core database schema for SkillTree application supporting:
 - Test session tracking
 - Question bank
 - Answer storage
+- **Gamification system** (points, badges, streaks)
+- **Referral tracking** (viral growth mechanics)
+- **Achievement system** (milestone rewards)
 
 ## Entity Relationship Diagram
 
 ```
 ┌─────────────┐
-│    User     │
-│ (Telegram)  │
-└──────┬──────┘
-       │
-       ├─────────┐
-       │         │
+│    User     │──────┐
+│ (Telegram)  │      │
+└──────┬──────┘      │
+       │             │
+       ├─────────┐   │
+       │         │   │
 ┌──────▼─────┐ ┌▼─────────┐
 │  Student   │ │  Parent  │
 └──────┬─────┘ └┬─────────┘
@@ -32,13 +35,23 @@ Core database schema for SkillTree application supporting:
        │ │ ParentStudent │ (Junction)
        │ └───────────────┘
        │
-┌──────▼────────┐
-│ TestSession   │
-└──────┬────────┘
+       ├──────────────────────┐
+       │                      │
+┌──────▼────────┐      ┌─────▼────────┐
+│ TestSession   │      │ DailyStreak  │ (Gamification)
+└──────┬────────┘      └──────────────┘
        │
-┌──────▼────────┐     ┌────────────┐
-│    Answer     │────►│  Question  │
-└───────────────┘     └────────────┘
+       ├───────────────┐
+       │               │
+┌──────▼────────┐     ┌▼───────────┐     ┌────────────┐
+│    Answer     │     │Achievement │────►│ Question   │
+└───────────────┘     └────────────┘     └─────┬──────┘
+                                               │
+                      ┌────────────────────────┘
+                      │
+               ┌──────▼──────────┐
+               │ ReferralTracking│
+               └─────────────────┘
 ```
 
 ## Entities
@@ -183,6 +196,10 @@ Core database schema for SkillTree application supporting:
 | `status` | SessionStatus | ENUM, DEFAULT IN_PROGRESS | Session state |
 | `startedAt` | DateTime | DEFAULT now() | Session start timestamp |
 | `completedAt` | DateTime | NULLABLE | Session completion timestamp |
+| `points` | Int | DEFAULT 0 | Total points earned (gamification) |
+| `badges` | Json | DEFAULT [] | Array of earned badge IDs |
+| `completionTimeMinutes` | Int | NULLABLE | Time taken to complete (in minutes) |
+| `shareCount` | Int | DEFAULT 0 | Number of times results shared |
 
 **SessionStatus Enum**:
 - `IN_PROGRESS` - Student actively answering questions
@@ -227,9 +244,19 @@ ABANDONED → [FINAL STATE]
 | `id` | String | PRIMARY KEY, CUID | Internal question ID |
 | `text` | String | NOT NULL | Question text (Russian) |
 | `category` | String | NOT NULL | Question category (e.g., "interests", "skills") |
+| `questionType` | QuestionType | ENUM, DEFAULT MULTIPLE_CHOICE | Question format type |
+| `difficulty` | Int | DEFAULT 3 | Difficulty level (1-5) for strategic pacing |
+| `sectionNumber` | Int | NOT NULL | Section number (1-5) |
 | `orderIndex` | Int | NOT NULL | Display order (1, 2, 3...) |
 | `createdAt` | DateTime | DEFAULT now() | Question creation timestamp |
 | `updatedAt` | DateTime | AUTO UPDATE | Last modification timestamp |
+
+**QuestionType Enum**:
+- `MULTIPLE_CHOICE` - Standard multiple choice (2-4 options)
+- `RATING_SCALE` - 1-5 star rating
+- `VISUAL_SELECTION` - Image-based choice
+- `OPEN_ENDED` - Free text response (limit to 2-3 per test)
+- `BINARY_CHOICE` - Yes/No or True/False
 
 **Relationships**:
 - One-to-Many with Answer
@@ -283,6 +310,171 @@ ABANDONED → [FINAL STATE]
 
 ---
 
+### DailyStreak (Gamification)
+
+**Purpose**: Tracks daily engagement streaks and progressive weekly bonuses
+
+**Fields**:
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `id` | String | PRIMARY KEY, CUID | Internal streak ID |
+| `userId` | String | FOREIGN KEY, UNIQUE | Reference to User.id |
+| `currentDay` | Int | DEFAULT 0 | Current day in weekly cycle (0-7) |
+| `weeklyPoints` | Int | DEFAULT 0 | Accumulated points this week |
+| `weekStartDate` | DateTime | NOT NULL | Monday of current week |
+| `lastCheckIn` | DateTime | NULLABLE | Last activity timestamp |
+| `longestStreak` | Int | DEFAULT 0 | Longest consecutive days (all-time record) |
+| `totalCheckIns` | Int | DEFAULT 0 | Total number of check-ins (lifetime) |
+| `createdAt` | DateTime | DEFAULT now() | Record creation timestamp |
+| `updatedAt` | DateTime | AUTO UPDATE | Last modification timestamp |
+
+**Relationships**:
+- One-to-One with User (CASCADE DELETE)
+
+**Indexes**:
+- `userId` (UNIQUE) - Fast lookup by user
+- `weekStartDate` - Fast filtering for weekly leaderboards
+
+**Validation Rules**:
+- `currentDay` must be between 0 and 7
+- `weeklyPoints` must be >= 0 and <= 28 (1+2+3+4+5+6+7 maximum)
+- `weekStartDate` must be a Monday
+- `lastCheckIn` must be <= current time
+
+**Business Logic** (Progressive Weekly Bonus):
+```
+Day 1 (Monday): User activity → +1 point
+Day 2 (Tuesday): User activity → +2 points
+Day 3 (Wednesday): User activity → +3 points
+Day 4 (Thursday): User activity → +4 points
+Day 5 (Friday): User activity → +5 points
+Day 6 (Saturday): User activity → +6 points
+Day 7 (Sunday): User activity → +7 points
+
+Monday (new week): Reset currentDay=0, weeklyPoints=0, update weekStartDate
+```
+
+**Qualifying Activities**:
+- Answer at least 1 question in test
+- View career recommendations
+- Share results with friend
+- Use referral link
+- Complete any meaningful interaction (not just /start)
+
+**State Transitions**:
+```
+New Week → currentDay=0, weeklyPoints=0
+Daily Check-in → currentDay++, weeklyPoints+=currentDay
+Missed Day → Streak broken (visual indicator, but weekly cycle continues)
+```
+
+---
+
+### Achievement (Gamification)
+
+**Purpose**: Tracks earned badges and milestone achievements
+
+**Fields**:
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `id` | String | PRIMARY KEY, CUID | Internal achievement ID |
+| `userId` | String | FOREIGN KEY | Reference to User.id |
+| `badgeType` | BadgeType | ENUM, NOT NULL | Type of badge earned |
+| `metadata` | Json | NULLABLE | Additional data (e.g., time, score) |
+| `earnedAt` | DateTime | DEFAULT now() | Achievement timestamp |
+
+**BadgeType Enum**:
+- `BRONZE_EXPLORER` - 25% test completion
+- `SILVER_SEEKER` - 50% test completion
+- `GOLD_ACHIEVER` - 75% test completion
+- `PLATINUM_MASTER` - 100% test completion
+- `SPEED_DEMON` - Completed test in <10 minutes
+- `THOUGHTFUL_ANALYST` - Took time on open-ended questions
+- `STREAK_3_DAYS` - 3-day activity streak
+- `STREAK_7_DAYS` - 7-day perfect week
+- `REFERRAL_BRONZE` - 3 successful referrals
+- `REFERRAL_SILVER` - 5 successful referrals
+- `REFERRAL_GOLD` - 10 successful referrals
+- `NIGHT_OWL` - Took test between 11pm-2am
+- `EARLY_BIRD` - Took test between 5am-7am
+- `DETECTIVE` - Found hidden easter egg
+
+**Relationships**:
+- Many-to-One with User (CASCADE DELETE)
+
+**Indexes**:
+- `userId` - Fast lookup of user's achievements
+- `badgeType` - Fast filtering by badge type
+- UNIQUE constraint on `(userId, badgeType)` - One badge of each type per user
+
+**Validation Rules**:
+- Cannot manually create achievements (must be earned through system logic)
+- Cannot delete achievements once earned (permanent record)
+
+**Business Rules**:
+- Achievements are cumulative (never lost)
+- Some achievements can trigger rewards (unlock content, free consultation)
+- Display as visual badges/stickers in Telegram
+
+---
+
+### ReferralTracking (Viral Growth)
+
+**Purpose**: Tracks referral relationships and rewards
+
+**Fields**:
+| Field | Type | Constraints | Description |
+|-------|------|-------------|-------------|
+| `id` | String | PRIMARY KEY, CUID | Internal referral ID |
+| `referrerId` | String | FOREIGN KEY | User who sent referral (User.id) |
+| `refereeId` | String | FOREIGN KEY | User who was referred (User.id) |
+| `referralCode` | String | NOT NULL | Unique referral code (e.g., "ref_abc123") |
+| `status` | ReferralStatus | ENUM, DEFAULT PENDING | Referral state |
+| `rewardClaimed` | Boolean | DEFAULT false | Whether referrer claimed reward |
+| `createdAt` | DateTime | DEFAULT now() | Referral timestamp |
+| `convertedAt` | DateTime | NULLABLE | When referee completed qualifying action |
+
+**ReferralStatus Enum**:
+- `PENDING` - Referee clicked link but not completed test
+- `COMPLETED` - Referee completed test
+- `REWARDED` - Both users received rewards
+
+**Relationships**:
+- Many-to-One with User (referrer) - CASCADE DELETE
+- Many-to-One with User (referee) - CASCADE DELETE
+
+**Indexes**:
+- `referrerId` - Fast lookup of user's referrals
+- `refereeId` - Fast lookup of who referred a user
+- `referralCode` (UNIQUE) - Fast lookup by code
+
+**Validation Rules**:
+- `referrerId` cannot equal `refereeId` (cannot self-refer)
+- `referralCode` must be unique globally
+- `convertedAt` must be >= `createdAt`
+
+**Business Logic**:
+```
+Referral Link Format: t.me/skilltreebot?start=ref_[userId]
+
+Reward Tiers:
+- 3 completed referrals → Unlock "Career Comparison" feature
+- 5 completed referrals → Free 15-min consultation
+- 10 completed referrals → Premium insights lifetime access
+
+Both Parties Benefit:
+- Referrer: +50 bonus points per completed referral
+- Referee: +25 welcome bonus points
+```
+
+**State Transitions**:
+```
+PENDING → COMPLETED (referee completes test)
+COMPLETED → REWARDED (rewards distributed to both users)
+```
+
+---
+
 ## Database Constraints
 
 ### Foreign Keys
@@ -312,12 +504,15 @@ ABANDONED → [FINAL STATE]
 - Parents: 100
 - ParentStudent relations: 150 (some parents have multiple children)
 - TestSessions: 600 (1.5 sessions per student on average)
-- Questions: 50 (predefined question bank)
-- Answers: 24,000 (40 questions per session × 600 sessions)
+- Questions: 55 (predefined question bank with 5 sections)
+- Answers: 30,000 (50 questions per session × 600 sessions)
+- **DailyStreaks**: 500 (1 per user)
+- **Achievements**: 2,000 (average 4 badges per user)
+- **ReferralTracking**: 300 (assuming 30% viral coefficient)
 
 **Storage Estimate**:
-- Total rows: ~25,300
-- Estimated size: ~50 MB (well under Supabase free tier 500 MB limit)
+- Total rows: ~34,000
+- Estimated size: ~65 MB (well under Supabase free tier 500 MB limit)
 
 **Query Performance Goals**:
 - Lookup user by telegramId: <10ms

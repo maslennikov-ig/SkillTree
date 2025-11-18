@@ -4,6 +4,37 @@
 **Date**: 2025-01-17
 **Status**: Complete
 
+## 📚 Detailed Research Reports
+
+### EdTech & Gamification Strategy
+
+For comprehensive research on EdTech career guidance best practices, gamification mechanics, UX/UI patterns, and viral growth strategies, see:
+
+**[EdTech Career Guidance App: Strategic Research Report](./research/EdTech%20Career%20Guidance%20App%3A%20Strategic%20Research%20Report.md)**
+
+This 1,083-line research report covers:
+- ✅ Testing UX/UI best practices (16Personalities, CareerExplorer, YouScience)
+- ✅ AI analysis & personalization (radar charts, progressive disclosure)
+- ✅ Engagement & conversion (dual-persona emails, free trial lessons)
+- ✅ Telegram-specific features (Mini Apps, referral systems, inline keyboards)
+- ✅ Gamification mechanics (points, badges, streaks, easter eggs)
+- ✅ Anti-patterns & UX red flags to avoid
+- ✅ MVP development roadmap with budget breakdown (~6,000₽)
+- ✅ Prioritized feature matrix with wow-effect scores
+
+**Key Findings**:
+- Challenge-based gamification improves performance by **89%**
+- Progress indicators make users willing to wait **3x longer**
+- Radar charts have **9/10 wow-effect** score
+- Referral systems critical for viral growth (target coefficient >1.0)
+- MVP can be built in **1 month** with minimal infrastructure costs
+
+**Related Documents**:
+- [gamification-strategy.md](./gamification-strategy.md) - Detailed implementation strategy based on research
+- [data-model.md](./data-model.md) - Database schema including gamification tables
+
+---
+
 ## Research Questions
 
 ### Q1: Turborepo Workspace Configuration Best Practices
