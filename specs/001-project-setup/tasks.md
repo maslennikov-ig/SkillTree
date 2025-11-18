@@ -161,25 +161,25 @@ Monorepo structure (from plan.md):
 
 ### Implementation for User Story 2
 
-- [ ] T042 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define User model in packages/database/prisma/schema.prisma (id, telegramId, telegramUsername, firstName, lastName, createdAt, updatedAt)
-- [ ] T043 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define Student model in packages/database/prisma/schema.prisma (id, userId FK, age, grade, phone, createdAt, updatedAt)
-- [ ] T044 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define Parent model in packages/database/prisma/schema.prisma (id, userId FK, email, phone, createdAt, updatedAt)
-- [ ] T045 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define ParentStudent junction model in packages/database/prisma/schema.prisma (id, parentId FK, studentId FK, createdAt)
-- [ ] T046 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define TestSession model in packages/database/prisma/schema.prisma (id, studentId FK, status enum, startedAt, completedAt)
-- [ ] T047 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define Question model in packages/database/prisma/schema.prisma (id, text, category, orderIndex, createdAt, updatedAt)
-- [ ] T048 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define Answer model in packages/database/prisma/schema.prisma (id, sessionId FK, questionId FK, answerText, answeredAt)
-- [ ] T049 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add SessionStatus enum to packages/database/prisma/schema.prisma (IN_PROGRESS, COMPLETED, ABANDONED)
-- [ ] T050 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add indexes to schema: User.telegramId, Student.userId, Parent.userId, Parent.email, TestSession.studentId/status, Question.category/orderIndex, Answer.sessionId/questionId
-- [ ] T051 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add unique constraints: User.telegramId, Student.userId, Parent.userId, ParentStudent(parentId, studentId), Answer(sessionId, questionId)
-- [ ] T052 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Configure cascade deletes: User → Student/Parent → TestSession → Answer, Student → ParentStudent
-- [ ] T053 [EXECUTOR: database-architect] [PARALLEL-GROUP-10] [US2] Add db:generate script to packages/database/package.json: "prisma generate"
-- [ ] T054 [EXECUTOR: database-architect] [PARALLEL-GROUP-10] [US2] Add db:migrate script to packages/database/package.json: "prisma migrate dev"
-- [ ] T055 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add db:push script to root package.json that runs "pnpm --filter @skilltree/database db:migrate"
+- [X] T042 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define User model in packages/database/prisma/schema.prisma (id, telegramId, telegramUsername, firstName, lastName, createdAt, updatedAt) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T043 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define Student model in packages/database/prisma/schema.prisma (id, userId FK, age, grade, phone, createdAt, updatedAt) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T044 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define Parent model in packages/database/prisma/schema.prisma (id, userId FK, email, phone, createdAt, updatedAt) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T045 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define ParentStudent junction model in packages/database/prisma/schema.prisma (id, parentId FK, studentId FK, createdAt) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T046 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define TestSession model in packages/database/prisma/schema.prisma (id, studentId FK, status enum, startedAt, completedAt) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T047 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define Question model in packages/database/prisma/schema.prisma (id, text, category, orderIndex, createdAt, updatedAt) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T048 [EXECUTOR: database-architect] [PARALLEL-GROUP-9] [US2] Define Answer model in packages/database/prisma/schema.prisma (id, sessionId FK, questionId FK, answerText, answeredAt) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T049 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add SessionStatus enum to packages/database/prisma/schema.prisma (IN_PROGRESS, COMPLETED, ABANDONED) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T050 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add indexes to schema: User.telegramId, Student.userId, Parent.userId, Parent.email, TestSession.studentId/status, Question.category/orderIndex, Answer.sessionId/questionId → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T051 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add unique constraints: User.telegramId, Student.userId, Parent.userId, ParentStudent(parentId, studentId), Answer(sessionId, questionId) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T052 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Configure cascade deletes: User → Student/Parent → TestSession → Answer, Student → ParentStudent → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T053 [EXECUTOR: database-architect] [PARALLEL-GROUP-10] [US2] Add db:generate script to packages/database/package.json: "prisma generate" → Artifacts: [package.json](../../../packages/database/package.json)
+- [X] T054 [EXECUTOR: database-architect] [PARALLEL-GROUP-10] [US2] Add db:migrate script to packages/database/package.json: "prisma migrate dev" → Artifacts: [package.json](../../../packages/database/package.json)
+- [X] T055 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add db:push script to root package.json that runs "pnpm --filter @skilltree/database db:migrate" → Artifacts: [package.json](../../../package.json)
 - [ ] T056 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Run npx prisma migrate dev --name init to create initial migration
 - [ ] T057 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Run npx prisma generate to generate Prisma Client
 - [ ] T058 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Verify schema in Supabase Studio shows 7 tables with correct relationships
 - [ ] T059 [EXECUTOR: nestjs-infrastructure-specialist] [SEQUENTIAL] [US2] Test database connection in apps/api/src/main.ts with PrismaClient.$connect()
-- [ ] T059.5 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Verify DATABASE_URL in .env.example includes ?sslmode=require parameter for SSL/TLS encryption (add comment if missing)
+- [X] T059.5 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Verify DATABASE_URL in .env.example includes ?sslmode=require parameter for SSL/TLS encryption (add comment if missing) → Artifacts: [.env.example](../../../.env.example)
 
 **Checkpoint**: User Story 2 complete - database schema deployed to Supabase with all tables and relationships
 
