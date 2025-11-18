@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.4] - 2025-11-18
+
+### Fixed
+- **api**: correct middleware configuration and update tasks progress (e72d2da)
+
 ## [0.1.3] - 2025-11-17
 
 ### Added
