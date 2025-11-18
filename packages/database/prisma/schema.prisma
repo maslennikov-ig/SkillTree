@@ -24,8 +24,12 @@ model User {
   updatedAt        DateTime @updatedAt
 
   // Relations
-  student Student?
-  parent  Parent?
+  student           Student?
+  parent            Parent?
+  dailyStreak       DailyStreak?
+  achievements      Achievement[]
+  referralsSent     ReferralTracking[] @relation("Referrer")
+  referralsReceived ReferralTracking[] @relation("Referee")
 
   @@index([telegramId])
 }
@@ -103,6 +107,12 @@ model TestSession {
   startedAt   DateTime      @default(now())
   completedAt DateTime?
 
+  // Gamification fields
+  points                Int  @default(0)
+  badges                Json @default("[]")
+  completionTimeMinutes Int?
+  shareCount            Int  @default(0)
+
   // Relations
   student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   answers Answer[]
@@ -111,19 +121,31 @@ model TestSession {
   @@index([status])
 }
 
+enum QuestionType {
+  MULTIPLE_CHOICE
+  RATING_SCALE
+  VISUAL_SELECTION
+  OPEN_ENDED
+  BINARY_CHOICE
+}
+
 model Question {
-  id         String   @id @default(cuid())
-  text       String
-  category   String
-  orderIndex Int
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  id            String       @id @default(cuid())
+  text          String
+  category      String
+  questionType  QuestionType @default(MULTIPLE_CHOICE)
+  difficulty    Int          @default(3)
+  sectionNumber Int
+  orderIndex    Int
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   // Relations
   answers Answer[]
 
   @@index([category])
   @@index([orderIndex])
+  @@index([sectionNumber])
 }
 
 model Answer {
@@ -140,4 +162,84 @@ model Answer {
   @@unique([sessionId, questionId])
   @@index([sessionId])
   @@index([questionId])
+}
+
+// ============================================================================
+// Gamification System
+// ============================================================================
+
+model DailyStreak {
+  id            String    @id @default(cuid())
+  userId        String    @unique
+  currentDay    Int       @default(0)
+  weeklyPoints  Int       @default(0)
+  weekStartDate DateTime
+  lastCheckIn   DateTime?
+  longestStreak Int       @default(0)
+  totalCheckIns Int       @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([weekStartDate])
+}
+
+enum BadgeType {
+  BRONZE_EXPLORER
+  SILVER_SEEKER
+  GOLD_ACHIEVER
+  PLATINUM_MASTER
+  SPEED_DEMON
+  THOUGHTFUL_ANALYST
+  STREAK_3_DAYS
+  STREAK_7_DAYS
+  REFERRAL_BRONZE
+  REFERRAL_SILVER
+  REFERRAL_GOLD
+  NIGHT_OWL
+  EARLY_BIRD
+  DETECTIVE
+}
+
+model Achievement {
+  id        String    @id @default(cuid())
+  userId    String
+  badgeType BadgeType
+  metadata  Json?
+  earnedAt  DateTime  @default(now())
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, badgeType])
+  @@index([userId])
+  @@index([badgeType])
+}
+
+enum ReferralStatus {
+  PENDING
+  COMPLETED
+  REWARDED
+}
+
+model ReferralTracking {
+  id            String         @id @default(cuid())
+  referrerId    String
+  refereeId     String
+  referralCode  String         @unique
+  status        ReferralStatus @default(PENDING)
+  rewardClaimed Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  convertedAt   DateTime?
+
+  // Relations
+  referrer User @relation("Referrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referee  User @relation("Referee", fields: [refereeId], references: [id], onDelete: Cascade)
+
+  @@index([referrerId])
+  @@index([refereeId])
+  @@index([referralCode])
 }
