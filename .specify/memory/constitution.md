@@ -1,30 +1,21 @@
 <!--
 Sync Impact Report
 ==================
-Version Change: 1.0.0 → 2.0.0
-Modified Principles:
-- Technology Standards → Complete rewrite for SkillTree stack (MAJOR)
-- Project name change: Symancy → SkillTree (MAJOR)
-Added Sections:
-- Telegram Bot Development Standards
-- OpenRouter AI Integration Standards
-- Russian Market Compliance
+Version Change: INITIAL → 1.0.0
+Modified Principles: N/A (Initial version)
+Added Sections: All core sections (initial creation)
 Removed Sections: None
 
 Templates Requiring Updates:
-✅ plan-template.md - Constitution Check section references this file
-✅ spec-template.md - Aligned with SkillTree requirements
-✅ tasks-template.md - Task organization matches constitution
-✅ CLAUDE.md - Root orchestration rules reference constitution
+✅ plan-template.md - Constitution Check section already references constitution file
+✅ spec-template.md - Already aligned with user-centric requirements approach
+✅ tasks-template.md - Already organized by user stories and testability principles
+✅ CLAUDE.md - Root orchestration rules reference constitution principles
 
 Follow-up TODOs: None - all placeholders resolved
 -->
 
-# SkillTree Project Constitution
-
-**Project**: SkillTree - AI-Powered Career Guidance Telegram Bot
-**Domain**: EdTech, Career Guidance, Lead Generation
-**Target Market**: Russian Federation (students 14-18 years old)
+# Symancy Project Constitution
 
 ## Core Principles
 
@@ -38,9 +29,8 @@ Every feature implementation MUST begin with comprehensive context gathering bef
 - Review relevant documentation files (specs, design docs, ADRs)
 - Check recent commits that touched related areas
 - Understand dependencies and integration points
-- Review Telegram Bot API documentation for bot-specific features
 
-**Rationale:** Context-first prevents duplicate work, ensures consistency with existing patterns, and prevents conflicting approaches. Blind implementation or delegation leads to rework and technical debt. For Telegram bots, understanding bot API limitations and best practices is critical.
+**Rationale:** Context-first prevents duplicate work, ensures consistency with existing patterns, and prevents conflicting approaches. Blind implementation or delegation leads to rework and technical debt.
 
 ### II. Agent-Based Orchestration
 
@@ -64,9 +54,8 @@ When tests are specified in feature requirements, Test-Driven Development (TDD) 
 - Verify tests FAIL before implementing
 - Follow Red-Green-Refactor cycle
 - Tests MUST be independently verifiable for each user story
-- Telegram webhook handlers MUST have integration tests
 
-**Rationale:** TDD ensures requirements are testable, prevents over-engineering, and provides immediate validation of implementation correctness. Telegram bots require robust testing due to asynchronous nature.
+**Rationale:** TDD ensures requirements are testable, prevents over-engineering, and provides immediate validation of implementation correctness.
 
 **Note:** Tests are OPTIONAL by default. Only when explicitly requested in feature specifications does this principle activate.
 
@@ -104,11 +93,10 @@ Type-check and build MUST pass before any commit. No exceptions.
 **Requirements:**
 - Run type-check after implementation
 - Run build verification
-- No hardcoded credentials (Telegram tokens, API keys)
+- No hardcoded credentials
 - No TODO comments without issue references
-- Prisma migrations MUST be tested before deploy
 
-**Rationale:** Quality gates prevent broken code from entering main branch, reduce debugging time, and maintain codebase health. Telegram bots require extra caution with credentials.
+**Rationale:** Quality gates prevent broken code from entering main branch, reduce debugging time, and maintain codebase health.
 
 ### VII. Progressive Specification
 
@@ -128,210 +116,61 @@ Features progress through mandatory specification phases before implementation. 
 
 ### Data Protection
 
-All user data MUST comply with 152-ФЗ (Russian Federal Law on Personal Data) and GDPR where applicable.
+All user data MUST comply with 152-ФЗ (Russian data protection law) and GDPR where applicable.
 
 **Requirements:**
 - No hardcoded credentials in code
-- Use environment variables for secrets (.env files, never committed)
-- Supabase RLS policies for data access control
-- Audit logs for sensitive operations (parent contact data access)
-- Phone number encryption/hashing for fraud detection
-- Telegram user IDs stored securely
-- Parent email addresses encrypted at rest
-
-**Russian Compliance:**
-- Store personal data of Russian citizens in Russia or Supabase EU region
-- Implement data deletion requests (right to be forgotten)
-- Maintain audit trail for data access
+- Use environment variables for secrets
+- Supabase RLS policies for data access
+- Audit logs for sensitive operations
 
 ### Authentication & Authorization
 
-All API endpoints MUST enforce authentication. Admin panel MUST use Supabase Auth.
+All API endpoints MUST enforce authentication via Supabase Auth.
 
 **Requirements:**
-- Telegram Bot authentication via user ID verification
-- Supabase Auth for admin panel
+- Use Supabase MCP for auth operations when available
 - Implement RLS policies for data isolation
 - Session management via Supabase
 - No custom auth implementations without justification
-- Webhook validation (Telegram secret token)
-
-### API Security
-
-**OpenRouter API:**
-- API keys stored in environment variables only
-- Rate limiting to prevent abuse
-- Cost monitoring and budget alerts
-- Token usage tracking per user
-
-**Telegram Bot API:**
-- Webhook secret token validation
-- Rate limiting (prevent spam)
-- Input sanitization (SQL injection, XSS prevention)
 
 ## Technology Standards
 
 ### Core Stack
 
-**Backend:**
-- **Runtime**: Node.js 18+ with TypeScript 5+
-- **Framework**: NestJS (recommended) or Express
-- **Telegram**: grammY (recommended) or node-telegram-bot-api
-- **Database**: PostgreSQL 15+ (Supabase Cloud)
-- **ORM**: Prisma (primary) or TypeORM
-- **Auth**: Supabase Auth for admin panel
-- **Process Manager**: PM2 (cluster mode)
+**Frontend:**
+- React 19+ with TypeScript
+- Vite for build tooling
+- Tailwind CSS for styling
+- Supabase client for auth and data
 
-**Frontend (Telegram Web App):**
-- **Framework**: React 18+ / Next.js 14+
-- **Language**: TypeScript 5+
-- **Telegram SDK**: @twa-dev/sdk
-- **State**: Zustand or Redux Toolkit
-- **Styling**: Tailwind CSS + shadcn/ui
-- **Build**: Vite or Next.js
+**Backend:**
+- Supabase PostgreSQL for primary database
+- Netlify Functions for serverless logic
+- n8n for workflow automation
+- Redis for caching (when needed)
 
 **AI/ML:**
-- **Primary**: OpenRouter API (multi-model support)
-  - GPT-4 Turbo (primary)
-  - Claude 3.5 Sonnet (fallback)
-  - Gemini Pro 1.5 (fallback)
-- **Token Management**: tiktoken
-- **Prompt Engineering**: Structured prompts with validation
-- **Cost Optimization**: Model selection based on complexity
-
-**Infrastructure:**
-- **Server**: FirstVDS (Ubuntu 22.04 LTS)
-- **Reverse Proxy**: Caddy 2.x (automatic HTTPS)
-- **Database**: Supabase Cloud (PostgreSQL 15+)
-- **Cache**: Redis 7+ (rate limiting, sessions)
-- **Queue**: BullMQ (async processing, optional)
-- **Storage**: Supabase Storage (images, cards)
-- **Email**: SendGrid or Resend
-- **CRM**: AmoCRM API v4
-
-**Deployment:**
-- **CI/CD**: GitHub Actions → webhook → auto-deploy
-- **Version Control**: Git (semantic versioning)
-- **Branching**: main (production), feature branches
-- **Deployment**: Git pull → npm install → build → migrate → PM2 reload
-
-### Telegram Bot Development Standards
-
-**Bot Design Principles:**
-- One question per screen (no overwhelming users)
-- Progress indicators for multi-step flows
-- Inline keyboards for quick responses
-- State persistence (users can pause and resume)
-- Error messages in Russian, user-friendly
-- Emoji usage for visual appeal (Gen Z audience)
-
-**Webhook vs Polling:**
-- Production: Webhook (https://api.skilltree.app/webhook)
-- Development: Polling (local development with ngrok)
-
-**Message Formatting:**
-- Use Telegram MarkdownV2 or HTML
-- Max message length: 4096 characters (paginate if needed)
-- Buttons: max 8 per row, max 100 buttons total
-
-**State Management:**
-- Store conversation state in Supabase
-- Session timeout: 24 hours
-- Allow resume from last question
-
-### OpenRouter AI Integration Standards
-
-**Model Selection Strategy:**
-- Default: `openai/gpt-4-turbo` (best quality)
-- Fallback 1: `anthropic/claude-3.5-sonnet` (if GPT-4 fails)
-- Fallback 2: `google/gemini-pro-1.5` (cost optimization)
-- Retry logic: 3 attempts with exponential backoff
-
-**Prompt Engineering:**
-- Structured prompts with clear instructions
-- Include student answers with question references
-- Request specific output format (JSON or structured text)
-- Token budget: 700-1000 words output
-- Temperature: 0.7 (balance creativity and consistency)
-
-**Cost Management:**
-- Track cost per generation
-- Budget alerts at $50, $100, $150 monthly
-- Log all API calls for audit
-- Cache common responses (optional)
-
-**Error Handling:**
-- Fallback to simpler model on timeout
-- Generic response if all models fail
-- Log all API errors to monitoring
+- Google Gemini API (primary)
+- OpenRouter for alternative models
+- pgvector for semantic search
 
 ### File Organization
 
-**Monorepo Structure (Turborepo or Nx):**
-```
-apps/
-  ├── api/              # NestJS backend
-  ├── bot/              # Telegram bot service
-  ├── frontend/         # Next.js frontend (optional)
-  └── admin/            # Admin dashboard
-packages/
-  ├── database/         # Prisma schema + migrations
-  ├── shared/           # Shared TypeScript types
-  └── config/           # Shared configuration
-```
+**Agents:** `.claude/agents/{domain}/{orchestrators|workers}/`
+**Commands:** `.claude/commands/`
+**Skills:** `.claude/skills/{skill-name}/SKILL.md`
+**Specifications:** `.specify/specs/{###-feature-name}/`
+**Templates:** `.specify/templates/`
+**Temporary Files:** `.tmp/current/` (git ignored)
+**Reports:** `docs/reports/{domain}/{YYYY-MM}/`
 
-**Development Artifacts:**
-- **Agents**: `.claude/agents/{domain}/{orchestrators|workers}/`
-- **Commands**: `.claude/commands/`
-- **Skills**: `.claude/skills/{skill-name}/SKILL.md`
-- **Specifications**: `.specify/specs/{###-feature-name}/`
-- **Templates**: `.specify/templates/`
-- **Temporary Files**: `.tmp/current/` (git ignored)
-- **Reports**: `docs/reports/{domain}/{YYYY-MM}/`
+### MCP Configuration
 
-### Code Quality Standards
+**BASE Configuration** (`.mcp.base.json`): context7 + sequential-thinking (~600 tokens)
+**FULL Configuration** (`.mcp.full.json`): + supabase + playwright + n8n + shadcn (~5000 tokens)
 
-**TypeScript:**
-- Strict mode enabled
-- No `any` types (use `unknown` or proper typing)
-- Explicit return types for functions
-- JSDoc comments for public APIs
-
-**Prisma:**
-- Migrations for all schema changes
-- Test migrations in development first
-- Backup database before production migrations
-- Use transactions for multi-table operations
-
-**Error Handling:**
-- Use custom error classes
-- Log all errors with context
-- User-friendly error messages (Russian)
-- Never expose internal errors to users
-
-**Logging:**
-- Structured logging (JSON format)
-- Log levels: error, warn, info, debug
-- Include request IDs for tracing
-- No sensitive data in logs (PII, tokens)
-
-### Russian Market Compliance
-
-**Language:**
-- All user-facing text in Russian
-- Error messages in Russian
-- Admin panel can be English (developer audience)
-
-**Regional Settings:**
-- Timezone: Moscow Time (UTC+3)
-- Currency: Russian Ruble (₽)
-- Phone format: +7 (XXX) XXX-XX-XX
-- Date format: DD.MM.YYYY
-
-**Payment Integration (Future):**
-- Russian payment systems: ЮKassa, Тинькофф
-- Comply with 54-ФЗ (online cash registers)
-- VAT calculation for Russian entities
+Switch configurations with `./switch-mcp.sh` based on task needs.
 
 ## Governance
 
@@ -345,7 +184,7 @@ Constitution amendments require:
 1. Documented rationale for change
 2. Impact analysis on existing templates and workflows
 3. Version bump according to semantic versioning:
-   - **MAJOR**: Backward incompatible governance or principle removals/redefinitions, technology stack changes
+   - **MAJOR**: Backward incompatible governance or principle removals/redefinitions
    - **MINOR**: New principle or section added, or materially expanded guidance
    - **PATCH**: Clarifications, wording, typo fixes, non-semantic refinements
 4. Sync Impact Report identifying affected templates
@@ -366,15 +205,4 @@ Any violation of constitutional principles MUST be justified in the "Complexity 
 
 Development runtime guidance is maintained in `CLAUDE.md` at repository root. This file provides operational procedures that implement constitutional principles but may be updated more frequently than the constitution itself.
 
-### Version History
-
-- **2.0.0** (2025-01-17): Major update for SkillTree project - complete technology stack rewrite, added Telegram Bot standards, OpenRouter integration, Russian market compliance
-- **1.0.0** (2025-11-10): Initial constitution for Symancy project
-
----
-
-**Version**: 2.0.0
-**Ratified**: 2025-11-10
-**Last Amended**: 2025-01-17
-**Project**: SkillTree
-**Maintainer**: Igor Maslennikov
+**Version**: 1.0.0 | **Ratified**: 2025-11-10 | **Last Amended**: 2025-11-10

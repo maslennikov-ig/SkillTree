@@ -175,10 +175,10 @@ Monorepo structure (from plan.md):
 - [X] T053 [EXECUTOR: database-architect] [PARALLEL-GROUP-10] [US2] Add db:generate script to packages/database/package.json: "prisma generate" → Artifacts: [package.json](../../../packages/database/package.json)
 - [X] T054 [EXECUTOR: database-architect] [PARALLEL-GROUP-10] [US2] Add db:migrate script to packages/database/package.json: "prisma migrate dev" → Artifacts: [package.json](../../../packages/database/package.json)
 - [X] T055 [EXECUTOR: database-architect] [SEQUENTIAL] [US2] Add db:push script to root package.json that runs "pnpm --filter @skilltree/database db:migrate" → Artifacts: [package.json](../../../package.json)
-- [ ] T056 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Run npx prisma migrate dev --name init to create initial migration
-- [ ] T057 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Run npx prisma generate to generate Prisma Client
-- [ ] T058 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Verify schema in Supabase Studio shows 7 tables with correct relationships
-- [ ] T059 [EXECUTOR: nestjs-infrastructure-specialist] [SEQUENTIAL] [US2] Test database connection in apps/api/src/main.ts with PrismaClient.$connect()
+- [X] T056 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Run npx prisma migrate dev --name init to create initial migration → Artifacts: prisma db push (10 tables created including gamification)
+- [X] T057 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Run npx prisma generate to generate Prisma Client → Artifacts: Prisma Client generated in node_modules/@prisma/client
+- [X] T058 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Verify schema in Supabase Studio shows 7 tables with correct relationships → Artifacts: 10 tables created (7 core + 3 gamification)
+- [X] T059 [EXECUTOR: nestjs-infrastructure-specialist] [SEQUENTIAL] [US2] Test database connection in apps/api/src/main.ts with PrismaClient.$connect() → Artifacts: API started, database connected via PgBouncer
 - [X] T059.5 [EXECUTOR: MAIN] [SEQUENTIAL] [US2] Verify DATABASE_URL in .env.example includes ?sslmode=require parameter for SSL/TLS encryption (add comment if missing) → Artifacts: [.env.example](../../../.env.example)
 
 **Checkpoint**: User Story 2 complete - database schema deployed to Supabase with all tables and relationships
