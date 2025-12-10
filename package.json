@@ -1,6 +1,6 @@
 {
   "name": "repa-maks-monorepo",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "private": true,
   "description": "RepaMaks - Telegram bot and course generation platform",
   "engines": {
