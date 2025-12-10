@@ -1,721 +1,635 @@
-# SkillTree: AI-Powered Career Guidance Telegram Bot
+# SkillTree
 
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3+-blue.svg)](https://www.typescriptlang.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
-[![NestJS](https://img.shields.io/badge/NestJS-10+-red.svg)](https://nestjs.com/)
-[![Turborepo](https://img.shields.io/badge/Turborepo-1.11+-black.svg)](https://turbo.build/repo)
-[![License](https://img.shields.io/badge/License-Proprietary-yellow.svg)]()
+> EdTech gamification platform for skill development with Telegram integration
 
-A comprehensive monorepo infrastructure for the SkillTree bot platform - providing Telegram-based career guidance with AI-powered assessments, real-time feedback, and family engagement tools.
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![NestJS](https://img.shields.io/badge/NestJS-10.4-red?logo=nestjs&logoColor=white)](https://nestjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7+-DC382D?logo=redis&logoColor=white)](https://redis.io/)
+[![Prisma](https://img.shields.io/badge/Prisma-ORM-2D3748?logo=prisma&logoColor=white)](https://www.prisma.io/)
+[![PM2](https://img.shields.io/badge/PM2-Runtime-2B037A?logo=pm2&logoColor=white)](https://pm2.keymetrics.io/)
+[![Caddy](https://img.shields.io/badge/Caddy-2.x-1F88C0?logo=caddy&logoColor=white)](https://caddyserver.com/)
 
-> **🚀 Current Status**: Phase 3 Complete - Developer Environment & Core Infrastructure Ready (45/161 tasks completed)
+## Overview
 
-## Quick Links
+SkillTree is a comprehensive EdTech platform designed to gamify skill development through daily streaks, achievements, radar chart visualizations, and Telegram bot integration. Built as a Turborepo monorepo with TypeScript and NestJS, the platform delivers a scalable, type-safe architecture for educational gamification.
 
-- **📦 GitHub Repository**: [github.com/maslennikov-ig/SkillTree](https://github.com/maslennikov-ig/SkillTree)
-- **📖 Setup Guide**: [QUICKSTART.md](./specs/001-project-setup/quickstart.md) (15 min local dev | 30 min VDS provisioning)
-- **🏗️ Architecture**: [docs/architecture/monorepo-structure.md](./docs/architecture/monorepo-structure.md)
-- **🚀 Deployment**: [docs/deployment/vds-provisioning.md](./docs/deployment/vds-provisioning.md)
-- **🔗 Webhook Config**: [docs/deployment/github-webhook.md](./docs/deployment/github-webhook.md)
+### Key Features
 
----
+- **Progressive Gamification**: Weekly streak system (Day 1: +1pt, Day 2: +2pts, ..., Day 7: +7pts)
+- **Achievement System**: 14 unique badge types for milestones and accomplishments
+- **Visual Analytics**: Radar chart visualizations with Chart.js/QuickChart API
+- **Telegram Integration**: Interactive bot built with grammY framework
+- **Email Reporting**: Automated weekly progress reports via SendGrid/Mailgun
+- **Referral Tracking**: Built-in referral system with reward mechanics
+- **Shareable Cards**: Visual achievement cards using Canvas API/PDFKit
 
-## Table of Contents
+### Tech Stack
 
-1. [Project Overview](#project-overview)
-2. [Tech Stack](#tech-stack)
-3. [Project Structure](#project-structure)
-4. [Prerequisites](#prerequisites)
-5. [Getting Started](#getting-started)
-6. [Available Scripts](#available-scripts)
-7. [Architecture](#architecture)
-8. [Deployment](#deployment)
-9. [Troubleshooting](#troubleshooting)
+**Backend**:
+- NestJS 10.4+ (REST API framework)
+- TypeScript 5.3+ (strict mode enabled)
+- Prisma ORM (type-safe database layer)
+- grammY 1.38+ (Telegram bot framework)
+- Pino (structured JSON logging)
 
----
+**Infrastructure**:
+- PostgreSQL 15+ (Supabase Cloud)
+- Redis 7+ (caching & rate limiting)
+- PM2 (process management, zero-downtime deployments)
+- Caddy 2.x (reverse proxy, automatic HTTPS)
 
-## Project Overview
+**DevOps**:
+- Turborepo (monorepo orchestration with build caching)
+- pnpm (fast, efficient package manager)
+- GitHub Webhooks (automated deployment pipeline)
+- VDS/FirstVDS (production hosting)
 
-SkillTree is a Telegram bot platform designed to:
+## Architecture
 
-- **Student Assessment**: Interactive career aptitude tests with AI analysis
-- **Parent Engagement**: Real-time feedback and student progress tracking
-- **Admin Dashboard**: Centralized management of tests, questions, and analytics
-- **Automatic Scaling**: Zero-downtime deployments with PM2 clustering
-- **Production Ready**: HTTPS, Redis caching, structured logging, health monitoring
+SkillTree is built as a **Turborepo monorepo** with pnpm workspaces for efficient dependency management and incremental builds.
 
-**Key Features**:
-- TypeScript 5+ with strict type checking
-- NestJS microservices architecture
-- Prisma ORM with Supabase Cloud PostgreSQL
-- Telegram bot framework (grammY)
-- Redis caching and rate limiting
-- Caddy 2.x automatic HTTPS
-- PM2 process management with clustering
-- Structured logging with Pino
-- GitHub webhook CI/CD pipeline
-- Health checks and monitoring endpoints
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      Caddy 2.x Reverse Proxy                 │
+│          (Automatic HTTPS + Load Balancing + Gzip)           │
+└───┬────────────────────────┬────────────────────────────────┘
+    │                        │
+    ▼                        ▼
+┌─────────┐            ┌─────────────┐
+│ Frontend│            │  Admin UI   │
+│ (Next.js)│           │  (Next.js)  │
+│ Port 3000│           │  Port 3001  │
+└─────────┘            └─────────────┘
+    │                        │
+    └────────┬───────────────┘
+             ▼
+    ┌──────────────────┐
+    │   NestJS API     │────────┐
+    │   (Port 4000)    │        │
+    │  PM2 Cluster (2) │        │
+    └────┬──────┬──────┘        │
+         │      │               │
+         ▼      ▼               ▼
+    ┌─────────────┐      ┌──────────────┐
+    │ PostgreSQL  │      │ Telegram Bot │
+    │  (Supabase) │      │   (grammY)   │
+    └─────────────┘      └──────────────┘
+         │
+         ▼
+    ┌─────────────┐
+    │   Redis     │
+    │ (localhost) │
+    └─────────────┘
+```
 
----
-
-## Tech Stack
-
-### Frontend & Backend
-| Component | Technology | Version |
-|-----------|-----------|---------|
-| Runtime | Node.js | 18+ LTS |
-| Language | TypeScript | 5.3+ |
-| Monorepo | Turborepo | 1.11+ |
-| Package Manager | pnpm | 8+ |
-| API Framework | NestJS | 10.4+ |
-| Bot Framework | grammY | (latest) |
-| ORM | Prisma | 5+ |
-
-### Database & Cache
-| Component | Technology | Version |
-|-----------|-----------|---------|
-| Database | PostgreSQL (Supabase Cloud) | 15+ |
-| Cache | Redis | 7+ |
-| Connection Pool | pgBouncer | (Supabase) |
-
-### DevOps & Infrastructure
-| Component | Technology | Version |
-|-----------|-----------|---------|
-| Web Server | Caddy | 2.x |
-| Process Manager | PM2 | (latest) |
-| Reverse Proxy | Caddy | 2.x |
-| Logging | Pino | (structured JSON) |
-| Firewall | UFW | (Linux) |
-| Intrusion Detection | fail2ban | (optional) |
-
----
-
-## Project Structure
+## Monorepo Structure
 
 ```
 repa-maks/
-├── apps/                              # Application packages
-│   └── api/                          # NestJS API server (port 4000)
+├── apps/
+│   └── api/                    # NestJS API server (port 4000)
 │       ├── src/
-│       │   ├── main.ts               # Bootstrap + PM2 ready signal
-│       │   ├── app.module.ts         # Root NestJS module
-│       │   ├── modules/
-│       │   │   ├── health/           # Health check endpoints
-│       │   │   ├── webhook/          # GitHub webhook handler
+│       │   ├── main.ts         # Bootstrap entry point
+│       │   ├── app.module.ts   # Root NestJS module
+│       │   ├── modules/        # Feature modules
+│       │   │   ├── health/     # Health check endpoints
+│       │   │   ├── webhook/    # GitHub webhook handler
 │       │   │   └── ...
-│       │   └── common/
-│       │       ├── logger.ts         # Pino logger
-│       │       ├── telegram-notifier.ts  # Telegram alerts
-│       │       ├── middleware/       # Express middleware
-│       │       └── filters/          # Exception handling
-│       ├── dist/                     # Compiled output
-│       ├── package.json
-│       └── tsconfig.json
+│       │   └── common/         # Cross-cutting concerns
+│       │       ├── logger.ts   # Pino logger
+│       │       └── telegram-notifier.ts
+│       └── dist/               # Compiled output
 │
-├── packages/                          # Shared libraries
-│   ├── shared/                       # Shared utilities & types
-│   │   ├── src/
-│   │   │   ├── types/               # TypeScript interfaces
-│   │   │   ├── utils/               # Helper functions
-│   │   │   └── constants/           # Shared constants
-│   │   └── package.json
-│   ├── database/                     # Prisma database layer
+├── packages/
+│   ├── database/               # Prisma ORM & migrations
 │   │   ├── prisma/
-│   │   │   ├── schema.prisma        # Data model
-│   │   │   └── migrations/          # Database migrations
-│   │   ├── src/
-│   │   │   └── index.ts             # PrismaClient export
-│   │   └── package.json
-│   └── config/                      # Shared configurations
-│       ├── eslint-config/
-│       ├── prettier-config/
-│       └── typescript-config/
+│   │   │   ├── schema.prisma   # Data models (10 tables)
+│   │   │   └── migrations/     # Versioned SQL migrations
+│   │   └── src/
+│   │       └── index.ts        # PrismaClient export
+│   │
+│   ├── shared/                 # Shared types & utilities
+│   │   └── src/
+│   │       ├── types/          # TypeScript interfaces
+│   │       ├── utils/          # Helper functions
+│   │       └── constants/      # Shared constants
+│   │
+│   └── config/                 # Shared configurations
+│       ├── eslint-config/      # ESLint preset
+│       ├── prettier-config/    # Prettier preset
+│       └── typescript-config/  # TypeScript base configs
 │
-├── scripts/                          # Deployment & automation
-│   ├── setup-server.sh              # VDS provisioning (Node, Redis, Caddy)
-│   ├── deploy.sh                    # CI/CD deployment script
-│   ├── rollback.sh                  # Manual rollback script
-│   └── check-disk-space.sh          # Disk monitoring
+├── scripts/                    # Deployment automation
+│   ├── setup-server.sh         # VDS initial provisioning
+│   ├── deploy.sh               # GitHub webhook deployment
+│   └── rollback.sh             # Manual rollback script
 │
-├── docs/                            # Documentation
-│   ├── architecture/
-│   │   └── monorepo-structure.md   # Detailed architecture
-│   ├── deployment/
-│   │   ├── vds-provisioning.md     # VDS setup guide
-│   │   └── github-webhook.md       # Webhook configuration
-│   └── TECHNICAL-SPECIFICATION-EN.md
+├── docs/                       # Documentation
+│   ├── architecture/           # System design docs
+│   │   └── monorepo-structure.md
+│   ├── deployment/             # Production deployment guides
+│   │   ├── vds-provisioning.md
+│   │   └── github-webhook.md
+│   └── reports/                # Quality & health reports
 │
-├── specs/001-project-setup/         # Feature specification
-│   ├── spec.md                      # User stories & acceptance criteria
-│   ├── quickstart.md                # Setup guide (15 min local | 30 min prod)
-│   ├── plan.md                      # Implementation plan
-│   ├── tasks.md                     # Task breakdown (T001-T154)
-│   ├── data-model.md                # Database schema
-│   └── research.md                  # Best practices & research
+├── specs/                      # Feature specifications
+│   └── 001-project-setup/
+│       ├── spec.md             # User stories & acceptance criteria
+│       ├── quickstart.md       # Setup guide (15 min)
+│       ├── tasks.md            # Task breakdown
+│       └── data-model.md       # Database schema
 │
-├── ecosystem.config.js              # PM2 configuration (clustering, logging)
-├── turbo.json                       # Turborepo pipeline config
-├── pnpm-workspace.yaml              # Workspace definitions
-├── tsconfig.json                    # Root TypeScript config
-├── .env.example                     # Environment variables template
-├── .gitignore                       # Git exclusions
-├── CLAUDE.md                        # Agent orchestration rules
-└── package.json                     # Root dependencies & scripts
+├── ecosystem.config.js         # PM2 process management
+├── turbo.json                  # Turborepo pipeline config
+├── pnpm-workspace.yaml         # Workspace packages
+└── package.json                # Root dependencies & scripts
 ```
 
----
+For detailed architecture documentation, see [docs/architecture/monorepo-structure.md](docs/architecture/monorepo-structure.md).
 
-## Prerequisites
+## Quick Start
 
-### Local Development
-- **Node.js**: 18+ LTS ([nodejs.org](https://nodejs.org))
+### Prerequisites
+
+- **Node.js**: 18+ (LTS recommended)
 - **pnpm**: 8+ (install: `npm install -g pnpm`)
 - **Git**: 2.30+
-- **Supabase Account**: Free tier ([supabase.com](https://supabase.com))
+- **Supabase Account**: Free tier (https://supabase.com)
 
-### VDS Server Provisioning (Production)
-- **Hosting**: FirstVDS or similar (Ubuntu 22.04 LTS, 4GB RAM, 2 CPU, 50GB SSD)
-- **Domains**: DNS configured for:
-  - `skilltree.app`
-  - `api.skilltree.app`
-  - `admin.skilltree.app`
-- **Access**: SSH with key authentication (password auth disabled)
-
----
-
-## Getting Started
-
-### 1. Clone Repository
+### Local Development Setup
 
 ```bash
+# 1. Clone repository
 git clone git@github.com:skilltree/repa-maks.git
 cd repa-maks
-```
 
-### 2. Install Dependencies
-
-```bash
+# 2. Install dependencies
 pnpm install
-```
 
-Expected: ~30-60 seconds with no errors
-
-### 3. Configure Environment
-
-```bash
-# Copy template
+# 3. Configure environment variables
 cp .env.example .env
+nano .env  # Add your Supabase credentials
 
-# Edit with your Supabase credentials
-nano .env
-```
+# 4. Setup database
+pnpm --filter @skilltree/database db:generate
+pnpm --filter @skilltree/database db:migrate
 
-See [.env.example](./.env.example) for required variables:
-- `DATABASE_URL`: Supabase PostgreSQL connection
-- `SUPABASE_URL`: Supabase API URL
-- `SUPABASE_ANON_KEY`: Supabase public key
-- `REDIS_URL`: Redis connection (localhost:6379 for dev)
-- `GITHUB_WEBHOOK_SECRET`: GitHub webhook signing key
-- `TELEGRAM_BOT_TOKEN`: Telegram bot API token
-- `ADMIN_CHAT_ID`: Telegram admin chat ID
-
-### 4. Setup Database
-
-```bash
-# Generate Prisma Client
-pnpm db:generate
-
-# Run migrations (creates tables in Supabase)
-pnpm db:migrate
-```
-
-Expected: 7 tables created in Supabase (users, students, parents, etc.)
-
-### 5. Start Development Servers
-
-```bash
+# 5. Start development servers
 pnpm dev
 ```
 
-Expected output:
-```
-@skilltree/api:dev: API server running on http://localhost:4000
-```
-
-### 6. Verify Setup
-
+**Verify Setup**:
 ```bash
-# In another terminal:
+# Check health endpoint
 curl http://localhost:4000/health
 
 # Expected response:
 {
   "status": "healthy",
   "uptime": 10,
-  "timestamp": "2025-01-17T12:00:00.000Z",
   "services": {
     "database": { "status": "connected", "responseTime": 15 },
-    "redis": { "status": "disconnected" }
+    "redis": { "status": "connected", "responseTime": 2 }
   }
 }
 ```
 
-**Note**: Redis disconnected is OK for local dev (runs in degraded mode). To enable Redis locally:
-```bash
-# macOS
-brew install redis && brew services start redis
+For detailed setup instructions, see [specs/001-project-setup/quickstart.md](specs/001-project-setup/quickstart.md).
 
-# Ubuntu/Debian
-sudo apt-get install redis-server && sudo systemctl start redis
-```
-
----
-
-## Available Scripts
+## npm Scripts
 
 ### Development
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm dev` | Start all services in watch mode (Turborepo parallel) |
-| `pnpm build` | Compile all packages for production |
-| `pnpm type-check` | Run TypeScript type checking across monorepo |
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start all services in development mode (watch mode) |
+| `pnpm build` | Build all packages for production (uses Turborepo cache) |
+| `pnpm type-check` | Run TypeScript type checking across all packages |
 | `pnpm lint` | Run ESLint across all packages |
+| `pnpm test` | Run all tests |
 
-### Database
+### Database Operations
 
-| Command | Purpose |
-|---------|---------|
+| Command | Description |
+|---------|-------------|
 | `pnpm db:generate` | Generate Prisma Client from schema |
-| `pnpm db:migrate` | Run pending migrations (dev environment) |
-| `pnpm db:push` | Deploy schema to Supabase (no migration file) |
-| `pnpm db:studio` | Open Supabase Studio in browser |
+| `pnpm db:migrate` | Create and apply database migrations |
+| `pnpm db:push` | Push schema changes to database (dev only, no migration files) |
+| `pnpm db:studio` | Open Prisma Studio database GUI |
 
-### Monorepo Management
+**Full script reference**:
+```bash
+# Equivalent to: pnpm --filter @skilltree/database db:generate
+pnpm db:generate
 
-| Command | Purpose |
-|---------|---------|
-| `pnpm install` | Install workspace dependencies |
-| `pnpm clean` | Remove all build artifacts and node_modules |
-| `turbo run build --filter=@skilltree/api` | Build specific package |
+# Equivalent to: pnpm --filter @skilltree/database db:migrate
+pnpm db:migrate
 
----
+# Equivalent to: pnpm --filter @skilltree/database db:push
+pnpm db:push
 
-## Architecture
-
-### High-Level Architecture
-
-```
-┌──────────────────────────────────────────┐
-│   Client Layer                           │
-│   ├─ Telegram Bot (grammY client)       │
-│   ├─ Frontend Web (future)               │
-│   └─ Admin Dashboard (future)            │
-└──────────────────┬───────────────────────┘
-                   │
-        ┌──────────▼──────────┐
-        │  Caddy 2.x         │
-        │  Reverse Proxy     │
-        │  HTTPS/TLS         │
-        └──────────┬──────────┘
-                   │
-    ┌──────────────┼──────────────┐
-    │              │              │
-    ▼              ▼              ▼
-┌────────┐  ┌──────────┐  ┌──────────┐
-│  API   │  │  Admin   │  │Frontend  │
-│ :4000  │  │  :3001   │  │  :3000   │
-└────┬───┘  └────┬─────┘  └────┬─────┘
-     │            │             │
-     └────────────┼─────────────┘
-                  │
-        ┌─────────▼─────────┐
-        │  PostgreSQL DB    │
-        │  (Supabase)       │
-        └───────────────────┘
-                  △
-        ┌─────────┴─────────┐
-        │                   │
-    ┌───▼──┐         ┌─────▼───┐
-    │Redis │         │Telegram  │
-    │:6379 │         │Bot API   │
-    └──────┘         └──────────┘
+# Equivalent to: pnpm --filter @skilltree/database db:studio
+pnpm db:studio
 ```
 
-### Deployment Architecture (VDS)
+### Package-Specific Operations
 
-```
-GitHub Main Branch Push
-         │
-         ▼
-GitHub Webhook Payload (HMAC signed)
-         │
-         ▼
-    ┌─────────────────┐
-    │ API /webhook/deploy endpoint
-    │ - Verify HMAC signature
-    │ - Spawn deployment script
-    └─────────────┬───┘
-                  │
-    ┌─────────────▼──────────────┐
-    │  /opt/skilltree/deploy.sh  │
-    │  1. git pull origin main   │
-    │  2. pnpm install --frozen  │
-    │  3. pnpm build             │
-    │  4. Prisma migrate         │
-    │  5. PM2 reload (zero down) │
-    │  6. Health check verify    │
-    │  7. Rollback if fail       │
-    └─────────────┬──────────────┘
-                  │
-    ┌─────────────▼──────────────┐
-    │  PM2 Cluster (2 instances) │
-    │  - Graceful reload         │
-    │  - Zero downtime           │
-    │  - Process crash recovery  │
-    └─────────────┬──────────────┘
-                  │
-    ┌─────────────▼──────────────┐
-    │  Caddy Reverse Proxy       │
-    │  - Auto HTTPS/TLS          │
-    │  - Gzip compression        │
-    │  - Access logging          │
-    └────────────────────────────┘
+```bash
+# Run script in specific package
+pnpm --filter @skilltree/api dev
+pnpm --filter @skilltree/api build
+pnpm --filter @skilltree/api test
+
+# Add dependency to specific package
+pnpm --filter @skilltree/api add express
+pnpm --filter @skilltree/api add -D @types/express
 ```
 
----
+### Cleanup
+
+```bash
+# Clean all build artifacts and node_modules
+pnpm clean
+
+# Clear Turborepo cache
+rm -rf .turbo
+```
+
+## Environment Variables
+
+Create a `.env` file in the project root with the following variables. See [.env.example](.env.example) for detailed descriptions.
+
+### Database Configuration (Supabase)
+
+```bash
+# Transaction pooler (port 6543) - for application queries
+DATABASE_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:6543/postgres?sslmode=require"
+
+# Session pooler (port 5432) - required for Prisma migrations
+DIRECT_URL="postgresql://postgres.[PROJECT-REF]:[PASSWORD]@aws-0-[REGION].pooler.supabase.com:5432/postgres?sslmode=require"
+
+# Supabase project URL and API key
+SUPABASE_URL="https://[PROJECT-ID].supabase.co"
+SUPABASE_ANON_KEY="[YOUR-ANON-KEY]"
+```
+
+**How to get Supabase credentials**:
+1. Go to https://supabase.com/dashboard
+2. Create new project (or use existing)
+3. Settings → Database → Connection string (use both "Transaction pooling" and "Session pooling")
+4. Settings → API → Project URL and anon key
+
+### Redis Configuration
+
+```bash
+# Local development
+REDIS_URL="redis://localhost:6379"
+
+# Production (with password)
+REDIS_URL="redis://:skilltree_redis_2024@localhost:6379"
+```
+
+### GitHub Webhook (Deployment Pipeline)
+
+```bash
+# Shared secret for webhook signature verification
+# Generate with: openssl rand -hex 32
+GITHUB_WEBHOOK_SECRET=""
+```
+
+Configure in GitHub: Repository → Settings → Webhooks → Secret
+
+### Telegram Bot (Future Phase)
+
+```bash
+# Get from @BotFather on Telegram
+TELEGRAM_BOT_TOKEN=""
+
+# Admin chat ID for deployment notifications
+# Get from: Send message to bot, then curl https://api.telegram.org/bot<TOKEN>/getUpdates
+ADMIN_CHAT_ID=""
+```
+
+### Application Configuration
+
+```bash
+NODE_ENV="development"  # development | production | test
+PORT=4000               # API server port
+```
+
+## Database Schema
+
+The platform uses **10 tables** with gamification features:
+
+**Core Tables**:
+- `User` - User accounts
+- `Student` - Student profiles
+- `Parent` - Parent profiles
+- `ParentStudent` - Parent-student relationships
+
+**Testing**:
+- `TestSession` - Test attempts and results
+- `Question` - Test questions
+- `Answer` - Student answers
+
+**Gamification**:
+- `DailyStreak` - Daily activity tracking
+- `Achievement` - Badge/achievement records
+- `ReferralTracking` - Referral system
+
+For detailed schema documentation, see [specs/001-project-setup/data-model.md](specs/001-project-setup/data-model.md).
+
+## Health Endpoints
+
+The API provides three health check endpoints for monitoring and orchestration:
+
+```bash
+# Full health status (database, Redis, uptime)
+GET /health
+
+# Kubernetes liveness probe (is app running?)
+GET /health/live
+
+# Kubernetes readiness probe (is app ready to serve traffic?)
+GET /health/ready
+```
+
+### Example Response (`GET /health`)
+
+```json
+{
+  "status": "healthy",
+  "uptime": 123.45,
+  "timestamp": "2025-01-17T12:00:00.000Z",
+  "services": {
+    "database": {
+      "status": "connected",
+      "responseTime": 15
+    },
+    "redis": {
+      "status": "connected",
+      "responseTime": 2
+    }
+  }
+}
+```
+
+**Status values**:
+- `healthy` - All services operational
+- `degraded` - Some non-critical services unavailable (e.g., Redis)
+- `unhealthy` - Critical services unavailable (e.g., database)
 
 ## Deployment
 
-### Local Development
+### Production VDS Server
 
-See [QUICKSTART.md - Part 1](./specs/001-project-setup/quickstart.md#part-1-local-development-setup) for detailed steps:
+SkillTree is deployed on FirstVDS (Ubuntu 22.04 LTS) with:
 
-1. Clone repository
-2. Install dependencies with `pnpm install`
-3. Configure `.env` with Supabase credentials
-4. Run `pnpm db:migrate` to setup database
-5. Start dev server with `pnpm dev`
-6. Verify health endpoint: `curl http://localhost:4000/health`
+- **SSH Access**: `ssh -i ~/.ssh/claude_deploy deploy@95.81.97.236`
+- **User**: `deploy` (passwordless sudo)
+- **App Directory**: `/opt/skilltree/`
+- **Installed Services**: Node.js 18, pnpm, PM2, Redis 7, Caddy 2.x
+- **Security**: UFW firewall (ports 22, 80, 443), fail2ban, key-only SSH
 
-**Time**: ~15 minutes
+### Automated Deployment Pipeline
 
-### Production VDS Deployment
+Deployments are triggered via GitHub webhook on push to `main` branch:
 
-See [docs/deployment/vds-provisioning.md](./docs/deployment/vds-provisioning.md) for step-by-step VDS setup including:
+1. **GitHub** sends webhook to `POST /webhook/deploy` (HMAC signed)
+2. **API** verifies signature and spawns deployment script
+3. **Deployment script** executes:
+   - `git pull origin main`
+   - `pnpm install --frozen-lockfile`
+   - `pnpm build`
+   - `pnpm db:migrate` (Prisma migrations)
+   - `pm2 reload ecosystem.config.js` (zero-downtime)
+   - Health check verification
+   - Rollback on failure
+4. **Telegram notification** sent to admin chat
 
-1. VDS provisioning (Node.js, pnpm, PM2)
-2. Redis installation with authentication
-3. Caddy 2.x setup for automatic HTTPS
-4. UFW firewall configuration (SSH, HTTP, HTTPS only)
-5. fail2ban intrusion detection
-6. PM2 ecosystem configuration (clustering, logging)
-7. GitHub webhook configuration
+### Manual Deployment
 
-**Time**: ~30 minutes
-
-### Continuous Deployment
-
-See [docs/deployment/github-webhook.md](./docs/deployment/github-webhook.md) for:
-
-1. GitHub webhook setup
-2. HMAC signature verification
-3. Automatic deployment on push to main
-4. Zero-downtime reload with PM2
-5. Automatic rollback on failure
-6. Telegram notifications
-
-**Deployment Flow**:
-```
-Push to main → GitHub webhook → API /webhook/deploy
-→ deploy.sh → Build → Migrate → PM2 reload → Health check → Live ✓
-```
-
----
-
-## Troubleshooting
-
-### Installation Issues
-
-**Problem**: `pnpm: command not found`
 ```bash
-# Solution: Install pnpm globally
-npm install -g pnpm
-```
+# SSH into server
+ssh -i ~/.ssh/claude_deploy deploy@95.81.97.236
 
-**Problem**: `permission denied` error on node_modules
-```bash
-# Solution: Fix ownership
-sudo chown -R $USER:$USER ~/.pnpm-store
-sudo chown -R $USER:$USER node_modules
-```
+# Navigate to app directory
+cd /opt/skilltree/repa-maks
 
-### Database Issues
+# Pull latest changes
+git pull origin main
 
-**Problem**: Cannot connect to Supabase
-```bash
-# Check .env has correct DATABASE_URL
-cat .env | grep DATABASE_URL
+# Install dependencies
+pnpm install --frozen-lockfile
 
-# Verify connection string format:
-# postgresql://postgres:[PASSWORD]@db.[PROJECT-ID].supabase.co:5432/postgres?sslmode=require
-```
-
-**Problem**: Tables already exist
-```bash
-# Reset database (WARNING: deletes all data)
-pnpm db:reset
-```
-
-### Health Endpoint Issues
-
-**Problem**: `/health` returns 503
-```bash
-# Check API logs
-pm2 logs api
-
-# Check database is accessible
-pnpm db:studio
-
-# Check environment variables
-cat .env
-```
-
-**Problem**: Redis unavailable (OK for dev)
-```bash
-# This is normal for local development
-# API runs in degraded mode without Redis
-
-# To enable Redis:
-brew services start redis  # macOS
-# or
-sudo systemctl start redis-server  # Ubuntu
-```
-
-### Build Issues
-
-**Problem**: Build fails with TypeScript errors
-```bash
-# Run type-check to see errors
-pnpm type-check
-
-# Clear cache and rebuild
-rm -rf .turbo
+# Build all packages
 pnpm build
+
+# Run database migrations
+pnpm --filter @skilltree/database db:migrate
+
+# Reload services (zero-downtime)
+pm2 reload ecosystem.config.js
+
+# Verify deployment
+pm2 status
+curl https://api.skilltree.app/health
 ```
 
-**Problem**: Turbo cache issues
+### Deployment Documentation
+
+For detailed deployment guides:
+- **VDS Server Provisioning**: [docs/deployment/vds-provisioning.md](docs/deployment/vds-provisioning.md)
+- **GitHub Webhook Setup**: [docs/deployment/github-webhook.md](docs/deployment/github-webhook.md)
+
+## Monitoring & Logs
+
+### PM2 Process Management
+
 ```bash
-# Clear Turborepo cache
-pnpm clean
-pnpm install
-pnpm build
-```
-
-### Deployment Issues
-
-**Problem**: GitHub webhook not triggering
-```bash
-# Verify webhook secret matches
-# Go to GitHub: Settings → Webhooks → Edit → Show recent deliveries
-
-# Check deployment logs on VDS
-tail -f /opt/skilltree/logs/deploy-*.log
-```
-
-**Problem**: PM2 reload fails
-```bash
-# Check PM2 status
+# View service status
 pm2 status
 
-# View PM2 logs
+# Monitor CPU & memory usage (interactive)
+pm2 monit
+
+# View logs (all services)
 pm2 logs
 
-# Force restart if needed
+# View logs (specific service)
+pm2 logs api
+
+# Restart services (with downtime)
 pm2 restart all
+
+# Reload services (zero-downtime)
+pm2 reload all
 ```
 
-**Problem**: Caddy HTTPS not working
+### Log Files (Production)
+
+Logs are stored in `/opt/skilltree/logs/`:
+
+- `api-combined.log` - All API logs (stdout + stderr)
+- `api-out.log` - Standard output only
+- `api-error.log` - Error output only
+- `deploy-YYYYMMDD-HHMMSS.log` - Deployment logs
+
+**Log rotation**: Automatic (max 10MB per file, retain 7 days)
+
+### Health Monitoring
+
 ```bash
-# Verify domains point to server
-dig skilltree.app
+# Check API health
+curl https://api.skilltree.app/health
 
 # Check Caddy status
 systemctl status caddy
 
-# View Caddy logs
+# Check Redis status
+redis-cli ping
+
+# Check Caddy logs
 journalctl -u caddy -f
+
+# Check database connection
+pnpm --filter @skilltree/database db:studio
 ```
 
----
+## Development Workflow
 
-## Security
+### Adding New Features
 
-### No Hardcoded Credentials
+1. Create feature branch: `git checkout -b feature/my-feature`
+2. Implement changes in appropriate package
+3. Run type check: `pnpm type-check`
+4. Run build: `pnpm build`
+5. Test locally: `pnpm dev`
+6. Commit changes: `git commit -m "feat: add my feature"`
+7. Push to remote: `git push origin feature/my-feature`
+8. Create pull request
 
-All secrets are stored in `.env` (git-ignored). Never commit:
-- Database passwords
-- API keys (Supabase, Telegram)
-- Webhook secrets
-- Redis passwords
+### Working with Packages
 
-Use `.env.example` as template with placeholders.
-
-### Environment Variables
-
-All required variables are documented in [.env.example](./.env.example) with:
-- Variable name
-- Description
-- Example value format
-- Where to obtain the value
-
-### SSH Security (VDS)
-
-Production VDS has:
-- SSH key-based authentication only (password disabled)
-- UFW firewall (only SSH, HTTP, HTTPS allowed)
-- fail2ban intrusion detection
-- Rate limiting on login attempts
-
----
-
-## Development Guidelines
-
-### TypeScript
-
-- Strict mode enabled (`strict: true` in tsconfig.json)
-- No implicit `any` types
-- All dependencies properly typed
-
-Run type-check before committing:
 ```bash
-pnpm type-check
-```
+# Add external dependency to specific package
+pnpm --filter @skilltree/api add express
 
-### Code Quality
+# Add dev dependency
+pnpm --filter @skilltree/api add -D @types/express
 
-- ESLint configuration in `packages/config/eslint-config/`
-- Prettier auto-formatting
-- Husky pre-commit hooks
-- lint-staged for staged files only
-
-### Commit Conventions
-
-Follow conventional commits:
-```bash
-git commit -m "feat: add health endpoint
-
-- Added GET /health endpoint
-- Database connectivity check
-- Redis status reporting
-
-🤖 Generated with Claude Code"
-```
-
-### Adding Dependencies
-
-Use workspace packages for internal dependencies:
-```bash
-# Add shared package to API
+# Add workspace dependency (local package)
 pnpm --filter @skilltree/api add @skilltree/shared
-
-# Import in code
-import { MyType } from '@skilltree/shared';
 ```
 
----
+### Database Changes
 
-## Learning Resources
+```bash
+# 1. Edit Prisma schema
+nano packages/database/prisma/schema.prisma
 
-- **Turborepo**: [turborepo.org/docs](https://turbo.build/repo/docs)
-- **NestJS**: [docs.nestjs.com](https://docs.nestjs.com)
-- **Prisma**: [prisma.io/docs](https://www.prisma.io/docs)
-- **Supabase**: [supabase.com/docs](https://supabase.com/docs)
-- **Caddy**: [caddyserver.com/docs](https://caddyserver.com/docs)
-- **PM2**: [pm2.keymetrics.io](https://pm2.keymetrics.io)
+# 2. Create migration
+pnpm --filter @skilltree/database db:migrate
 
----
+# 3. Review generated SQL
+cat packages/database/prisma/migrations/[timestamp]_name/migration.sql
 
-## Support & Issues
-
-For issues and questions:
-
-1. Check [QUICKSTART.md](./specs/001-project-setup/quickstart.md#troubleshooting) troubleshooting section
-2. Review relevant documentation in `/docs`
-3. Check existing GitHub issues
-4. Create new issue with:
-   - Description of problem
-   - Steps to reproduce
-   - Error messages (full logs)
-   - Environment details (Node version, OS, etc.)
-
----
-
-## Project Status
-
-**Current Phase**: 001-project-setup (Infrastructure & foundations)
-**Progress**: 45/161 tasks completed (28%)
-**Last Updated**: 2025-01-17
-
-```
-Progress: [████████░░░░░░░░░░░░░░░░░░░░] 28%
-Phase 0: [██████████] 100% | Phase 1: [██████████] 100%
-Phase 2: [██████████] 100% | Phase 3: [██████████] 100%
-Phase 4: [░░░░░░░░░░]   0% | Phase 5: [░░░░░░░░░░]   0%
-Phase 6: [░░░░░░░░░░]   0% | Phase 7: [░░░░░░░░░░]   0%
-Phase 8: [░░░░░░░░░░]   0% | Phase 9: [░░░░░░░░░░]   0%
+# 4. Migrations are automatically applied via deployment pipeline
 ```
 
-### ✅ Phase 0-3: Completed (45 tasks)
+## Troubleshooting
 
-**Phase 0: Planning** (3/3 tasks)
-- ✅ Task analysis and executor assignment
-- ✅ Research task resolution
-- ✅ Meta-agent subagent creation
+### Build Errors
 
-**Phase 1: Setup** (10/10 tasks)
-- ✅ Monorepo structure with Turborepo
-- ✅ Root configuration (package.json, turbo.json, tsconfig.json)
-- ✅ Git ignore patterns
-- ✅ Environment variables template (.env.example)
-- ✅ ESLint, Prettier, TypeScript shared configs
+```bash
+# Clear Turborepo cache
+rm -rf .turbo
 
-**Phase 2: Foundational** (15/15 tasks)
-- ✅ packages/shared with types, utils, constants
-- ✅ packages/database with Prisma schema (7 tables)
-- ✅ apps/api with NestJS structure
-- ✅ Workspace dependencies configured
-- ✅ Database connection retry logic
-- ✅ All dependencies installed
+# Clean node_modules and reinstall
+rm -rf node_modules && pnpm install
 
-**Phase 3: User Story 1 - Dev Environment** (17/17 tasks)
-- ✅ Root scripts (dev, build, type-check)
-- ✅ Turborepo pipeline configuration
-- ✅ API package scripts
-- ✅ TypeScript strict mode configuration
-- ✅ Husky + lint-staged pre-commit hooks
-- ✅ Build and type-check validation
+# Clear all build artifacts
+pnpm clean
+```
 
-### ⏳ Next Phases (116 tasks remaining)
+### Database Connection Issues
 
-**Phase 4**: Database Schema (19 tasks) - Prisma models, migrations, indexes
-**Phase 5**: VDS Server Provisioning (25 tasks) - Node.js, Redis, Caddy, UFW, fail2ban
-**Phase 6**: Health Check API (11 tasks) - Health endpoints, database/Redis checks
-**Phase 7**: Deployment Pipeline (23 tasks) - GitHub webhook, auto-deploy, rollback
-**Phase 8**: Monitoring & Logging (22 tasks) - Pino logger, PM2 logs, Telegram alerts
-**Phase 9**: Polish & Documentation (20 tasks) - README, architecture docs, validation
+```bash
+# Test connection with Prisma Studio
+pnpm --filter @skilltree/database db:studio
 
-### 🎯 Immediate Next Steps
+# Check DATABASE_URL in .env
+cat .env | grep DATABASE_URL
 
-1. Complete database schema implementation (Phase 4)
-2. Setup VDS server infrastructure (Phase 5)
-3. Implement health check endpoints (Phase 6)
-4. Configure CI/CD pipeline (Phase 7)
+# Verify Supabase project is active
+# Go to: https://supabase.com/dashboard
+```
 
----
+### Health Check Fails
+
+```bash
+# Check if API is running
+curl http://localhost:4000/health
+
+# Check PM2 status (production)
+pm2 status
+
+# Check logs
+pm2 logs api
+
+# Restart services
+pm2 restart all
+```
+
+### Redis Connection Issues
+
+```bash
+# Test Redis connection
+redis-cli ping
+
+# Start Redis (Ubuntu/Debian)
+sudo systemctl start redis-server
+
+# Start Redis (macOS)
+brew services start redis
+```
+
+## Contributing
+
+1. Fork the repository
+2. Create feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to branch (`git push origin feature/amazing-feature`)
+5. Open pull request
+
+### Code Standards
+
+- TypeScript strict mode enabled
+- ESLint + Prettier for code formatting
+- Conventional Commits for commit messages
+- Type check must pass before commit
+- Build must pass before commit
 
 ## License
 
-SkillTree - Proprietary
+MIT License - see [LICENSE](LICENSE) file for details
 
-**Last Updated**: 2025-01-17
+## Documentation
+
+- **Monorepo Architecture**: [docs/architecture/monorepo-structure.md](docs/architecture/monorepo-structure.md)
+- **Quickstart Guide**: [specs/001-project-setup/quickstart.md](specs/001-project-setup/quickstart.md)
+- **Data Model**: [specs/001-project-setup/data-model.md](specs/001-project-setup/data-model.md)
+- **VDS Provisioning**: [docs/deployment/vds-provisioning.md](docs/deployment/vds-provisioning.md)
+- **GitHub Webhook**: [docs/deployment/github-webhook.md](docs/deployment/github-webhook.md)
+
+## Support
+
+For issues, questions, or feature requests, please open an issue on GitHub.
+
+---
+
+**Current Version**: 0.1.9
+**Last Updated**: 2025-12-10
+**Status**: Active Development
