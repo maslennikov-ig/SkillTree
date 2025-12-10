@@ -144,3 +144,19 @@ Follow command-specific instructions. See `docs/Agents Ecosystem/AGENT-ORCHESTRA
 
 ## Recent Changes
 - 001-project-setup: Added comprehensive gamification strategy with progressive weekly streak (Day 1: +1pt, Day 2: +2pts, ..., Day 7: +7pts), achievement system (14 badge types), referral tracking, radar chart visualizations, and email reporting infrastructure
+
+## VDS Server Access (SkillTree Production)
+
+**Connection**: `ssh -i ~/.ssh/claude_deploy deploy@95.81.97.236`
+**User**: deploy (passwordless sudo)
+**Key**: `~/.ssh/claude_deploy` (ed25519)
+**App Dir**: `/opt/skilltree/` (logs, backups, scripts)
+
+**Installed Services**:
+- Node.js 18.x, pnpm 10.x, PM2 6.x
+- Redis 7.x (localhost, password: skilltree_redis_2024)
+- Caddy 2.x (reverse proxy, auto HTTPS)
+- UFW (ports 22, 80, 443 only)
+- fail2ban (SSH protection)
+
+**Security**: Root SSH disabled, password auth disabled, key-only access
