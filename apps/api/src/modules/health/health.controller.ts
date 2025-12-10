@@ -8,6 +8,7 @@ import {
 import type { Request } from "express";
 import { prisma } from "@skilltree/database";
 import { logger } from "../../common/logger";
+import Redis from "ioredis";
 
 interface ServiceStatus {
   status: "connected" | "disconnected" | "degraded";
@@ -40,6 +41,7 @@ interface HealthResponse {
 @Controller("health")
 export class HealthController {
   private startTime = Date.now();
+  private redisClient: Redis | null = null;
 
   /**
    * Main health check endpoint
@@ -125,6 +127,28 @@ export class HealthController {
   }
 
   /**
+   * Get or create Redis client with lazy connection
+   * @private
+   */
+  private getRedisClient(): Redis | null {
+    if (!this.redisClient) {
+      const redisUrl = process.env.REDIS_URL;
+      if (!redisUrl) return null;
+
+      try {
+        this.redisClient = new Redis(redisUrl, {
+          lazyConnect: true,
+          maxRetriesPerRequest: 1,
+          connectTimeout: 5000,
+        });
+      } catch {
+        return null;
+      }
+    }
+    return this.redisClient;
+  }
+
+  /**
    * Check health of all services
    * @private
    */
@@ -203,25 +227,27 @@ export class HealthController {
    * @private
    */
   private async checkRedis(): Promise<ServiceStatus> {
-    // TODO: Implement Redis health check when Redis client is configured
-    // For now, return disconnected (degraded mode)
-    // This allows the app to start without Redis
+    const startTime = Date.now();
+    const client = this.getRedisClient();
 
-    const redisUrl = process.env.REDIS_URL;
-
-    if (!redisUrl) {
+    if (!client) {
       return {
         status: "disconnected",
         error: "REDIS_URL not configured (optional service)",
       };
     }
 
-    // Redis health check would go here
-    // Example: await redisClient.ping()
-
-    return {
-      status: "disconnected",
-      error: "Redis client not yet configured (future implementation)",
-    };
+    try {
+      await client.ping();
+      return {
+        status: "connected",
+        responseTime: Date.now() - startTime,
+      };
+    } catch (error) {
+      return {
+        status: "disconnected",
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
+    }
   }
 }

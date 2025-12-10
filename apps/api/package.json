@@ -20,6 +20,7 @@
     "@skilltree/database": "workspace:*",
     "@skilltree/shared": "workspace:*",
     "grammy": "^1.38.3",
+    "ioredis": "^5.8.2",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
     "reflect-metadata": "^0.1.13",
