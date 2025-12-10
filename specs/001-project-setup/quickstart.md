@@ -218,6 +218,31 @@ git push origin 001-project-setup
 
 ---
 
+### Option A: Automated Setup (Recommended)
+
+```bash
+# SSH into server
+ssh root@[YOUR-VDS-IP]
+
+# Download and run setup script
+curl -fsSL https://raw.githubusercontent.com/maslennikov-ig/SkillTree/main/scripts/setup-server.sh | sudo bash
+```
+
+**What the script installs**:
+- Node.js 18.x, pnpm, PM2
+- Redis 7.x (password: `skilltree_redis_2024`)
+- Caddy 2.x (reverse proxy)
+- UFW firewall (22, 80, 443)
+- fail2ban (SSH protection)
+- SSH hardening (key-only auth)
+- App directories `/opt/skilltree/{logs,backups,scripts}`
+
+**After script completes**: Skip to Step 6 (Create Application Directory)
+
+---
+
+### Option B: Manual Setup
+
 ### Step 1: Connect to VDS
 
 ```bash

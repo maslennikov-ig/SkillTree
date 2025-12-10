@@ -26,6 +26,8 @@
 ###############################################################################
 
 set -e  # Exit immediately if any command fails
+set -u  # Exit on undefined variable
+set -o pipefail  # Catch errors in pipes
 
 # Colors for output
 RED='\033[0;31m'
@@ -122,9 +124,12 @@ cp /etc/redis/redis.conf /etc/redis/redis.conf.backup
 # Bind to localhost only (security: only local apps can access)
 sed -i 's/^bind .*/bind 127.0.0.1 ::1/' /etc/redis/redis.conf
 
-# Require password authentication (IMPORTANT: Change YOUR_SECURE_PASSWORD before deployment)
-warning "Redis password set to placeholder. YOU MUST CHANGE THIS in production!"
-sed -i 's/^# requirepass foobared/requirepass YOUR_SECURE_PASSWORD/' /etc/redis/redis.conf
+# Require password authentication
+sed -i 's/^# requirepass foobared/requirepass skilltree_redis_2024/' /etc/redis/redis.conf
+# Also handle cases where requirepass is not commented
+if ! grep -q "^requirepass" /etc/redis/redis.conf; then
+    echo "requirepass skilltree_redis_2024" >> /etc/redis/redis.conf
+fi
 
 # Enable Redis as systemd service
 systemctl enable redis-server
@@ -261,20 +266,19 @@ fail2ban-client status sshd || log "fail2ban SSH jail active"
 
 log "Creating application directory structure..."
 
-# Create main application directory
-mkdir -p /opt/skilltree
-
-# Create subdirectories for logs and backups
+# Create main application directory with subdirectories
 mkdir -p /opt/skilltree/logs
 mkdir -p /opt/skilltree/backups
+mkdir -p /opt/skilltree/scripts
 
 # Set proper permissions (adjust user:group as needed for your deployment user)
 # For now, root owns these directories - change to app user in production
 chmod 755 /opt/skilltree
 chmod 755 /opt/skilltree/logs
 chmod 755 /opt/skilltree/backups
+chmod 755 /opt/skilltree/scripts
 
-log "Application directories created at /opt/skilltree/{logs,backups}"
+log "Application directories created at /opt/skilltree/{logs,backups,scripts}"
 
 ###############################################################################
 # COMPLETION SUMMARY
@@ -300,17 +304,20 @@ echo ""
 log "Application Structure:"
 log "  - /opt/skilltree/logs (deployment logs)"
 log "  - /opt/skilltree/backups (database backups)"
+log "  - /opt/skilltree/scripts (deployment scripts)"
+echo ""
+log "Redis Configuration:"
+log "  - Password: skilltree_redis_2024"
+log "  - Bind: localhost only (127.0.0.1)"
 echo ""
 warning "IMPORTANT: Next Steps"
-echo "  1. Change Redis password in /etc/redis/redis.conf"
-echo "  2. Restart Redis: systemctl restart redis-server"
-echo "  3. Clone application repository to /opt/skilltree/"
-echo "  4. Configure Caddyfile at /etc/caddy/Caddyfile (see docs/deployment/Caddyfile.example)"
-echo "  5. Create .env file with production credentials"
-echo "  6. Install app dependencies: pnpm install --frozen-lockfile"
-echo "  7. Build application: pnpm build"
-echo "  8. Start PM2 services: pm2 start ecosystem.config.js"
-echo "  9. Configure PM2 startup: pm2 startup systemd && pm2 save"
-echo "  10. Reload Caddy: systemctl reload caddy"
+echo "  1. Clone application repository to /opt/skilltree/"
+echo "  2. Configure Caddyfile at /etc/caddy/Caddyfile (see scripts/Caddyfile)"
+echo "  3. Create .env file with production credentials (REDIS_PASSWORD=skilltree_redis_2024)"
+echo "  4. Install app dependencies: pnpm install --frozen-lockfile"
+echo "  5. Build application: pnpm build"
+echo "  6. Start PM2 services: pm2 start ecosystem.config.js"
+echo "  7. Configure PM2 startup: pm2 startup systemd && pm2 save"
+echo "  8. Reload Caddy: systemctl reload caddy"
 echo ""
 log "Provisioning script completed successfully!"

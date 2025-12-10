@@ -193,33 +193,33 @@ Monorepo structure (from plan.md):
 
 ### Implementation for User Story 3
 
-- [ ] T060 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-11] [US3] Create scripts/setup-server.sh with shebang and error handling (set -e)
-- [ ] T061 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Node.js 18.x installation to setup-server.sh via NodeSource repository
-- [ ] T062 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add pnpm and PM2 global installation to setup-server.sh (npm install -g pnpm pm2)
-- [ ] T063 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Redis 7.x installation to setup-server.sh via apt-get
-- [ ] T064 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Configure Redis in setup-server.sh: bind to localhost, require password via sed commands
-- [ ] T065 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Redis service enable and start to setup-server.sh (systemctl enable/start redis-server)
-- [ ] T066 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Caddy 2.x installation to setup-server.sh via Cloudsmith repository
-- [ ] T067 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add UFW firewall setup to setup-server.sh: allow 22, 80, 443 only, enable with --force
-- [ ] T067.5 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Disable SSH password authentication in setup-server.sh: edit /etc/ssh/sshd_config (PasswordAuthentication no, PubkeyAuthentication yes), restart sshd
-- [ ] T068 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add application directory creation to setup-server.sh: mkdir -p /opt/skilltree/{logs,backups}
-- [ ] T069 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-12] [US3] Create /etc/caddy/Caddyfile with reverse proxy configuration for skilltree.app → localhost:3000
-- [ ] T070 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-12] [US3] Add api.skilltree.app reverse proxy to Caddyfile → localhost:4000 with gzip encoding
-- [ ] T071 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-12] [US3] Add admin.skilltree.app reverse proxy to Caddyfile → localhost:3001 with gzip encoding
-- [ ] T072 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-12] [US3] Add Caddy access logging to Caddyfile for each domain (/var/log/caddy/{service}.log)
-- [ ] T073 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Caddy service reload to setup-server.sh (systemctl reload caddy)
-- [ ] T074 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-13] [US3] Create ecosystem.config.js in root with PM2 configuration for api service
-- [ ] T075 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-13] [US3] Configure api process in ecosystem.config.js: name='api', script='./apps/api/dist/main.js', instances=2, exec_mode='cluster', wait_ready=true
-- [ ] T076 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-13] [US3] Add environment variables to api config in ecosystem.config.js: NODE_ENV='production', PORT=4000
-- [ ] T077 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-13] [US3] Add graceful shutdown settings to ecosystem.config.js: listen_timeout=10000, kill_timeout=5000
-- [ ] T078 [EXECUTOR: technical-writer] [SEQUENTIAL] [US3] Document manual deployment steps in quickstart.md for VDS provisioning
-- [ ] T079 [EXECUTOR: MAIN] [SEQUENTIAL] [US3] Test setup-server.sh in local Ubuntu VM or dry-run mode
-- [ ] T080 [EXECUTOR: MAIN] [SEQUENTIAL] [US3] Verify script creates /opt/skilltree directory structure
-- [ ] T081 [EXECUTOR: MAIN] [SEQUENTIAL] [US3] Verify Redis listens on localhost:6379 with password authentication
-- [ ] T082 [EXECUTOR: MAIN] [SEQUENTIAL] [US3] Verify UFW status shows only SSH (22), HTTP (80), HTTPS (443) allowed
-- [ ] T082.5 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Install and configure fail2ban in setup-server.sh: apt-get install fail2ban, configure SSH jail (maxretry=3, bantime=600), enable service
+- [X] T060 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-11] [US3] Create scripts/setup-server.sh with shebang and error handling (set -e) → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T061 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Node.js 18.x installation to setup-server.sh via NodeSource repository → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T062 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add pnpm and PM2 global installation to setup-server.sh (npm install -g pnpm pm2) → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T063 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Redis 7.x installation to setup-server.sh via apt-get → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T064 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Configure Redis in setup-server.sh: bind to localhost, require password via sed commands → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T065 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Redis service enable and start to setup-server.sh (systemctl enable/start redis-server) → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T066 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Caddy 2.x installation to setup-server.sh via Cloudsmith repository → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T067 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add UFW firewall setup to setup-server.sh: allow 22, 80, 443 only, enable with --force → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T067.5 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Disable SSH password authentication in setup-server.sh: edit /etc/ssh/sshd_config (PasswordAuthentication no, PubkeyAuthentication yes), restart sshd → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T068 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add application directory creation to setup-server.sh: mkdir -p /opt/skilltree/{logs,backups,scripts} → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T069 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-12] [US3] Create /etc/caddy/Caddyfile with reverse proxy configuration for skilltree.app → localhost:3000 → Artifacts: [Caddyfile](../../../scripts/Caddyfile)
+- [X] T070 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-12] [US3] Add api.skilltree.app reverse proxy to Caddyfile → localhost:4000 with gzip encoding → Artifacts: [Caddyfile](../../../scripts/Caddyfile)
+- [X] T071 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-12] [US3] Add admin.skilltree.app reverse proxy to Caddyfile → localhost:3001 with gzip encoding → Artifacts: [Caddyfile](../../../scripts/Caddyfile)
+- [X] T072 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-12] [US3] Add Caddy access logging to Caddyfile for each domain (/var/log/caddy/{service}.log) → Artifacts: [Caddyfile](../../../scripts/Caddyfile)
+- [X] T073 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Add Caddy service reload to setup-server.sh (systemctl reload caddy) → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
+- [X] T074 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-13] [US3] Create ecosystem.config.js in root with PM2 configuration for api service → Artifacts: [ecosystem.config.js](../../../ecosystem.config.js)
+- [X] T075 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-13] [US3] Configure api process in ecosystem.config.js: name='api', script='./apps/api/dist/main.js', instances=2, exec_mode='cluster', wait_ready=true → Artifacts: [ecosystem.config.js](../../../ecosystem.config.js)
+- [X] T076 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-13] [US3] Add environment variables to api config in ecosystem.config.js: NODE_ENV='production', PORT=4000 → Artifacts: [ecosystem.config.js](../../../ecosystem.config.js)
+- [X] T077 [EXECUTOR: devops-automation-specialist] [PARALLEL-GROUP-13] [US3] Add graceful shutdown settings to ecosystem.config.js: listen_timeout=10000, kill_timeout=5000 → Artifacts: [ecosystem.config.js](../../../ecosystem.config.js)
+- [X] T078 [EXECUTOR: technical-writer] [SEQUENTIAL] [US3] Document manual deployment steps in quickstart.md for VDS provisioning → Artifacts: [quickstart.md](./quickstart.md)
+- [X] T079 [EXECUTOR: MAIN] [SEQUENTIAL] [US3] Test setup-server.sh in local Ubuntu VM or dry-run mode → Artifacts: Server 95.81.97.236 fully provisioned
+- [X] T080 [EXECUTOR: MAIN] [SEQUENTIAL] [US3] Verify script creates /opt/skilltree directory structure → Artifacts: /opt/skilltree/{logs,backups,scripts} verified
+- [X] T081 [EXECUTOR: MAIN] [SEQUENTIAL] [US3] Verify Redis listens on localhost:6379 with password authentication → Artifacts: Redis PONG with password verified
+- [X] T082 [EXECUTOR: MAIN] [SEQUENTIAL] [US3] Verify UFW status shows only SSH (22), HTTP (80), HTTPS (443) allowed → Artifacts: UFW status verified
+- [X] T082.5 [EXECUTOR: devops-automation-specialist] [SEQUENTIAL] [US3] Install and configure fail2ban in setup-server.sh: apt-get install fail2ban, configure SSH jail (maxretry=3, bantime=600), enable service → Artifacts: [setup-server.sh](../../../scripts/setup-server.sh)
 
-**Checkpoint**: User Story 3 complete - VDS server provisioned with all services installed and configured
+**Checkpoint**: ✅ User Story 3 COMPLETE (25/25 tasks) - VDS server provisioned with all services installed and configured
 
 ---
 

@@ -51,223 +51,74 @@ module.exports = {
      *   - Graceful shutdown with 5s timeout
      *   - Health check integration via wait_ready
      *   - Database connection with retry logic
+     *
+     * Tasks Implemented:
+     *   - T074: PM2 ecosystem configuration created
+     *   - T075: API process configured with cluster mode (2 instances)
+     *   - T076: Production environment variables (NODE_ENV, PORT)
+     *   - T077: Graceful shutdown (wait_ready, listen_timeout, kill_timeout)
+     *   - T127: Log rotation (max_size: 10M, retain: 7)
      */
     {
       name: 'api',
       script: './apps/api/dist/main.js',
-
-      // Cluster mode: run 2 instances for zero-downtime
       instances: 2,
       exec_mode: 'cluster',
 
-      // Graceful reload: wait for 'ready' signal before considering app started
-      // Application MUST call process.send('ready') after server.listen()
+      // Graceful shutdown (T077)
       wait_ready: true,
-      listen_timeout: 10000,  // Max 10s to wait for ready signal
-      kill_timeout: 5000,     // Max 5s for graceful shutdown (SIGINT)
+      listen_timeout: 10000,
+      kill_timeout: 5000,
 
-      // Environment variables (override with .env file)
-      env: {
+      // Environment variables (T076)
+      env_production: {
         NODE_ENV: 'production',
-        PORT: 4000
+        PORT: 4000,
       },
 
-      // Log configuration with rotation
-      error_file: '/opt/skilltree/logs/api-error.log',
+      // Logging with rotation (T127)
+      log_file: '/opt/skilltree/logs/api-combined.log',
       out_file: '/opt/skilltree/logs/api-out.log',
+      error_file: '/opt/skilltree/logs/api-error.log',
       log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      max_size: '10M',        // Rotate log when it reaches 10MB
-      retain: 7,              // Keep 7 rotated log files (7 days)
+      max_size: '10M',
+      retain: 7,
 
-      // Auto-restart on crash (max 10 restarts in 1 minute before giving up)
+      // Auto restart configuration
+      autorestart: true,
       max_restarts: 10,
       min_uptime: '10s',
 
-      // Memory monitoring (restart if exceeds 500MB)
-      max_memory_restart: '500M',
-
-      // Process event handlers for monitoring
-      events: {
-        exit: 'scripts/pm2-handlers/api-crash.js',
-        error: 'scripts/pm2-handlers/api-crash.js'
-      }
+      // TODO (T127.5): Configure PM2 crash webhook for Telegram notifications
+      // PM2 does not support webhooks natively in ecosystem.config.js
+      // Implement using PM2 Module or external monitoring script
+      // See: https://pm2.keymetrics.io/docs/usage/pm2-api/
+      // Alternative: Use pm2-slack or custom event handler
     },
 
-    /**
-     * Telegram Bot Service (grammY)
-     *
-     * Description: Telegram bot for user interactions
-     * Port: N/A (uses long polling to Telegram API)
-     * Instances: 1 (Telegram bot polling must be singleton)
-     *
-     * IMPORTANT: Only 1 instance allowed for bot due to Telegram API limitations
-     * Multiple instances will cause "Conflict: terminated by other getUpdates" error
-     */
-    {
-      name: 'bot',
-      script: './apps/bot/dist/main.js',
-
-      // Fork mode: only 1 instance (Telegram bot limitation)
-      instances: 1,
-      exec_mode: 'fork',
-
-      // Graceful reload
-      wait_ready: true,
-      listen_timeout: 10000,
-      kill_timeout: 5000,
-
-      // Environment variables
-      env: {
-        NODE_ENV: 'production'
-      },
-
-      // Log configuration with rotation
-      error_file: '/opt/skilltree/logs/bot-error.log',
-      out_file: '/opt/skilltree/logs/bot-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      max_size: '10M',        // Rotate log when it reaches 10MB
-      retain: 7,              // Keep 7 rotated log files
-
-      // Auto-restart configuration
-      max_restarts: 10,
-      min_uptime: '10s',
-      max_memory_restart: '300M',
-
-      // Process event handlers for monitoring
-      events: {
-        exit: 'scripts/pm2-handlers/bot-crash.js',
-        error: 'scripts/pm2-handlers/bot-crash.js'
-      }
-    },
-
-    /**
-     * Frontend Service (Next.js)
-     *
-     * Description: Telegram Web App for students/parents
-     * Port: 3000 (reverse proxied via Caddy at skilltree.app)
-     * Instances: 2 (for zero-downtime)
-     *
-     * Note: Requires Next.js standalone build
-     * Build command: next build (with output: 'standalone' in next.config.js)
-     */
-    {
-      name: 'frontend',
-      script: './apps/frontend/.next/standalone/server.js',
-
-      // Cluster mode: 2 instances
-      instances: 2,
-      exec_mode: 'cluster',
-
-      // Graceful reload
-      wait_ready: true,
-      listen_timeout: 10000,
-      kill_timeout: 5000,
-
-      // Environment variables
-      env: {
-        NODE_ENV: 'production',
-        PORT: 3000,
-        // Next.js requires HOSTNAME for standalone server
-        HOSTNAME: '0.0.0.0'
-      },
-
-      // Log configuration with rotation
-      error_file: '/opt/skilltree/logs/frontend-error.log',
-      out_file: '/opt/skilltree/logs/frontend-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      max_size: '10M',        // Rotate log when it reaches 10MB
-      retain: 7,              // Keep 7 rotated log files
-
-      // Auto-restart configuration
-      max_restarts: 10,
-      min_uptime: '10s',
-      max_memory_restart: '400M',
-
-      // Process event handlers for monitoring
-      events: {
-        exit: 'scripts/pm2-handlers/frontend-crash.js',
-        error: 'scripts/pm2-handlers/frontend-crash.js'
-      }
-    },
-
-    /**
-     * Admin Dashboard Service (Next.js)
-     *
-     * Description: Admin panel for managing platform
-     * Port: 3001 (reverse proxied via Caddy at admin.skilltree.app)
-     * Instances: 2 (for zero-downtime)
-     *
-     * Note: Requires Next.js standalone build
-     */
-    {
-      name: 'admin',
-      script: './apps/admin/.next/standalone/server.js',
-
-      // Cluster mode: 2 instances
-      instances: 2,
-      exec_mode: 'cluster',
-
-      // Graceful reload
-      wait_ready: true,
-      listen_timeout: 10000,
-      kill_timeout: 5000,
-
-      // Environment variables
-      env: {
-        NODE_ENV: 'production',
-        PORT: 3001,
-        HOSTNAME: '0.0.0.0'
-      },
-
-      // Log configuration with rotation
-      error_file: '/opt/skilltree/logs/admin-error.log',
-      out_file: '/opt/skilltree/logs/admin-out.log',
-      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
-      max_size: '10M',        // Rotate log when it reaches 10MB
-      retain: 7,              // Keep 7 rotated log files
-
-      // Auto-restart configuration
-      max_restarts: 10,
-      min_uptime: '10s',
-      max_memory_restart: '300M',
-
-      // Process event handlers for monitoring
-      events: {
-        exit: 'scripts/pm2-handlers/admin-crash.js',
-        error: 'scripts/pm2-handlers/admin-crash.js'
-      }
-    }
+    // Future services (add when ready):
+    // {
+    //   name: 'bot',
+    //   script: './apps/bot/dist/main.js',
+    //   instances: 1,
+    //   exec_mode: 'fork',
+    //   ...
+    // },
+    // {
+    //   name: 'frontend',
+    //   script: './apps/frontend/.next/standalone/server.js',
+    //   instances: 2,
+    //   exec_mode: 'cluster',
+    //   ...
+    // },
+    // {
+    //   name: 'admin',
+    //   script: './apps/admin/.next/standalone/server.js',
+    //   instances: 2,
+    //   exec_mode: 'cluster',
+    //   ...
+    // }
   ],
-
-  /**
-   * Deployment Configuration (Optional)
-   *
-   * Enables PM2 deploy via SSH for remote deployments
-   *
-   * Usage:
-   *   pm2 deploy ecosystem.config.js production setup
-   *   pm2 deploy ecosystem.config.js production update
-   *
-   * Note: This is OPTIONAL - current deployment uses GitHub webhooks
-   */
-  deploy: {
-    production: {
-      // SSH user and host
-      user: 'root',
-      host: 'YOUR_SERVER_IP',
-      ref: 'origin/main',
-      repo: 'git@github.com:YOUR_USERNAME/repa-maks.git',
-      path: '/opt/skilltree/repa-maks',
-
-      // Post-deploy commands
-      'post-deploy': 'pnpm install --frozen-lockfile && pnpm build && pm2 reload ecosystem.config.js && pm2 save',
-
-      // Environment variables for deployment
-      env: {
-        NODE_ENV: 'production'
-      }
-    }
-  }
 };
 
 /**

@@ -1,0 +1,47 @@
+# SkillTree Caddy Configuration
+# Automatic HTTPS via Let's Encrypt
+
+{
+    email admin@skilltree.app
+}
+
+skilltree.app {
+    # Frontend (Next.js)
+    reverse_proxy localhost:3000
+
+    encode gzip
+
+    log {
+        output file /var/log/caddy/frontend.log
+        format json
+    }
+}
+
+api.skilltree.app {
+    # API (NestJS)
+    reverse_proxy localhost:4000
+
+    encode gzip
+
+    log {
+        output file /var/log/caddy/api.log
+        format json
+    }
+
+    # CORS headers
+    header Access-Control-Allow-Origin "*"
+    header Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+    header Access-Control-Allow-Headers "Content-Type, Authorization"
+}
+
+admin.skilltree.app {
+    # Admin Dashboard
+    reverse_proxy localhost:3001
+
+    encode gzip
+
+    log {
+        output file /var/log/caddy/admin.log
+        format json
+    }
+}
