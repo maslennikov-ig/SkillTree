@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.9] - 2025-12-10
+
+### Added
+- **api**: complete Phase 6 & 6.5 - Health API & Telegram notifications (80633e6)
+
 ## [0.1.8] - 2025-12-10
 
 ### Added
