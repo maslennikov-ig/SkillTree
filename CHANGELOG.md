@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10] - 2025-12-18
+
+### Added
+- **api**: complete Phase 7 & 8 - Deployment pipeline & Monitoring (3c7759a)
+
+### Fixed
+- **database**: add build output for production deployment (74721f7)
+
 ## [0.1.9] - 2025-12-10
 
 ### Added
