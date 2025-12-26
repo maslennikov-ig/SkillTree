@@ -1,3 +1,4 @@
+import "dotenv/config"; // Load .env before any other imports
 import { NestFactory } from "@nestjs/core";
 import { AppModule } from "./app.module";
 import { prisma } from "@skilltree/database";

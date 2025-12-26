@@ -19,6 +19,7 @@
     "@nestjs/platform-express": "^10.2.10",
     "@skilltree/database": "workspace:*",
     "@skilltree/shared": "workspace:*",
+    "dotenv": "^17.2.3",
     "grammy": "^1.38.3",
     "ioredis": "^5.8.2",
     "pino": "^10.1.0",

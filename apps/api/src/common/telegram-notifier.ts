@@ -153,5 +153,30 @@ export class TelegramNotifier {
   }
 }
 
-// Export singleton instance
-export const telegramNotifier = new TelegramNotifier();
+// Lazy singleton - only created when first accessed
+let _instance: TelegramNotifier | null = null;
+
+export function getTelegramNotifier(): TelegramNotifier {
+  if (!_instance) {
+    _instance = new TelegramNotifier();
+  }
+  return _instance;
+}
+
+// Legacy export for backward compatibility (deprecated)
+export const telegramNotifier = {
+  get instance() {
+    return getTelegramNotifier();
+  },
+  sendAlert: (message: string) => getTelegramNotifier().sendAlert(message),
+  formatDeploymentSuccess: (commitId: string, commitMessage: string) =>
+    getTelegramNotifier().formatDeploymentSuccess(commitId, commitMessage),
+  formatDeploymentFailure: (error: string, commitId?: string) =>
+    getTelegramNotifier().formatDeploymentFailure(error, commitId),
+  formatRollbackNotification: (commitId: string) =>
+    getTelegramNotifier().formatRollbackNotification(commitId),
+  formatProcessCrash: (processName: string, error: string) =>
+    getTelegramNotifier().formatProcessCrash(processName, error),
+  formatDiskSpaceWarning: (diskUsagePercent: number) =>
+    getTelegramNotifier().formatDiskSpaceWarning(diskUsagePercent),
+};
