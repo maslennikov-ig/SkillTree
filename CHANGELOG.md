@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.11] - 2025-12-27
+
+### Fixed
+- **api**: lazy-load TelegramNotifier after dotenv init (3282885)
+
+### Other
+- update release script with dual changelog support (4df3420)
+
 ## [0.1.10] - 2025-12-18
 
 ### Added
