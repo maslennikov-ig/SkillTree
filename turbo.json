@@ -21,6 +21,15 @@
     },
     "clean": {
       "cache": false
+    },
+    "@skilltree/bot#dev": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["@skilltree/database#build", "@skilltree/shared#build"]
+    },
+    "@skilltree/bot#build": {
+      "dependsOn": ["@skilltree/database#build", "@skilltree/shared#build"],
+      "outputs": ["dist/**"]
     }
   }
 }

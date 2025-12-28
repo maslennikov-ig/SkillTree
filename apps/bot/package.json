@@ -1,0 +1,28 @@
+{
+  "name": "@skilltree/bot",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SkillTree Telegram Bot - Career guidance for teenagers",
+  "main": "dist/bot.js",
+  "scripts": {
+    "dev": "ts-node --transpile-only src/bot.ts",
+    "build": "tsc",
+    "start": "node dist/bot.js",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "grammy": "^1.21.0",
+    "@grammyjs/menu": "^1.2.0",
+    "@grammyjs/ratelimiter": "^1.2.0",
+    "date-fns": "^3.6.0",
+    "pino": "^10.1.0",
+    "@skilltree/database": "workspace:*",
+    "@skilltree/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@skilltree/typescript-config": "workspace:*",
+    "@types/node": "^20.10.0",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.3.0"
+  }
+}
