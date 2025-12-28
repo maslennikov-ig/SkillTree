@@ -52,17 +52,19 @@ model Student {
   user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   testSessions    TestSession[]
   parentRelations ParentStudent[]
+  parentLinkCode  ParentLinkCode?
 
   @@index([userId])
 }
 
 model Parent {
-  id        String   @id @default(cuid())
-  userId    String   @unique
-  email     String?
-  phone     String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  email         String?
+  emailVerified Boolean  @default(false) // T016: Email verification status
+  phone         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   // Relations
   user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -108,6 +110,12 @@ model TestSession {
   startedAt   DateTime      @default(now())
   completedAt DateTime?
 
+  // FSM state fields (T008)
+  currentStep    Int       @default(0) // FSM instruction pointer (0-54)
+  answeredJSON   Json      @default("{}") // Answers as {questionId: value}
+  reminderSentAt DateTime? // 12h reminder tracking
+  updatedAt      DateTime  @updatedAt
+
   // Gamification fields
   points                Int  @default(0)
   badges                Json @default("[]")
@@ -115,8 +123,9 @@ model TestSession {
   shareCount            Int  @default(0)
 
   // Relations
-  student Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  answers Answer[]
+  student    Student     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  answers    Answer[]
+  testResult TestResult?
 
   @@index([studentId])
   @@index([status])
@@ -141,8 +150,15 @@ model Question {
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 
+  // RIASEC fields (T009)
+  primaryDimension String // R/I/A/S/E/C
+  riasecWeights    Json? // {R:0, I:1, A:0.3...}
+  isEasterEgg      Boolean @default(false)
+  hint             String? // Easter egg hint text
+
   // Relations
   answers Answer[]
+  options QuestionOption[]
 
   @@index([category])
   @@index([orderIndex])
@@ -243,4 +259,106 @@ model ReferralTracking {
   @@index([referrerId])
   @@index([refereeId])
   @@index([referralCode])
+}
+
+// ============================================================================
+// RIASEC Test System (T010-T015)
+// ============================================================================
+
+// T010: Question answer options with RIASEC scoring
+model QuestionOption {
+  id         String  @id @default(cuid())
+  questionId String
+  text       String
+  emoji      String?
+  value      String
+  scores     Json // RIASECScores: {R:0, I:1, A:0.3, S:0, E:0, C:0}
+  order      Int
+
+  // Relations
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+}
+
+// T015: Career outlook enum
+enum CareerOutlook {
+  GROWING
+  STABLE
+  DECLINING
+}
+
+// T015: Career demand level enum
+enum DemandLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+// T011: Career database with RIASEC profiles
+model Career {
+  id             String        @id @default(cuid())
+  title          String
+  titleRu        String
+  description    String
+  riasecProfile  Json // RIASECScores: {R:30, I:90, A:35, S:25, E:30, C:75}
+  salaryMin      Int
+  salaryMax      Int
+  salarySource   String
+  category       String
+  requiredSkills String[]
+  educationPath  String[]
+  universities   String[]
+  outlook        CareerOutlook
+  demandLevel    DemandLevel
+
+  @@index([category])
+}
+
+// T012: Calculated test results
+model TestResult {
+  id              String   @id @default(cuid())
+  sessionId       String   @unique
+  riasecProfile   Json // Calculated RIASECScores
+  topCareers      Json // CareerMatch[] array
+  personalityType String
+  hollandCode     String // Top-3 code (e.g., "RIC")
+  radarChartUrl   String?
+  shareCardUrl    String?
+  createdAt       DateTime @default(now())
+
+  // Relations
+  session TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
+
+// ============================================================================
+// Parent Verification System (T013-T014)
+// ============================================================================
+
+// T013: Email verification codes for parents
+model EmailVerification {
+  id        String   @id @default(cuid())
+  userId    String
+  email     String
+  code      String // 4-digit code
+  expiresAt DateTime
+  verified  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([code])
+}
+
+// T014: Parent-student linking codes
+model ParentLinkCode {
+  id        String   @id @default(cuid())
+  studentId String   @unique
+  code      String   @unique // 6-char alphanumeric
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  // Relations
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@index([code])
 }

@@ -68,36 +68,36 @@ packages/shared/src/    # Shared types
 
 ### 2.1 Database Schema Extensions
 
-- [ ] T008 Add currentStep, answeredJSON, reminderSentAt fields to TestSession model in packages/database/prisma/schema.prisma
-- [ ] T009 [P] Add primaryDimension, riasecWeights, isEasterEgg, hint fields to Question model in packages/database/prisma/schema.prisma
-- [ ] T010 [P] Create QuestionOption model with scores JSON field in packages/database/prisma/schema.prisma
-- [ ] T011 [P] Create Career model with riasecProfile, outlook, demandLevel in packages/database/prisma/schema.prisma
-- [ ] T012 [P] Create TestResult model with riasecProfile, topCareers, personalityType in packages/database/prisma/schema.prisma
-- [ ] T013 [P] Create EmailVerification model with 4-digit code support in packages/database/prisma/schema.prisma
-- [ ] T014 [P] Create ParentLinkCode model with 6-char code in packages/database/prisma/schema.prisma
-- [ ] T015 [P] Add CareerOutlook and DemandLevel enums in packages/database/prisma/schema.prisma
-- [ ] T016 Add emailVerified field to Parent model in packages/database/prisma/schema.prisma
-- [ ] T017 Run prisma migrate dev to apply schema changes
+- [X] T008 [EXECUTOR: database-architect] Add currentStep, answeredJSON, reminderSentAt fields to TestSession model → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
+- [X] T009 [EXECUTOR: database-architect] [P] Add primaryDimension, riasecWeights, isEasterEgg, hint fields to Question model
+- [X] T010 [EXECUTOR: database-architect] [P] Create QuestionOption model with scores JSON field
+- [X] T011 [EXECUTOR: database-architect] [P] Create Career model with riasecProfile, outlook, demandLevel
+- [X] T012 [EXECUTOR: database-architect] [P] Create TestResult model with riasecProfile, topCareers, personalityType
+- [X] T013 [EXECUTOR: database-architect] [P] Create EmailVerification model with 4-digit code support
+- [X] T014 [EXECUTOR: database-architect] [P] Create ParentLinkCode model with 6-char code
+- [X] T015 [EXECUTOR: database-architect] [P] Add CareerOutlook and DemandLevel enums
+- [X] T016 [EXECUTOR: database-architect] Add emailVerified field to Parent model
+- [ ] T017 [EXECUTOR: MAIN] Run prisma migrate dev to apply schema changes (DEFERRED - requires DATABASE_URL)
 
 ### 2.2 Seed Data
 
-- [ ] T018 Create packages/database/prisma/seed-data/questions.ts with 55 RIASEC questions from riasec-seed-data.ts
-- [ ] T019 [P] Create packages/database/prisma/seed-data/careers.ts with 43 careers from riasec-seed-data.ts
-- [ ] T020 Update packages/database/prisma/seed.ts to import and seed questions and careers
-- [ ] T021 Run prisma db seed to populate question bank and career database
+- [X] T018 Create packages/database/prisma/seed-data/questions.ts with 55 RIASEC questions from riasec-seed-data.ts → Artifacts: [riasec-data.ts](../../../packages/database/prisma/seed-data/riasec-data.ts)
+- [X] T019 [P] Create packages/database/prisma/seed-data/careers.ts with 43 careers from riasec-seed-data.ts → Merged into riasec-data.ts
+- [X] T020 Update packages/database/prisma/seed.ts to import and seed questions and careers → Artifacts: [seed.ts](../../../packages/database/prisma/seed.ts)
+- [ ] T021 Run prisma db seed to populate question bank and career database (DEFERRED - requires DATABASE_URL)
 
 ### 2.3 Shared Types
 
-- [ ] T022 [P] Create packages/shared/src/types/riasec.ts with RIASECScores, RIASECType, CareerMatch interfaces
-- [ ] T023 [P] Create packages/shared/src/types/gamification.ts with PointsConfig, UnlockableFeature, FEATURE_UNLOCKS
-- [ ] T024 [P] Create packages/shared/src/constants/riasec.ts with RIASEC_NORMS, RIASEC_COLORS, ARCHETYPES
+- [X] T022 [EXECUTOR: typescript-types-specialist] [P] Create packages/shared/src/types/riasec.ts with RIASECScores, RIASECType, CareerMatch interfaces → Artifacts: [riasec.ts](../../../packages/shared/src/types/riasec.ts)
+- [X] T023 [EXECUTOR: typescript-types-specialist] [P] Create packages/shared/src/types/gamification.ts with PointsConfig, UnlockableFeature, FEATURE_UNLOCKS → Artifacts: [gamification.ts](../../../packages/shared/src/types/gamification.ts)
+- [X] T024 [EXECUTOR: typescript-types-specialist] [P] Create packages/shared/src/constants/riasec.ts with RIASEC_NORMS, RIASEC_COLORS, ARCHETYPES → Artifacts: [riasec.ts](../../../packages/shared/src/constants/riasec.ts)
 
 ### 2.4 Bot Core Setup
 
-- [ ] T025 Create apps/bot/src/bot.ts with grammY Bot instance, MyContext type, Prisma middleware
-- [ ] T026 Create apps/bot/src/types/context.ts with extended MyContext interface including quizSession
-- [ ] T027 [P] Create apps/bot/src/keyboards/main-menu.ts with Student and Parent persistent keyboards
-- [ ] T028 Update root package.json to add bot workspace scripts
+- [X] T025 Create apps/bot/src/bot.ts with grammY Bot instance, MyContext type, Prisma middleware → Artifacts: [bot.ts](../../../apps/bot/src/bot.ts)
+- [X] T026 Create apps/bot/src/types/context.ts with extended MyContext interface including quizSession → Artifacts: [context.ts](../../../apps/bot/src/types/context.ts)
+- [X] T027 [P] Create apps/bot/src/keyboards/main-menu.ts with Student and Parent persistent keyboards → Artifacts: [main-menu.ts](../../../apps/bot/src/keyboards/main-menu.ts)
+- [X] T028 Update root package.json to add bot workspace scripts → Artifacts: [package.json](../../../package.json)
 
 ### 2.5 Environment Configuration
 

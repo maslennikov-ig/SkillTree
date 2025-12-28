@@ -1,3 +1,2 @@
 // Shared constants
-// Will be populated in future phases
-export {};
+export * from "./riasec";

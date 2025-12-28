@@ -11,7 +11,11 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:deploy": "prisma migrate deploy",
+    "db:seed": "ts-node --compiler-options '{\"module\":\"commonjs\"}' prisma/seed.ts",
     "type-check": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "ts-node --compiler-options '{\"module\":\"commonjs\"}' prisma/seed.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.7.0"
