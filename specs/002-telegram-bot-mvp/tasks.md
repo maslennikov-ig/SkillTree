@@ -101,8 +101,8 @@ packages/shared/src/    # Shared types
 
 ### 2.5 Environment Configuration
 
-- [ ] T029 Add TELEGRAM_BOT_TOKEN, SENDPULSE_*, feature flag env vars to .env.example
-- [ ] T030 Create apps/bot/.env.example with bot-specific environment variables
+- [X] T029 Add TELEGRAM_BOT_TOKEN, SENDPULSE_*, feature flag env vars to .env.example → Artifacts: [.env.example](../../../.env.example)
+- [X] T030 Create apps/bot/.env.example with bot-specific environment variables → Artifacts: [.env.example](../../../apps/bot/.env.example)
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
