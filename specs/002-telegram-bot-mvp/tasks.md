@@ -77,14 +77,14 @@ packages/shared/src/    # Shared types
 - [X] T014 [EXECUTOR: database-architect] [P] Create ParentLinkCode model with 6-char code
 - [X] T015 [EXECUTOR: database-architect] [P] Add CareerOutlook and DemandLevel enums
 - [X] T016 [EXECUTOR: database-architect] Add emailVerified field to Parent model
-- [ ] T017 [EXECUTOR: MAIN] Run prisma migrate dev to apply schema changes (DEFERRED - requires DATABASE_URL)
+- [X] T017 [EXECUTOR: MAIN] Run prisma migrate dev to apply schema changes → Applied via prisma db push on VDS
 
 ### 2.2 Seed Data
 
 - [X] T018 Create packages/database/prisma/seed-data/questions.ts with 55 RIASEC questions from riasec-seed-data.ts → Artifacts: [riasec-data.ts](../../../packages/database/prisma/seed-data/riasec-data.ts)
 - [X] T019 [P] Create packages/database/prisma/seed-data/careers.ts with 43 careers from riasec-seed-data.ts → Merged into riasec-data.ts
 - [X] T020 Update packages/database/prisma/seed.ts to import and seed questions and careers → Artifacts: [seed.ts](../../../packages/database/prisma/seed.ts)
-- [ ] T021 Run prisma db seed to populate question bank and career database (DEFERRED - requires DATABASE_URL)
+- [X] T021 Run prisma db seed to populate question bank and career database → 55 questions, 42 careers seeded on VDS
 
 ### 2.3 Shared Types
 
