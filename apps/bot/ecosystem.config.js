@@ -13,6 +13,7 @@ module.exports = {
     {
       name: "skilltree-bot",
       script: "./dist/bot.js",
+      cwd: "/opt/skilltree/repa-maks/apps/bot",
       instances: 1,
       exec_mode: "fork",
       autorestart: true,
@@ -39,7 +40,7 @@ module.exports = {
       name: "skilltree-anonymize-cron",
       script: "npx",
       args: "ts-node ../../packages/database/prisma/scripts/anonymize-users.ts --limit=100",
-      cwd: "/opt/skilltree/current/apps/bot",
+      cwd: "/opt/skilltree/repa-maks/apps/bot",
       instances: 1,
       exec_mode: "fork",
       autorestart: false, // One-shot job
@@ -62,7 +63,7 @@ module.exports = {
       name: "skilltree-retention-check",
       script: "npx",
       args: "ts-node ../../packages/database/prisma/scripts/check-retention.ts --json",
-      cwd: "/opt/skilltree/current/apps/bot",
+      cwd: "/opt/skilltree/repa-maks/apps/bot",
       instances: 1,
       exec_mode: "fork",
       autorestart: false, // One-shot job
