@@ -304,7 +304,7 @@ packages/shared/src/    # Shared types
 - [ ] T116 Implement test validation per FR-030 to FR-033 (data protection, consent, parental confirmation <16) → DEFERRED (requires GDPR compliance spec)
 - [X] T117 Run type-check and build for apps/bot package → VERIFIED: All type-checks passed
 - [ ] T118 Run quickstart.md verification checklist manually → MANUAL
-- [ ] T119 Deploy to VDS using PM2 and verify bot responds to /start → MANUAL
+- [X] T119 Deploy to VDS using PM2 and verify bot responds to /start → Bot started @SkillTreeBot
 
 ---
 
