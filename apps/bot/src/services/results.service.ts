@@ -210,7 +210,7 @@ function getDefaultArchetypeName(dim: RIASECType): string {
     E: "Предприниматель",
     C: "Организатор",
   };
-  return names[dim];
+  return names[dim] ?? "Неизвестный тип";
 }
 
 function getDefaultArchetypeEmoji(dim: RIASECType): string {
@@ -222,7 +222,7 @@ function getDefaultArchetypeEmoji(dim: RIASECType): string {
     E: "💼",
     C: "📊",
   };
-  return emojis[dim];
+  return emojis[dim] ?? "❓";
 }
 
 function getDefaultArchetypeDescription(dim: RIASECType): string {
@@ -234,7 +234,7 @@ function getDefaultArchetypeDescription(dim: RIASECType): string {
     E: "Любит убеждать и управлять",
     C: "Любит порядок и организованность",
   };
-  return descriptions[dim];
+  return descriptions[dim] ?? "Уникальная личность";
 }
 
 // ============================================================================
