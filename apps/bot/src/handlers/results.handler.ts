@@ -70,7 +70,7 @@ export const resultsHandler = new Composer<MyContext>();
 // /results Command
 // ============================================================================
 
-resultsHandler.command("results", async (ctx) => {
+async function handleShowResults(ctx: MyContext) {
   if (!ctx.from) return;
 
   const log = logger.child({ command: "/results", telegramId: ctx.from.id });
@@ -140,7 +140,12 @@ resultsHandler.command("results", async (ctx) => {
     log.error({ error }, "Error displaying results");
     await ctx.reply("Произошла ошибка. Попробуй позже.");
   }
-});
+}
+
+resultsHandler.command("results", handleShowResults);
+
+// "Результаты" keyboard button -> same as /results
+resultsHandler.hears(/^Результаты$/i, handleShowResults);
 
 // ============================================================================
 // View All Careers Callback
@@ -492,6 +497,128 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SHARE, async (ctx) => {
     await ctx.reply("Произошла ошибка. Попробуй позже.");
   }
 });
+
+// ============================================================================
+// /share Command and "Поделиться" Button
+// ============================================================================
+
+async function handleShare(ctx: MyContext) {
+  if (!ctx.from) return;
+
+  if (!isStudent(ctx)) {
+    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    return;
+  }
+
+  const log = logger.child({ command: "/share", telegramId: ctx.from.id });
+
+  try {
+    // Get the latest completed session
+    const session = await ctx.prisma.testSession.findFirst({
+      where: {
+        studentId: ctx.user.studentId,
+        status: "COMPLETED",
+      },
+      orderBy: { completedAt: "desc" },
+    });
+
+    if (!session) {
+      await ctx.reply(
+        "У тебя пока нет результатов. Пройди тест командой /test",
+      );
+      return;
+    }
+
+    // Generate referral link
+    const referralLink = `t.me/skilltreebot?start=ref_${ctx.user.userId}`;
+
+    // Try to fetch share card from API
+    let shareCardSent = false;
+
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}/results/${session.id}/share-card`,
+      );
+
+      if (response.ok) {
+        const buffer = Buffer.from(await response.arrayBuffer());
+
+        await ctx.replyWithPhoto(new InputFile(buffer, "share-card.png"), {
+          caption:
+            `Мой RIASEC-профиль!\n\n` +
+            `Пройди тест и узнай свои сильные стороны:\n${referralLink}`,
+        });
+
+        shareCardSent = true;
+        log.info({ sessionId: session.id }, "Share card sent successfully");
+      } else {
+        log.warn(
+          { sessionId: session.id, status: response.status },
+          "Failed to fetch share card from API",
+        );
+      }
+    } catch (fetchError) {
+      log.error({ error: fetchError }, "Error fetching share card from API");
+    }
+
+    // If share card failed, send text fallback
+    if (!shareCardSent) {
+      await ctx.reply(
+        `**Поделись своими результатами!**\n\n` +
+          `Отправь эту ссылку друзьям:\n` +
+          `${referralLink}\n\n` +
+          `Когда друг пройдёт тест, ты получишь бонусные очки!`,
+        { parse_mode: "Markdown" },
+      );
+    }
+
+    // Check if this is the first share and award points
+    const isFirstShare = session.shareCount === 0;
+
+    if (isFirstShare) {
+      // Update share count
+      await ctx.prisma.testSession.update({
+        where: { id: session.id },
+        data: { shareCount: { increment: 1 } },
+      });
+
+      // Award points for first share (+25)
+      const pointsAwarded = 25;
+
+      // Update session points
+      await ctx.prisma.testSession.update({
+        where: { id: session.id },
+        data: { points: { increment: pointsAwarded } },
+      });
+
+      // Send notification about earned points
+      await ctx.reply(
+        `🎉 **+${pointsAwarded} очков за первый шеринг!**\n\n` +
+          `Когда друг пройдёт тест по твоей ссылке, ты получишь ещё +50 очков!`,
+        { parse_mode: "Markdown" },
+      );
+
+      log.info(
+        { sessionId: session.id, pointsAwarded },
+        "First share points awarded",
+      );
+    } else {
+      // Update share count for subsequent shares
+      await ctx.prisma.testSession.update({
+        where: { id: session.id },
+        data: { shareCount: { increment: 1 } },
+      });
+    }
+  } catch (error) {
+    log.error({ error }, "Error in share handler");
+    await ctx.reply("Произошла ошибка. Попробуй позже.");
+  }
+}
+
+resultsHandler.command("share", handleShare);
+
+// "Поделиться" keyboard button -> same as /share
+resultsHandler.hears(/^Поделиться$/i, handleShare);
 
 // ============================================================================
 // Send to Parent Callback

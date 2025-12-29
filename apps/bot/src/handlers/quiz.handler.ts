@@ -70,7 +70,7 @@ export const quizHandler = new Composer<MyContext>();
 // /test Command - Start New Quiz
 // ============================================================================
 
-quizHandler.command("test", async (ctx) => {
+async function handleStartTest(ctx: MyContext) {
   if (!ctx.from) return;
 
   const log = logger.child({ command: "/test", telegramId: ctx.from.id });
@@ -126,13 +126,15 @@ quizHandler.command("test", async (ctx) => {
     log.error({ error }, "Error starting quiz");
     await ctx.reply("Произошла ошибка при запуске теста. Попробуй позже.");
   }
-});
+}
+
+quizHandler.command("test", handleStartTest);
 
 // ============================================================================
 // /resume Command - Continue Existing Quiz
 // ============================================================================
 
-quizHandler.command("resume", async (ctx) => {
+async function handleResumeTest(ctx: MyContext) {
   if (!ctx.from) return;
 
   if (!isStudent(ctx)) {
@@ -163,7 +165,19 @@ quizHandler.command("resume", async (ctx) => {
     logger.error({ error }, "Error resuming quiz");
     await ctx.reply("Произошла ошибка. Попробуй /test чтобы начать заново.");
   }
-});
+}
+
+quizHandler.command("resume", handleResumeTest);
+
+// ============================================================================
+// Keyboard Button Handlers (Reply Keyboard)
+// ============================================================================
+
+// "Начать тест" button -> same as /test
+quizHandler.hears(/^Начать тест$/i, handleStartTest);
+
+// "Продолжить тест" button -> same as /resume
+quizHandler.hears(/^Продолжить тест$/i, handleResumeTest);
 
 // ============================================================================
 // /abort and /cancel Commands - Abandon Current Quiz
