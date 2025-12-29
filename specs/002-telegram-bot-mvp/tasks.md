@@ -341,7 +341,7 @@ packages/shared/src/    # Shared types
 
 - [X] T130 [FR-038] Create packages/database/prisma/scripts/check-retention.ts to identify expired data → Artifacts: [check-retention.ts](../../../packages/database/prisma/scripts/check-retention.ts)
 - [X] T131 [FR-038] Add retentionExpiresAt field to User model (createdAt + 3 years, updated on activity) → Artifacts: [schema.prisma](../../../packages/database/prisma/schema.prisma)
-- [ ] T132 [FR-038] Run migration to add retentionExpiresAt field to User table → DEFERRED (requires DATABASE_URL)
+- [X] T132 [FR-038] Run migration to add retentionExpiresAt field to User table → Applied via prisma db push on VDS
 
 ### Implementation for FR-039 (Anonymization)
 

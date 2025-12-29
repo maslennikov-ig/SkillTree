@@ -10,6 +10,7 @@
 
 import {
   PrismaClient,
+  Prisma,
   QuestionType,
   CareerOutlook,
   DemandLevel,
@@ -41,7 +42,7 @@ async function main() {
         sectionNumber: q.section,
         orderIndex: q.orderIndex,
         primaryDimension: q.primaryDimension,
-        riasecWeights: null, // Will be calculated from options
+        riasecWeights: Prisma.JsonNull, // Will be calculated from options
         isEasterEgg: q.isEasterEgg ?? false,
         hint: q.hint ?? null,
       },
@@ -54,7 +55,7 @@ async function main() {
         sectionNumber: q.section,
         orderIndex: q.orderIndex,
         primaryDimension: q.primaryDimension,
-        riasecWeights: null,
+        riasecWeights: Prisma.JsonNull,
         isEasterEgg: q.isEasterEgg ?? false,
         hint: q.hint ?? null,
       },
@@ -71,13 +72,14 @@ async function main() {
       // Create new options
       for (let i = 0; i < q.options.length; i++) {
         const opt = q.options[i];
+        if (!opt) continue;
         await prisma.questionOption.create({
           data: {
             questionId: question.id,
             text: opt.text,
             emoji: extractEmoji(opt.text),
             value: opt.value,
-            scores: opt.scores,
+            scores: opt.scores as unknown as Prisma.InputJsonValue,
             order: i,
           },
         });
@@ -101,7 +103,7 @@ async function main() {
         title: c.title,
         titleRu: c.titleRu,
         description: c.description,
-        riasecProfile: c.riasecProfile,
+        riasecProfile: c.riasecProfile as unknown as Prisma.InputJsonValue,
         salaryMin: c.salaryMin,
         salaryMax: c.salaryMax,
         salarySource: c.salarySource,
@@ -117,7 +119,7 @@ async function main() {
         title: c.title,
         titleRu: c.titleRu,
         description: c.description,
-        riasecProfile: c.riasecProfile,
+        riasecProfile: c.riasecProfile as unknown as Prisma.InputJsonValue,
         salaryMin: c.salaryMin,
         salaryMax: c.salaryMax,
         salarySource: c.salarySource,
@@ -177,7 +179,7 @@ function mapDemandLevel(level: string): DemandLevel {
 
 function extractEmoji(text: string): string | null {
   const emojiMatch = text.match(/^(\p{Emoji})/u);
-  return emojiMatch ? emojiMatch[1] : null;
+  return emojiMatch?.[1] ?? null;
 }
 
 main()
