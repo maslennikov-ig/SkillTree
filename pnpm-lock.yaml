@@ -148,6 +148,9 @@ importers:
       date-fns:
         specifier: ^3.6.0
         version: 3.6.0
+      dotenv:
+        specifier: ^17.2.3
+        version: 17.2.3
       grammy:
         specifier: ^1.21.0
         version: 1.38.3

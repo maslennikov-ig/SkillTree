@@ -11,13 +11,14 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "grammy": "^1.21.0",
     "@grammyjs/menu": "^1.2.0",
     "@grammyjs/ratelimiter": "^1.2.0",
-    "date-fns": "^3.6.0",
-    "pino": "^10.1.0",
     "@skilltree/database": "workspace:*",
-    "@skilltree/shared": "workspace:*"
+    "@skilltree/shared": "workspace:*",
+    "date-fns": "^3.6.0",
+    "dotenv": "^17.2.3",
+    "grammy": "^1.21.0",
+    "pino": "^10.1.0"
   },
   "devDependencies": {
     "@skilltree/typescript-config": "workspace:*",

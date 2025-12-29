@@ -9,6 +9,9 @@
  * - Graceful shutdown handling
  */
 
+// Load environment variables first - must be before any other imports
+import "dotenv/config";
+
 import { Bot } from "grammy";
 import { limit } from "@grammyjs/ratelimiter";
 import { PrismaClient } from "@skilltree/database";
