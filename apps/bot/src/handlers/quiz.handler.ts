@@ -58,6 +58,7 @@ import {
 } from "../services/referral.service";
 import { sendReferralSuccessNotification } from "../services/notification.service";
 import { buildResultsKeyboard } from "../keyboards/results";
+import { studentActiveQuizMenu, studentMainMenu } from "../keyboards/main-menu";
 import { logger } from "../utils/logger";
 
 // ============================================================================
@@ -112,12 +113,17 @@ async function handleStartTest(ctx: MyContext) {
     const session = result.session;
     log.info({ sessionId: session.id }, "New quiz session started");
 
-    // Show intro message
+    // Show intro message with active quiz keyboard
     await ctx.reply(
       `🌳 Отлично! Начинаем тест на профориентацию.\n\n` +
         `📝 Всего ${TOTAL_QUESTIONS} вопросов, 5 секций\n` +
         `⏱ Примерное время: 15-20 минут\n\n` +
-        `Отвечай честно — правильных и неправильных ответов нет!`,
+        `Отвечай честно — правильных и неправильных ответов нет!\n\n` +
+        `💡 _Если отвлечёшься — нажми «Продолжить тест» внизу._`,
+      {
+        reply_markup: studentActiveQuizMenu,
+        parse_mode: "Markdown",
+      },
     );
 
     // Render first question
@@ -551,6 +557,12 @@ quizHandler.callbackQuery(CALLBACK_PREFIX.NEW, async (ctx) => {
         `Отвечай честно — правильных и неправильных ответов нет!`,
     );
 
+    // Show active quiz keyboard
+    await ctx.reply(`💡 _Если отвлечёшься — нажми «Продолжить тест» внизу._`, {
+      reply_markup: studentActiveQuizMenu,
+      parse_mode: "Markdown",
+    });
+
     await renderStep(ctx, 0, session.id);
   } catch (error) {
     log.error({ error }, "Error starting fresh quiz");
@@ -656,6 +668,7 @@ async function handleQuizComplete(
       ? await getCareerName(ctx, topCareer.careerId)
       : "загружается...";
 
+    // Show results with inline keyboard
     await ctx.reply(
       `📊 **Результаты готовы!**\n\n` +
         `${profile.archetype.emoji} **${profile.archetype.name}**\n` +
@@ -670,6 +683,9 @@ async function handleQuizComplete(
         parse_mode: "Markdown",
       },
     );
+
+    // Restore main menu (without "Продолжить тест")
+    await ctx.reply("Главное меню:", { reply_markup: studentMainMenu });
 
     log.info(
       { archetype: profile.archetype.code, topCareer: topCareer?.careerId },
