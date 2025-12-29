@@ -1,0 +1,781 @@
+/**
+ * Quiz Handler for SkillTree Bot
+ *
+ * Implements the FSM-driven quiz engine:
+ * - /test command - starts new quiz session
+ * - currentStep as instruction pointer (0-54)
+ * - renderStep function for question rendering
+ * - Answer callbacks for MC, Rating, Binary question types
+ * - Section completion celebrations
+ * - Test completion flow with results trigger
+ */
+
+import { Composer } from "grammy";
+import type { MyContext } from "../types/context";
+import { isStudent, hasActiveQuiz } from "../types/context";
+import {
+  startSession,
+  saveAnswer,
+  getQuestionForStep,
+  getProgress,
+  isEndOfSection,
+  isQuizComplete,
+  getActiveSession,
+} from "../services/quiz.service";
+import {
+  buildQuestionKeyboard,
+  buildSectionCompleteKeyboard,
+  buildResumePromptKeyboard,
+  parseAnswerCallback,
+  CALLBACK_PREFIX,
+} from "../keyboards/question";
+import {
+  TOTAL_QUESTIONS,
+  getSectionForStep,
+  getSectionCelebration,
+} from "../content/questions";
+import {
+  calculateRIASECProfile,
+  matchCareers,
+  saveTestResults,
+} from "../services/results.service";
+import {
+  generateSectionInsight,
+  shouldShowInsight,
+} from "../services/insight.service";
+import {
+  awardQuestionPoints,
+  awardSectionPoints,
+  awardTestCompletionPoints,
+  checkBadgeUnlock,
+  checkEasterEggBadge,
+  getBadgeNotification,
+} from "../services/gamification.service";
+import {
+  completeReferral,
+  claimReferralRewards,
+  checkReferralMilestoneBadge,
+} from "../services/referral.service";
+import { sendReferralSuccessNotification } from "../services/notification.service";
+import { buildResultsKeyboard } from "../keyboards/results";
+import { logger } from "../utils/logger";
+
+// ============================================================================
+// Composer
+// ============================================================================
+
+export const quizHandler = new Composer<MyContext>();
+
+// ============================================================================
+// /test Command - Start New Quiz
+// ============================================================================
+
+quizHandler.command("test", async (ctx) => {
+  if (!ctx.from) return;
+
+  const log = logger.child({ command: "/test", telegramId: ctx.from.id });
+
+  // Check if user is a registered student
+  if (!isStudent(ctx)) {
+    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    return;
+  }
+
+  try {
+    // Check for existing active session
+    if (hasActiveQuiz(ctx)) {
+      const progress = Math.round(
+        (ctx.quizSession.currentStep / TOTAL_QUESTIONS) * 100,
+      );
+      await ctx.reply(
+        `У тебя уже есть незавершённый тест!\n\n` +
+          `📊 Прогресс: ${ctx.quizSession.currentStep}/${TOTAL_QUESTIONS} вопросов (${progress}%)\n\n` +
+          `Что хочешь сделать?`,
+        { reply_markup: buildResumePromptKeyboard() },
+      );
+      return;
+    }
+
+    // Start new session (validates retake policy)
+    const result = await startSession(ctx.prisma, ctx.user.studentId);
+
+    // Handle retake policy errors
+    if (!result.success) {
+      log.info(
+        { errorType: result.error.type },
+        "Quiz start blocked by retake policy",
+      );
+      await ctx.reply(result.error.message);
+      return;
+    }
+
+    const session = result.session;
+    log.info({ sessionId: session.id }, "New quiz session started");
+
+    // Show intro message
+    await ctx.reply(
+      `🌳 Отлично! Начинаем тест на профориентацию.\n\n` +
+        `📝 Всего ${TOTAL_QUESTIONS} вопросов, 5 секций\n` +
+        `⏱ Примерное время: 15-20 минут\n\n` +
+        `Отвечай честно — правильных и неправильных ответов нет!`,
+    );
+
+    // Render first question
+    await renderStep(ctx, 0, session.id);
+  } catch (error) {
+    log.error({ error }, "Error starting quiz");
+    await ctx.reply("Произошла ошибка при запуске теста. Попробуй позже.");
+  }
+});
+
+// ============================================================================
+// /resume Command - Continue Existing Quiz
+// ============================================================================
+
+quizHandler.command("resume", async (ctx) => {
+  if (!ctx.from) return;
+
+  if (!isStudent(ctx)) {
+    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    return;
+  }
+
+  try {
+    // Check for active session via middleware or fetch fresh
+    const session =
+      ctx.quizSession ??
+      (await getActiveSession(ctx.prisma, ctx.user.studentId));
+
+    if (!session) {
+      await ctx.reply(
+        "У тебя нет активного теста. Отправь /test чтобы начать новый.",
+      );
+      return;
+    }
+
+    const { text } = getProgress(session.currentStep);
+
+    await ctx.reply(`📚 Продолжаем тест!\n\n${text}`);
+
+    // Render current question
+    await renderStep(ctx, session.currentStep, session.id);
+  } catch (error) {
+    logger.error({ error }, "Error resuming quiz");
+    await ctx.reply("Произошла ошибка. Попробуй /test чтобы начать заново.");
+  }
+});
+
+// ============================================================================
+// /abort and /cancel Commands - Abandon Current Quiz
+// ============================================================================
+
+/**
+ * Handler for abandoning quiz (shared by /abort and /cancel)
+ */
+async function handleAbandonQuiz(ctx: MyContext): Promise<void> {
+  if (!ctx.from) return;
+
+  const log = logger.child({ command: "/cancel", telegramId: ctx.from.id });
+
+  if (!isStudent(ctx) || !hasActiveQuiz(ctx)) {
+    await ctx.reply("У тебя нет активного теста.");
+    return;
+  }
+
+  try {
+    const sessionId = ctx.quizSession.id;
+
+    await ctx.prisma.testSession.update({
+      where: { id: sessionId },
+      data: { status: "ABANDONED" },
+    });
+
+    log.info({ sessionId }, "Quiz session abandoned by user");
+
+    // Note: ctx.quizSession will be undefined on next request
+    // as middleware reloads session state fresh each time
+
+    await ctx.reply(
+      "Тест отменён. Твой прогресс сохранён.\n\nОтправь /test чтобы начать заново.",
+    );
+  } catch (error) {
+    log.error({ error }, "Error aborting quiz");
+    await ctx.reply("Произошла ошибка. Попробуй позже.");
+  }
+}
+
+quizHandler.command("abort", handleAbandonQuiz);
+quizHandler.command("cancel", handleAbandonQuiz);
+
+// ============================================================================
+// FSM Core: renderStep Function
+// ============================================================================
+
+/**
+ * Render question for given step
+ * This is the FSM "instruction executor"
+ */
+async function renderStep(
+  ctx: MyContext,
+  step: number,
+  sessionId: string,
+): Promise<void> {
+  const log = logger.child({ fn: "renderStep", step, sessionId });
+
+  // Check if quiz is complete
+  if (isQuizComplete(step)) {
+    log.info("Quiz complete, triggering results");
+    await handleQuizComplete(ctx, sessionId);
+    return;
+  }
+
+  try {
+    // Load question from database
+    const question = await getQuestionForStep(ctx.prisma, step);
+
+    if (!question) {
+      log.error("Question not found for step");
+      await ctx.reply("Ошибка: вопрос не найден. Обратитесь в поддержку.");
+      return;
+    }
+
+    // Build progress info
+    const { text: progressText } = getProgress(step);
+
+    // Build question text
+    let messageText = `${progressText}\n\n`;
+    messageText += `**${question.text}**`;
+
+    // Add rating scale labels if applicable
+    if (question.type === "RATING" && question.ratingRange?.labels) {
+      messageText += `\n\n_${question.ratingRange.labels.min} — ${question.ratingRange.labels.max}_`;
+    }
+
+    // Build keyboard
+    const keyboard = buildQuestionKeyboard(question);
+
+    // Add hint button for Easter egg questions
+    if (question.isEasterEgg && question.hint) {
+      keyboard.row();
+      keyboard.text("🔍 Подсказка", `${CALLBACK_PREFIX.HINT}${question.id}`);
+    }
+
+    // Send question
+    await ctx.reply(messageText, {
+      reply_markup: keyboard,
+      parse_mode: "Markdown",
+    });
+
+    log.debug(
+      { questionId: question.id, type: question.type },
+      "Question rendered",
+    );
+  } catch (error) {
+    log.error({ error }, "Error rendering step");
+    await ctx.reply("Произошла ошибка. Попробуй /resume чтобы продолжить.");
+  }
+}
+
+// ============================================================================
+// Answer Callback Handlers
+// ============================================================================
+
+/**
+ * Handle all answer callbacks (MC, Rating, Binary)
+ */
+quizHandler.callbackQuery(/^answer_/, async (ctx) => {
+  await ctx.answerCallbackQuery();
+
+  if (!ctx.from) return;
+
+  const log = logger.child({ fn: "answerCallback", telegramId: ctx.from.id });
+
+  // Verify user is a student with active session
+  if (!isStudent(ctx)) {
+    await ctx.reply("Сначала зарегистрируйся. Отправь /start");
+    return;
+  }
+
+  // Get session from context or fetch
+  const session =
+    ctx.quizSession ?? (await getActiveSession(ctx.prisma, ctx.user.studentId));
+
+  if (!session) {
+    await ctx.reply("У тебя нет активного теста. Отправь /test");
+    return;
+  }
+
+  try {
+    // Parse callback data
+    const parsed = parseAnswerCallback(ctx.callbackQuery.data);
+    if (!parsed) {
+      log.warn({ data: ctx.callbackQuery.data }, "Invalid answer callback");
+      return;
+    }
+
+    // Get current question ID
+    const question = await getQuestionForStep(ctx.prisma, session.currentStep);
+    if (!question) {
+      log.error(
+        { step: session.currentStep },
+        "Question not found for current step",
+      );
+      await ctx.reply("Ошибка: вопрос не найден.");
+      return;
+    }
+
+    // Save answer and get next step
+    const nextStep = await saveAnswer(ctx.prisma, session.id, {
+      questionId: question.id,
+      value: parsed.value,
+    });
+
+    log.debug(
+      { questionId: question.id, value: parsed.value, nextStep },
+      "Answer saved",
+    );
+
+    // Award points for answering question
+    try {
+      await awardQuestionPoints(ctx.prisma, ctx.user.studentId);
+
+      // Check for Easter egg badges
+      const easterEggBadges = await checkEasterEggBadge(
+        ctx.prisma,
+        ctx.user.studentId,
+        {
+          questionNumber: session.currentStep + 1,
+          answeredAt: new Date(),
+        },
+      );
+
+      // Notify about any new badges earned
+      for (const result of easterEggBadges) {
+        if (result.isNew && result.badge) {
+          const badgeMessage = getBadgeNotification(result.badge);
+          await ctx.reply(badgeMessage);
+        }
+      }
+    } catch (error) {
+      log.error({ error }, "Error awarding question points");
+    }
+
+    // Edit message to show answer was recorded
+    await ctx.editMessageText(
+      `✅ Ответ записан: ${getAnswerDisplayText(parsed.type, parsed.value, question)}`,
+    );
+
+    // Check for section completion
+    if (isEndOfSection(session.currentStep)) {
+      await handleSectionComplete(ctx, session.currentStep, session.id);
+    } else {
+      // Render next question
+      await renderStep(ctx, nextStep, session.id);
+    }
+  } catch (error) {
+    log.error({ error }, "Error processing answer");
+    await ctx.reply("Произошла ошибка. Попробуй /resume чтобы продолжить.");
+  }
+});
+
+// ============================================================================
+// Section Complete Handler
+// ============================================================================
+
+async function handleSectionComplete(
+  ctx: MyContext,
+  step: number,
+  sessionId: string,
+): Promise<void> {
+  const section = getSectionForStep(step);
+  const celebration = getSectionCelebration(section);
+
+  // Check if this is the final section
+  if (section >= 5) {
+    await handleQuizComplete(ctx, sessionId);
+    return;
+  }
+
+  // Award section completion points
+  if (isStudent(ctx)) {
+    try {
+      await awardSectionPoints(ctx.prisma, ctx.user.studentId, section);
+
+      // Check for badge unlocks
+      const progress = Math.round((step / TOTAL_QUESTIONS) * 100);
+      const badgeResult = await checkBadgeUnlock(
+        ctx.prisma,
+        ctx.user.studentId,
+        progress,
+      );
+
+      if (badgeResult.isNew && badgeResult.badge) {
+        const badgeMessage = getBadgeNotification(badgeResult.badge);
+        await ctx.reply(badgeMessage);
+      }
+    } catch (error) {
+      logger.error({ error }, "Error awarding section points");
+    }
+  }
+
+  // Generate insight teaser for sections 2, 3, 4
+  let insightText = "";
+  if (shouldShowInsight(section)) {
+    try {
+      const insight = await generateSectionInsight(
+        ctx.prisma,
+        sessionId,
+        section,
+      );
+      insightText = `\n\n💡 ${insight.message}`;
+    } catch (error) {
+      logger.error({ error }, "Error generating insight");
+    }
+  }
+
+  // Show section celebration
+  const nextSection = section + 1;
+  const sectionsRemaining = 5 - section;
+
+  await ctx.reply(
+    `🎉 ${celebration}\n\n` +
+      `Ты прошёл секцию ${section}/5!\n` +
+      `✨ +100 очков за секцию!` +
+      insightText +
+      `\n\nОсталось: ${sectionsRemaining} ${getSectionWord(sectionsRemaining)}\n\n` +
+      `Готов к секции ${nextSection}?`,
+    { reply_markup: buildSectionCompleteKeyboard() },
+  );
+}
+
+// ============================================================================
+// Flow Continue Callback (after section celebration)
+// ============================================================================
+
+quizHandler.callbackQuery(CALLBACK_PREFIX.CONTINUE, async (ctx) => {
+  await ctx.answerCallbackQuery();
+
+  if (!isStudent(ctx)) return;
+
+  const session =
+    ctx.quizSession ?? (await getActiveSession(ctx.prisma, ctx.user.studentId));
+
+  if (!session) {
+    await ctx.reply("Сессия истекла. Отправь /test чтобы начать заново.");
+    return;
+  }
+
+  await ctx.editMessageText("Продолжаем! 💪");
+  await renderStep(ctx, session.currentStep, session.id);
+});
+
+// ============================================================================
+// Resume/New Session Callbacks (from /test existing session prompt)
+// ============================================================================
+
+quizHandler.callbackQuery(CALLBACK_PREFIX.RESUME, async (ctx) => {
+  await ctx.answerCallbackQuery();
+
+  if (!isStudent(ctx)) return;
+
+  const session =
+    ctx.quizSession ?? (await getActiveSession(ctx.prisma, ctx.user.studentId));
+
+  if (!session) {
+    await ctx.editMessageText(
+      "Сессия истекла. Отправь /test чтобы начать заново.",
+    );
+    return;
+  }
+
+  const { text } = getProgress(session.currentStep);
+  await ctx.editMessageText(`📚 Продолжаем тест!\n\n${text}`);
+  await renderStep(ctx, session.currentStep, session.id);
+});
+
+quizHandler.callbackQuery(CALLBACK_PREFIX.NEW, async (ctx) => {
+  await ctx.answerCallbackQuery();
+
+  if (!isStudent(ctx)) return;
+
+  const log = logger.child({ fn: "startFresh", telegramId: ctx.from.id });
+
+  try {
+    // Abandon existing session
+    const existingSession =
+      ctx.quizSession ??
+      (await getActiveSession(ctx.prisma, ctx.user.studentId));
+
+    if (existingSession) {
+      await ctx.prisma.testSession.update({
+        where: { id: existingSession.id },
+        data: { status: "ABANDONED" },
+      });
+      log.info({ sessionId: existingSession.id }, "Previous session abandoned");
+    }
+
+    // Start new session (validates retake policy)
+    const result = await startSession(ctx.prisma, ctx.user.studentId);
+
+    // Handle retake policy errors
+    if (!result.success) {
+      log.info(
+        { errorType: result.error.type },
+        "Quiz start blocked by retake policy",
+      );
+      await ctx.editMessageText(result.error.message);
+      return;
+    }
+
+    const session = result.session;
+    log.info({ sessionId: session.id }, "New quiz session started (fresh)");
+
+    await ctx.editMessageText(
+      `🌳 Начинаем заново!\n\n` +
+        `📝 Всего ${TOTAL_QUESTIONS} вопросов, 5 секций\n` +
+        `⏱ Примерное время: 15-20 минут\n\n` +
+        `Отвечай честно — правильных и неправильных ответов нет!`,
+    );
+
+    await renderStep(ctx, 0, session.id);
+  } catch (error) {
+    log.error({ error }, "Error starting fresh quiz");
+    await ctx.editMessageText("Произошла ошибка. Попробуй /test ещё раз.");
+  }
+});
+
+// ============================================================================
+// Hint Callback (Easter Egg)
+// ============================================================================
+
+quizHandler.callbackQuery(/^hint_/, async (ctx) => {
+  await ctx.answerCallbackQuery();
+
+  const questionId = ctx.callbackQuery.data.substring(
+    CALLBACK_PREFIX.HINT.length,
+  );
+
+  try {
+    const question = await ctx.prisma.question.findUnique({
+      where: { id: questionId },
+      select: { hint: true },
+    });
+
+    if (question?.hint) {
+      await ctx.reply(`💡 ${question.hint}`);
+    }
+  } catch (error) {
+    logger.error({ error, questionId }, "Error fetching hint");
+  }
+});
+
+// ============================================================================
+// Quiz Complete Handler
+// ============================================================================
+
+async function handleQuizComplete(
+  ctx: MyContext,
+  sessionId: string,
+): Promise<void> {
+  const log = logger.child({ fn: "handleQuizComplete", sessionId });
+
+  try {
+    // Mark session as completed (if not already by saveAnswer)
+    await ctx.prisma.testSession.update({
+      where: { id: sessionId },
+      data: {
+        status: "COMPLETED",
+        completedAt: new Date(),
+      },
+    });
+
+    log.info("Quiz completed");
+
+    // Award completion points and badge
+    if (isStudent(ctx)) {
+      try {
+        await awardTestCompletionPoints(ctx.prisma, ctx.user.studentId);
+        const badgeResult = await checkBadgeUnlock(
+          ctx.prisma,
+          ctx.user.studentId,
+          100,
+        );
+        if (badgeResult.isNew && badgeResult.badge) {
+          const badgeMessage = getBadgeNotification(badgeResult.badge);
+          await ctx.reply(badgeMessage);
+        }
+      } catch (error) {
+        log.error({ error }, "Error awarding completion points");
+      }
+    }
+
+    // Show completion message
+    await ctx.reply(
+      `🎊 Поздравляем! Тест завершён!\n\n` +
+        `Ты ответил на все ${TOTAL_QUESTIONS} вопросов.\n` +
+        `🏆 +500 очков за завершение теста!\n\n` +
+        `⏳ Подожди немного, мы анализируем твои ответы...`,
+    );
+
+    // Calculate RIASEC profile
+    log.info("Calculating RIASEC profile");
+    const profile = await calculateRIASECProfile(ctx.prisma, sessionId);
+
+    // Match careers
+    log.info("Matching careers");
+    const careerMatches = await matchCareers(ctx.prisma, profile);
+
+    // Save results
+    log.info("Saving test results");
+    await saveTestResults(ctx.prisma, sessionId, profile, careerMatches);
+
+    // Get session points for PDF unlock check
+    const session = await ctx.prisma.testSession.findUnique({
+      where: { id: sessionId },
+      select: { points: true },
+    });
+    const totalPoints = session?.points || 0;
+
+    // Show results summary
+    const topCareer = careerMatches[0];
+    const topCareerText = topCareer
+      ? await getCareerName(ctx, topCareer.careerId)
+      : "загружается...";
+
+    await ctx.reply(
+      `📊 **Результаты готовы!**\n\n` +
+        `${profile.archetype.emoji} **${profile.archetype.name}**\n` +
+        `_${profile.archetype.description}_\n\n` +
+        `**Код Голланда:** ${profile.topDimensions.join("")}\n` +
+        `**Топ профессия:** ${topCareerText} (${topCareer?.matchPercentage ?? 0}%)\n\n` +
+        `Нажми кнопку ниже чтобы увидеть подробности!`,
+      {
+        reply_markup: buildResultsKeyboard({
+          pdfUnlocked: totalPoints >= 1000,
+        }),
+        parse_mode: "Markdown",
+      },
+    );
+
+    log.info(
+      { archetype: profile.archetype.code, topCareer: topCareer?.careerId },
+      "Results displayed",
+    );
+
+    // Process referral completion if user was referred
+    if (ctx.user) {
+      try {
+        const referralResult = await completeReferral(
+          ctx.prisma,
+          ctx.user.userId,
+        );
+
+        if (referralResult.success && referralResult.referralId) {
+          log.info(
+            {
+              referralId: referralResult.referralId,
+              referrerId: referralResult.referrerId,
+            },
+            "Referral completed",
+          );
+
+          // Claim rewards for both parties
+          const rewardsResult = await claimReferralRewards(
+            ctx.prisma,
+            referralResult.referralId,
+          );
+
+          if (rewardsResult.success) {
+            // Notify referee about their bonus
+            await ctx.reply(
+              `🎁 +${rewardsResult.refereePointsAwarded} очков за регистрацию по реферальной ссылке!`,
+            );
+
+            // Check and award referral milestone badges to referrer
+            if (referralResult.referrerId) {
+              const badgeResult = await checkReferralMilestoneBadge(
+                ctx.prisma,
+                referralResult.referrerId,
+              );
+
+              // Send notification to referrer about successful referral
+              if (referralResult.referrerTelegramId) {
+                const refereeName =
+                  ctx.from?.first_name ?? ctx.from?.username ?? "Друг";
+                await sendReferralSuccessNotification(
+                  ctx.prisma,
+                  ctx.api,
+                  referralResult.referrerTelegramId,
+                  refereeName,
+                  rewardsResult.referrerPointsAwarded,
+                  badgeResult.isNew ? badgeResult.badge : undefined,
+                );
+              }
+            }
+          }
+        }
+      } catch (error) {
+        // Don't fail quiz completion if referral processing fails
+        log.error({ error }, "Error processing referral completion");
+      }
+    }
+  } catch (error) {
+    log.error({ error }, "Error completing quiz");
+    await ctx.reply(
+      "Произошла ошибка. Отправь /results чтобы увидеть результаты.",
+    );
+  }
+}
+
+/**
+ * Get career name by ID
+ */
+async function getCareerName(
+  ctx: MyContext,
+  careerId: string,
+): Promise<string> {
+  const career = await ctx.prisma.career.findUnique({
+    where: { id: careerId },
+    select: { titleRu: true },
+  });
+  return career?.titleRu ?? "Профессия";
+}
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Get display text for answer confirmation
+ */
+function getAnswerDisplayText(
+  type: "mc" | "rating" | "binary",
+  value: string,
+  question: { options?: Array<{ text: string; value: string }> },
+): string {
+  switch (type) {
+    case "mc": {
+      // Find option text by value
+      const option = question.options?.find((o) => o.value === value);
+      return option?.text ?? value;
+    }
+
+    case "rating":
+      return `${value}/5`;
+
+    case "binary":
+      return value === "yes" ? "Да" : "Нет";
+
+    default:
+      return value;
+  }
+}
+
+/**
+ * Get Russian word for "section(s)" with correct declension
+ */
+function getSectionWord(count: number): string {
+  if (count === 1) return "секция";
+  if (count >= 2 && count <= 4) return "секции";
+  return "секций";
+}

@@ -12,6 +12,8 @@
     "db:studio": "prisma studio",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "ts-node --compiler-options '{\"module\":\"commonjs\"}' prisma/seed.ts",
+    "db:check-retention": "ts-node --compiler-options '{\"module\":\"commonjs\"}' prisma/scripts/check-retention.ts",
+    "db:anonymize": "ts-node --compiler-options '{\"module\":\"commonjs\"}' prisma/scripts/anonymize-users.ts",
     "type-check": "tsc --noEmit"
   },
   "prisma": {
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@skilltree/typescript-config": "workspace:*",
     "prisma": "^5.7.0",
+    "ts-node": "^10.9.2",
     "typescript": "^5.3.0"
   }
 }

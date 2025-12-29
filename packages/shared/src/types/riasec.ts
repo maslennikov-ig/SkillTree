@@ -25,3 +25,37 @@ export interface RIASECNorms {
   mean: number;
   sd: number;
 }
+
+// ============================================================================
+// Question Types (for Quiz Content)
+// ============================================================================
+
+export type QuestionType =
+  | "MULTIPLE_CHOICE"
+  | "RATING"
+  | "BINARY"
+  | "OPEN_TEXT";
+
+export interface QuestionOption {
+  text: string;
+  value: string;
+  scores: RIASECScores;
+}
+
+export interface Question {
+  id: string;
+  text: string;
+  type: QuestionType;
+  section: number; // 1-5
+  orderIndex: number; // 1-55
+  difficulty: number; // 1-3
+  primaryDimension: RIASECType;
+  options?: QuestionOption[];
+  ratingRange?: {
+    min: number;
+    max: number;
+    labels: { min: string; max: string };
+  };
+  isEasterEgg?: boolean;
+  hint?: string;
+}

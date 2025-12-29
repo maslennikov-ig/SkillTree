@@ -10,6 +10,7 @@
  */
 
 import { Bot } from "grammy";
+import { limit } from "@grammyjs/ratelimiter";
 import { PrismaClient } from "@skilltree/database";
 import type { PrismaClient as PrismaClientType } from "@skilltree/database";
 import { logger } from "./utils/logger";
@@ -24,8 +25,31 @@ if (!process.env.TELEGRAM_BOT_TOKEN) {
   process.exit(1);
 }
 
+if (!process.env.API_URL) {
+  logger.fatal("API_URL environment variable is required");
+  process.exit(1);
+}
+
+// Export for use in handlers
+export const API_URL = process.env.API_URL;
+
 // Create bot instance with extended context
 const bot = new Bot<MyContext>(process.env.TELEGRAM_BOT_TOKEN);
+
+// ============================================================================
+// Middleware: Rate Limiting (MUST be first)
+// ============================================================================
+
+bot.use(
+  limit({
+    timeFrame: 60000, // 1 minute
+    limit: 20, // max 20 messages per minute
+    onLimitExceeded: async (ctx) => {
+      logger.warn({ telegramId: ctx.from?.id }, "Rate limit exceeded");
+      await ctx.reply("Слишком много запросов. Подожди минуту.");
+    },
+  }),
+);
 
 // ============================================================================
 // Middleware: Attach Prisma Client
@@ -160,16 +184,24 @@ bot.catch((err) => {
 });
 
 // ============================================================================
-// Register Handlers (add as you implement)
+// Register Handlers
 // ============================================================================
 
-// TODO: Import and register handlers
-// import { startHandler } from "./handlers/start.handler";
-// import { quizHandler } from "./handlers/quiz.handler";
-// import { resultsHandler } from "./handlers/results.handler";
-// bot.use(startHandler);
-// bot.use(quizHandler);
-// bot.use(resultsHandler);
+import { startHandler } from "./handlers/start.handler";
+import { quizHandler } from "./handlers/quiz.handler";
+import { resultsHandler } from "./handlers/results.handler";
+import { streakHandler } from "./handlers/streak.handler";
+import { parentHandler } from "./handlers/parent.handler";
+import { referralHandler } from "./handlers/referral.handler";
+import { privacyHandler } from "./handlers/privacy.handler";
+
+bot.use(startHandler);
+bot.use(quizHandler);
+bot.use(resultsHandler);
+bot.use(streakHandler);
+bot.use(parentHandler);
+bot.use(referralHandler);
+bot.use(privacyHandler);
 
 // ============================================================================
 // Graceful Shutdown

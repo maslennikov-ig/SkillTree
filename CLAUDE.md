@@ -139,10 +139,12 @@ Follow command-specific instructions. See `docs/Agents Ecosystem/AGENT-ORCHESTRA
 ## Active Technologies
 - Node.js 18+ with TypeScript 5+ + Turborepo (monorepo), NestJS (API framework), grammY (Telegram bot), Prisma (ORM), PM2 (process manager), Caddy 2.x (reverse proxy), Redis 7+ (cache/rate limiting) (001-project-setup)
 - PostgreSQL 15+ (Supabase Cloud), Redis 7+ (localhost), Supabase Storage (future: images/cards) (001-project-setup)
-- **Gamification & Visualization**: Chart.js/QuickChart API (radar charts), SendGrid/Mailgun (email reports), PDFKit/Puppeteer (PDF generation), Canvas API (shareable cards) (001-project-setup)
-- **Database Schema**: 10 tables including gamification (DailyStreak, Achievement, ReferralTracking) with progressive weekly streak system (001-project-setup)
+- **Gamification & Visualization**: Chart.js + @napi-rs/canvas (local radar charts), SendPulse (12K free email/month), PDFKit (PDF generation) (002-telegram-bot-mvp)
+- **Database Schema**: 10+ tables including gamification (DailyStreak, Achievement, ReferralTracking), quiz FSM (TestSession with currentStep), careers database (Career, TestResult) (002-telegram-bot-mvp)
+- **Bot Architecture**: Database-Driven FSM (NOT conversations plugin), 55-question RIASEC test, Pearson correlation career matching (002-telegram-bot-mvp)
 
 ## Recent Changes
+- 002-telegram-bot-mvp: Implementation plan complete with FSM quiz architecture, SendPulse email (12K free/month), local chart generation via @napi-rs/canvas, 55-question RIASEC test, 43 careers database
 - 001-project-setup: Added comprehensive gamification strategy with progressive weekly streak (Day 1: +1pt, Day 2: +2pts, ..., Day 7: +7pts), achievement system (14 badge types), referral tracking, radar chart visualizations, and email reporting infrastructure
 
 ## VDS Server Access (SkillTree Production)

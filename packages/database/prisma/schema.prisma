@@ -24,6 +24,11 @@ model User {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
+  // Data retention (FR-038): Expires 3 years after last activity
+  // Initially null, set by application on first activity to createdAt + 3 years
+  // Updated on user activity (login, answer submission, etc.)
+  retentionExpiresAt DateTime?
+
   // Relations
   student           Student?
   parent            Parent?
@@ -33,6 +38,7 @@ model User {
   referralsReceived ReferralTracking[] @relation("Referee")
 
   @@index([telegramId])
+  @@index([retentionExpiresAt]) // For efficient querying of expired users
 }
 
 // ============================================================================

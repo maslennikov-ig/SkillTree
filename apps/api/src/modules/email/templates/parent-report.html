@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Результаты профориентационного теста</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      max-width: 650px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+    }
+    .container {
+      background-color: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+    .header {
+      background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+      color: white;
+      padding: 40px 30px;
+      text-align: center;
+    }
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 28px;
+      font-weight: 600;
+    }
+    .header p {
+      margin: 0;
+      opacity: 0.95;
+      font-size: 16px;
+    }
+    .content {
+      padding: 30px;
+    }
+    .greeting {
+      font-size: 18px;
+      margin-bottom: 20px;
+      color: #2E7D32;
+    }
+    .section {
+      margin-bottom: 30px;
+    }
+    .section-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: #2E7D32;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #4CAF50;
+    }
+    .info-box {
+      background-color: #f9f9f9;
+      border-left: 4px solid #4CAF50;
+      padding: 15px 20px;
+      margin-bottom: 15px;
+      border-radius: 4px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .info-label {
+      font-weight: 600;
+      color: #666;
+    }
+    .info-value {
+      color: #333;
+    }
+    .archetype-box {
+      background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .archetype-emoji {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .archetype-name {
+      font-size: 22px;
+      font-weight: 600;
+      color: #2E7D32;
+      margin-bottom: 10px;
+    }
+    .archetype-description {
+      font-size: 16px;
+      color: #555;
+      line-height: 1.5;
+    }
+    .riasec-scores {
+      margin: 20px 0;
+    }
+    .score-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .score-label {
+      width: 180px;
+      font-weight: 600;
+      color: #555;
+      flex-shrink: 0;
+    }
+    .score-bar-container {
+      flex-grow: 1;
+      background-color: #e0e0e0;
+      height: 24px;
+      border-radius: 12px;
+      overflow: hidden;
+      margin-right: 10px;
+    }
+    .score-bar {
+      height: 100%;
+      border-radius: 12px;
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      color: white;
+      font-weight: 600;
+      font-size: 12px;
+    }
+    .score-bar.R { background-color: #E74C3C; }
+    .score-bar.I { background-color: #3498DB; }
+    .score-bar.A { background-color: #9B59B6; }
+    .score-bar.S { background-color: #2ECC71; }
+    .score-bar.E { background-color: #F39C12; }
+    .score-bar.C { background-color: #1ABC9C; }
+    .career-card {
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 15px;
+      background-color: #fafafa;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .career-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .career-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .career-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #2E7D32;
+      margin: 0;
+    }
+    .career-match {
+      background-color: #4CAF50;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 16px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .career-description {
+      color: #555;
+      line-height: 1.6;
+      margin: 10px 0 0 0;
+    }
+    .cta-section {
+      background: linear-gradient(135deg, #4CAF50 0%, #2E7D32 100%);
+      border-radius: 8px;
+      padding: 30px;
+      text-align: center;
+      margin-top: 30px;
+      color: white;
+    }
+    .cta-section h3 {
+      margin: 0 0 15px 0;
+      font-size: 22px;
+    }
+    .cta-section p {
+      margin: 0 0 20px 0;
+      opacity: 0.95;
+    }
+    .cta-button {
+      display: inline-block;
+      background-color: white;
+      color: #2E7D32;
+      padding: 14px 32px;
+      border-radius: 25px;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 16px;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .footer {
+      padding: 30px;
+      text-align: center;
+      background-color: #f9f9f9;
+      border-top: 1px solid #e0e0e0;
+    }
+    .footer p {
+      margin: 5px 0;
+      color: #999;
+      font-size: 13px;
+    }
+    .footer-logo {
+      color: #4CAF50;
+      font-weight: 600;
+      font-size: 16px;
+      margin-bottom: 10px;
+    }
+    @media only screen and (max-width: 600px) {
+      body {
+        padding: 10px;
+      }
+      .header {
+        padding: 30px 20px;
+      }
+      .header h1 {
+        font-size: 24px;
+      }
+      .content {
+        padding: 20px;
+      }
+      .score-label {
+        width: 120px;
+        font-size: 14px;
+      }
+      .score-item {
+        flex-wrap: wrap;
+      }
+      .score-bar-container {
+        flex-basis: 100%;
+        margin-top: 5px;
+      }
+      .career-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .career-match {
+        margin-top: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🎓 Результаты профориентационного теста</h1>
+      <p>SkillTree — платформа профориентации для подростков</p>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+      <!-- Greeting -->
+      <div class="greeting">
+        Уважаемый(-ая) {{parentName}}!
+      </div>
+
+      <p>Ваш ребёнок, <strong>{{studentName}}</strong>, успешно прошёл профориентационный тест RIASEC {{testDate}}. Ниже представлены результаты анализа интересов и склонностей.</p>
+
+      <!-- Archetype Section -->
+      <div class="section">
+        <div class="section-title">Тип личности</div>
+        <div class="archetype-box">
+          <div class="archetype-emoji">{{archetypeEmoji}}</div>
+          <div class="archetype-name">{{archetypeName}}</div>
+          <div class="archetype-description">{{archetypeDescription}}</div>
+        </div>
+        <div class="info-box">
+          <div class="info-row">
+            <span class="info-label">Код Холланда:</span>
+            <span class="info-value"><strong>{{hollandCode}}</strong></span>
+          </div>
+          <div class="info-row">
+            <span class="info-label">Дата прохождения теста:</span>
+            <span class="info-value">{{testDate}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIASEC Profile Section -->
+      <div class="section">
+        <div class="section-title">Профиль интересов RIASEC</div>
+        <div class="riasec-scores">
+          <div class="score-item">
+            <div class="score-label">Практический (R)</div>
+            <div class="score-bar-container">
+              <div class="score-bar R" style="width: {{riasecR}}%">{{riasecR}}</div>
+            </div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Исследовательский (I)</div>
+            <div class="score-bar-container">
+              <div class="score-bar I" style="width: {{riasecI}}%">{{riasecI}}</div>
+            </div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Артистический (A)</div>
+            <div class="score-bar-container">
+              <div class="score-bar A" style="width: {{riasecA}}%">{{riasecA}}</div>
+            </div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Социальный (S)</div>
+            <div class="score-bar-container">
+              <div class="score-bar S" style="width: {{riasecS}}%">{{riasecS}}</div>
+            </div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Предприимчивый (E)</div>
+            <div class="score-bar-container">
+              <div class="score-bar E" style="width: {{riasecE}}%">{{riasecE}}</div>
+            </div>
+          </div>
+          <div class="score-item">
+            <div class="score-label">Конвенциональный (C)</div>
+            <div class="score-bar-container">
+              <div class="score-bar C" style="width: {{riasecC}}%">{{riasecC}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top Careers Section -->
+      <div class="section">
+        <div class="section-title">Топ-3 рекомендуемых профессии</div>
+
+        <div class="career-card">
+          <div class="career-header">
+            <h3 class="career-title">1. {{career1Title}}</h3>
+            <span class="career-match">{{career1Match}}% совпадение</span>
+          </div>
+          <p class="career-description">{{career1Description}}</p>
+        </div>
+
+        <div class="career-card">
+          <div class="career-header">
+            <h3 class="career-title">2. {{career2Title}}</h3>
+            <span class="career-match">{{career2Match}}% совпадение</span>
+          </div>
+          <p class="career-description">{{career2Description}}</p>
+        </div>
+
+        <div class="career-card">
+          <div class="career-header">
+            <h3 class="career-title">3. {{career3Title}}</h3>
+            <span class="career-match">{{career3Match}}% совпадение</span>
+          </div>
+          <p class="career-description">{{career3Description}}</p>
+        </div>
+      </div>
+
+      <!-- CTA Section -->
+      <div class="cta-section">
+        <h3>Нужна консультация?</h3>
+        <p>Наши эксперты помогут интерпретировать результаты и составить индивидуальный план профориентации для Вашего ребёнка.</p>
+        <a href="https://t.me/skilltree_support" class="cta-button">Записаться на консультацию</a>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="footer-logo">SkillTree</div>
+      <p>Платформа профориентации для подростков 14-17 лет</p>
+      <p>Это автоматическое письмо. Пожалуйста, не отвечайте на него.</p>
+      <p style="margin-top: 15px;">
+        <a href="https://t.me/skilltree_support" style="color: #4CAF50; text-decoration: none;">Поддержка</a> |
+        <a href="https://skilltree.ru" style="color: #4CAF50; text-decoration: none;">Сайт</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>
