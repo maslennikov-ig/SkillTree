@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.12] - 2026-01-06
+
+### Added
+- **bot**: show 'Продолжить тест' keyboard during quiz (81b9cd0)
+- **002**: phases 3-14 telegram bot MVP implementation (a97dc6d)
+- **002**: phase 2.5 environment configuration (a9f6adb)
+- **002**: phase 2 foundational infrastructure for telegram bot mvp (453d98e)
+- **002**: phase 0-1 setup for telegram bot mvp (0aab0a1)
+
+### Fixed
+- **bot**: handle OPEN_TEXT questions and improve quiz UX (b3140cf)
+- **bot**: add .hears() handlers for reply keyboard buttons (29c8258)
+- **bot**: add dotenv for .env file loading (c3a6a4b)
+- **bot**: add cwd to PM2 ecosystem config for .env loading (2bee7c5)
+- **bot**: fix TypeScript Record lookup type errors in results.service.ts (6d1962f)
+- **database**: fix TypeScript errors in seed.ts (8c94f79)
+
+### Other
+- add testing guide for QA (e86829d)
+- **tasks**: mark T119 as complete - bot deployed to VDS (dff2c69)
+- **tasks**: mark T017, T021 as complete after VDS deployment (4e386ac)
+- move deep-research-prompt to Research folder (6b38be2)
+
 ## [0.1.11] - 2025-12-27
 
 ### Fixed
