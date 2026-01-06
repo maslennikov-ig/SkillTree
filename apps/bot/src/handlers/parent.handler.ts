@@ -50,8 +50,8 @@ parentHandler.command("linkcode", async (ctx) => {
   // Only students can generate link codes
   if (!isStudent(ctx)) {
     await ctx.reply(
-      "Эта команда доступна только для студентов.\n\n" +
-        "Если ты студент, сначала зарегистрируйся через /start",
+      "Эта команда доступна только для учеников.\n\n" +
+        "Если ты ученик, сначала зарегистрируйся через /start",
     );
     return;
   }
@@ -116,7 +116,7 @@ parentHandler.callbackQuery(CALLBACK.GENERATE_NEW_CODE, async (ctx) => {
 
   if (!isStudent(ctx)) {
     await ctx.editMessageText(
-      "Ты не зарегистрирован как студент. Отправь /start",
+      "Ты не зарегистрирован как ученик. Отправь /start",
     );
     return;
   }

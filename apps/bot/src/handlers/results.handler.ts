@@ -76,7 +76,7 @@ async function handleShowResults(ctx: MyContext) {
   const log = logger.child({ command: "/results", telegramId: ctx.from.id });
 
   if (!isStudent(ctx)) {
-    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    await ctx.reply("Сначала зарегистрируйся как ученик. Отправь /start");
     return;
   }
 
@@ -506,7 +506,7 @@ async function handleShare(ctx: MyContext) {
   if (!ctx.from) return;
 
   if (!isStudent(ctx)) {
-    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    await ctx.reply("Сначала зарегистрируйся как ученик. Отправь /start");
     return;
   }
 

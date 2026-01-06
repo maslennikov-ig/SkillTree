@@ -27,6 +27,7 @@ import {
   buildSectionCompleteKeyboard,
   buildResumePromptKeyboard,
   parseAnswerCallback,
+  formatOptionsAsText,
   CALLBACK_PREFIX,
 } from "../keyboards/question";
 import {
@@ -78,7 +79,7 @@ async function handleStartTest(ctx: MyContext) {
 
   // Check if user is a registered student
   if (!isStudent(ctx)) {
-    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    await ctx.reply("Сначала зарегистрируйся как ученик. Отправь /start");
     return;
   }
 
@@ -144,7 +145,7 @@ async function handleResumeTest(ctx: MyContext) {
   if (!ctx.from) return;
 
   if (!isStudent(ctx)) {
-    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    await ctx.reply("Сначала зарегистрируйся как ученик. Отправь /start");
     return;
   }
 
@@ -184,6 +185,83 @@ quizHandler.hears(/^Начать тест$/i, handleStartTest);
 
 // "Продолжить тест" button -> same as /resume
 quizHandler.hears(/^Продолжить тест$/i, handleResumeTest);
+
+// ============================================================================
+// Text Message Handler for OPEN_TEXT Questions
+// ============================================================================
+
+/**
+ * Handle text messages during quiz (OPEN_TEXT questions)
+ * This handler must come AFTER .hears() handlers to avoid conflicts
+ */
+quizHandler.on("message:text", async (ctx) => {
+  if (!ctx.from || !ctx.message?.text) return;
+
+  // Skip if text is a command or known button text
+  const text = ctx.message.text;
+  if (
+    text.startsWith("/") ||
+    text === "Начать тест" ||
+    text === "Продолжить тест" ||
+    text === "Помощь"
+  ) {
+    return; // Let other handlers process
+  }
+
+  const log = logger.child({ fn: "textAnswer", telegramId: ctx.from.id });
+
+  // Check if user has active quiz
+  if (!isStudent(ctx)) return;
+
+  const session =
+    ctx.quizSession ?? (await getActiveSession(ctx.prisma, ctx.user.studentId));
+  if (!session) return;
+
+  // Get current question
+  const question = await getQuestionForStep(ctx.prisma, session.currentStep);
+  if (!question) {
+    log.warn({ step: session.currentStep }, "No question found for step");
+    return;
+  }
+
+  // Only handle OPEN_TEXT questions
+  if (question.type !== "OPEN_TEXT") {
+    log.debug(
+      { type: question.type },
+      "Text received but question is not OPEN_TEXT",
+    );
+    return;
+  }
+
+  try {
+    // Save the text answer (limit to 500 chars)
+    const nextStep = await saveAnswer(ctx.prisma, session.id, {
+      questionId: question.id,
+      value: text.substring(0, 500),
+    });
+
+    log.info({ questionId: question.id, nextStep }, "OPEN_TEXT answer saved");
+
+    // Award points
+    await awardQuestionPoints(ctx.prisma, ctx.user.studentId);
+
+    // Confirm to user
+    await ctx.reply(
+      `✅ Записано! "${text.substring(0, 50)}${text.length > 50 ? "..." : ""}"`,
+    );
+
+    // Check for section completion
+    if (isEndOfSection(session.currentStep)) {
+      await handleSectionComplete(ctx, session.currentStep, session.id);
+    } else {
+      // Render next question
+      await renderStep(ctx, nextStep, session.id);
+    }
+  } catch (error) {
+    log.error({ error }, "Error saving OPEN_TEXT answer");
+    await ctx.reply("Произошла ошибка. Попробуй /resume чтобы продолжить.");
+  }
+});
 
 // ============================================================================
 // /abort and /cancel Commands - Abandon Current Quiz
@@ -266,9 +344,23 @@ async function renderStep(
     let messageText = `${progressText}\n\n`;
     messageText += `**${question.text}**`;
 
+    // Add options as text for MULTIPLE_CHOICE questions
+    if (question.type === "MULTIPLE_CHOICE" && question.options) {
+      messageText += `\n\n${formatOptionsAsText(question.options)}`;
+    }
+
     // Add rating scale labels if applicable
     if (question.type === "RATING" && question.ratingRange?.labels) {
-      messageText += `\n\n_${question.ratingRange.labels.min} — ${question.ratingRange.labels.max}_`;
+      messageText += `\n\n1️⃣ = _${question.ratingRange.labels.min}_`;
+      messageText += `\n5️⃣ = _${question.ratingRange.labels.max}_`;
+    }
+
+    // Add hint for OPEN_TEXT questions
+    if (question.type === "OPEN_TEXT") {
+      if (question.hint) {
+        messageText += `\n\n💡 _${question.hint}_`;
+      }
+      messageText += `\n\n✍️ _Напиши свой ответ (до 500 символов) или нажми «Пропустить»_`;
     }
 
     // Build keyboard
@@ -596,6 +688,57 @@ quizHandler.callbackQuery(/^hint_/, async (ctx) => {
 });
 
 // ============================================================================
+// Skip Callback (OPEN_TEXT questions)
+// ============================================================================
+
+/**
+ * Handle skip button for OPEN_TEXT questions
+ */
+quizHandler.callbackQuery(CALLBACK_PREFIX.SKIP, async (ctx) => {
+  await ctx.answerCallbackQuery();
+
+  if (!isStudent(ctx)) return;
+
+  const session =
+    ctx.quizSession ?? (await getActiveSession(ctx.prisma, ctx.user.studentId));
+
+  if (!session) {
+    await ctx.editMessageText(
+      "Сессия истекла. Отправь /test чтобы начать заново.",
+    );
+    return;
+  }
+
+  const question = await getQuestionForStep(ctx.prisma, session.currentStep);
+  if (!question) return;
+
+  try {
+    // Save empty answer for skipped question
+    const nextStep = await saveAnswer(ctx.prisma, session.id, {
+      questionId: question.id,
+      value: "[ПРОПУЩЕНО]",
+    });
+
+    logger.info(
+      { sessionId: session.id, questionId: question.id },
+      "OPEN_TEXT question skipped",
+    );
+
+    await ctx.editMessageText("⏭️ Пропущено");
+
+    // Check for section completion or render next
+    if (isEndOfSection(session.currentStep)) {
+      await handleSectionComplete(ctx, session.currentStep, session.id);
+    } else {
+      await renderStep(ctx, nextStep, session.id);
+    }
+  } catch (error) {
+    logger.error({ error }, "Error skipping OPEN_TEXT question");
+    await ctx.reply("Произошла ошибка. Попробуй /resume чтобы продолжить.");
+  }
+});
+
+// ============================================================================
 // Quiz Complete Handler
 // ============================================================================
 
@@ -776,6 +919,11 @@ async function getCareerName(
 // ============================================================================
 
 /**
+ * Letter labels for multiple choice options (must match keyboards/question.ts)
+ */
+const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"];
+
+/**
  * Get display text for answer confirmation
  */
 function getAnswerDisplayText(
@@ -785,9 +933,13 @@ function getAnswerDisplayText(
 ): string {
   switch (type) {
     case "mc": {
-      // Find option text by value
-      const option = question.options?.find((o) => o.value === value);
-      return option?.text ?? value;
+      // Find option index and show letter
+      const optionIndex = question.options?.findIndex((o) => o.value === value) ?? -1;
+      if (optionIndex >= 0) {
+        const letter = OPTION_LETTERS[optionIndex] || String(optionIndex + 1);
+        return letter;
+      }
+      return value;
     }
 
     case "rating":

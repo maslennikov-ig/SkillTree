@@ -37,7 +37,7 @@ streakHandler.command("streak", async (ctx) => {
 
   // Check if user is a registered student
   if (!isStudent(ctx)) {
-    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    await ctx.reply("Сначала зарегистрируйся как ученик. Отправь /start");
     return;
   }
 
@@ -68,7 +68,7 @@ streakHandler.command("achievements", async (ctx) => {
 
   // Check if user is a registered student
   if (!isStudent(ctx)) {
-    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    await ctx.reply("Сначала зарегистрируйся как ученик. Отправь /start");
     return;
   }
 
@@ -123,7 +123,7 @@ streakHandler.command("checkin", async (ctx) => {
 
   // Check if user is a registered student
   if (!isStudent(ctx)) {
-    await ctx.reply("Сначала зарегистрируйся как студент. Отправь /start");
+    await ctx.reply("Сначала зарегистрируйся как ученик. Отправь /start");
     return;
   }
 

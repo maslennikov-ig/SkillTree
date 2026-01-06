@@ -167,7 +167,7 @@ startHandler.command("privacy", async (ctx) => {
 
 📋 Какие данные мы собираем:
 • Telegram ID и имя пользователя
-• Возраст и класс обучения (для студентов)
+• Возраст и класс обучения (для учеников)
 • Ответы на тесты профориентации
 • Результаты тестирования и рекомендации
 • Email (если указан, для отправки отчётов)
@@ -199,7 +199,7 @@ startHandler.command("privacy", async (ctx) => {
 
 async function showWelcomeMessage(ctx: MyContext) {
   const keyboard = new InlineKeyboard()
-    .text("🎓 Я студент", CALLBACK.ROLE_STUDENT)
+    .text("🎓 Я ученик", CALLBACK.ROLE_STUDENT)
     .text("👨‍👩‍👧 Я родитель", CALLBACK.ROLE_PARENT);
 
   await ctx.reply(
@@ -210,7 +210,7 @@ async function showWelcomeMessage(ctx: MyContext) {
 
 async function showRoleSelection(ctx: MyContext) {
   const keyboard = new InlineKeyboard()
-    .text("🎓 Я студент", CALLBACK.ROLE_STUDENT)
+    .text("🎓 Я ученик", CALLBACK.ROLE_STUDENT)
     .text("👨‍👩‍👧 Я родитель", CALLBACK.ROLE_PARENT);
 
   await ctx.reply("Выбери свою роль:", { reply_markup: keyboard });
@@ -344,7 +344,7 @@ startHandler.callbackQuery(/^grade_\d+_\d+$/, async (ctx) => {
     const keyboard = getMainMenu("student", false);
 
     await ctx.editMessageText(
-      `Отлично! Ты зарегистрирован как студент ${grade} класса.\n\nТеперь можешь начать тест на профориентацию!`,
+      `Отлично! Ты зарегистрирован как ученик ${grade} класса.\n\nТеперь можешь начать тест на профориентацию!`,
       { reply_markup: undefined },
     );
 

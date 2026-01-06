@@ -1,0 +1,3 @@
+ '/home/me/code/repa-maks/docs/Deep Think/ grammY Conversation Architecture (Deep Think).md'
+Результаты Deep Research мне кажется как будто бы он глюканул, они какие-то очень краткие. Если это так, то разделив все-таки промп на два, и с учетом своего уточнения, где-то я отвечал на вопросы, давай мы с тобой запустим два новых Research, если здесь недостаточно информации. Research/RIASEC Career Assessment System for Russian Teenagers.md
+и вот ещё ранее делал '/home/me/code/repa-maks/docs/Research/ Комплексное исследование лучших практик профориентации для учащихся 14-17 лет.md' 

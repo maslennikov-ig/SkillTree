@@ -22,6 +22,7 @@ export const CALLBACK_PREFIX = {
   CONTINUE: "flow_continue",
   RESUME: "flow_resume",
   NEW: "flow_new",
+  SKIP: "flow_skip",
 } as const;
 
 // ============================================================================
@@ -29,24 +30,44 @@ export const CALLBACK_PREFIX = {
 // ============================================================================
 
 /**
+ * Letter labels for multiple choice options
+ */
+const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"];
+
+/**
  * Build keyboard for MULTIPLE_CHOICE questions
- * Each option gets its own row (vertical layout)
+ * Short letter buttons (A, B, C, D) in a horizontal row
+ * Full option text is shown in the message body
  */
 export function buildMultipleChoiceKeyboard(
   options: QuestionOption[],
 ): InlineKeyboard {
   const keyboard = new InlineKeyboard();
 
-  for (const option of options) {
-    // Use option text directly (includes emoji)
-    keyboard.text(
-      option.text,
-      `${CALLBACK_PREFIX.MULTIPLE_CHOICE}${option.value}`,
-    );
-    keyboard.row();
+  for (let i = 0; i < options.length; i++) {
+    const letter = OPTION_LETTERS[i] || String(i + 1);
+    const option = options[i];
+    if (option) {
+      keyboard.text(letter, `${CALLBACK_PREFIX.MULTIPLE_CHOICE}${option.value}`);
+    }
   }
 
   return keyboard;
+}
+
+/**
+ * Format options as text for message body
+ * Returns string like:
+ * A) 🔧 Option text one
+ * B) 📚 Option text two
+ */
+export function formatOptionsAsText(options: QuestionOption[]): string {
+  return options
+    .map((opt, i) => {
+      const letter = OPTION_LETTERS[i] || String(i + 1);
+      return `${letter}) ${opt.text}`;
+    })
+    .join("\n");
 }
 
 // ============================================================================
@@ -87,6 +108,19 @@ export function buildBinaryKeyboard(): InlineKeyboard {
 }
 
 // ============================================================================
+// Open Text Keyboard
+// ============================================================================
+
+/**
+ * Build keyboard for OPEN_TEXT questions (skip button only)
+ * User can type their answer and press skip if they want to skip
+ */
+export function buildOpenTextKeyboard(): InlineKeyboard {
+  return new InlineKeyboard()
+    .text("Пропустить ⏭️", CALLBACK_PREFIX.SKIP);
+}
+
+// ============================================================================
 // Dynamic Keyboard Builder
 // ============================================================================
 
@@ -111,8 +145,7 @@ export function buildQuestionKeyboard(question: Question): InlineKeyboard {
       return buildBinaryKeyboard();
 
     case "OPEN_TEXT":
-      // Open text questions don't need keyboard, user types response
-      return new InlineKeyboard();
+      return buildOpenTextKeyboard();
 
     default:
       // Fallback to multiple choice if options exist
