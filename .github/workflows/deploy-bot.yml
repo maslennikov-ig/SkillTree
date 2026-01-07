@@ -43,11 +43,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Type-check
-        run: pnpm --filter @skilltree/bot exec tsc --noEmit
+      - name: Build all packages
+        run: pnpm build
 
-      - name: Build bot
-        run: pnpm --filter @skilltree/bot build
+      - name: Type-check bot
+        run: pnpm --filter @skilltree/bot exec tsc --noEmit
 
   deploy:
     name: Deploy to VDS
