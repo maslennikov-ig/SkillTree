@@ -18,8 +18,8 @@ on:
 
 env:
   NODE_VERSION: '18'
-  PNPM_VERSION: '10'
-  APP_DIR: '/opt/skilltree'
+  PNPM_VERSION: '8'
+  APP_DIR: '/opt/skilltree/repa-maks'
 
 jobs:
   build:
