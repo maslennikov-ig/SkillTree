@@ -17,44 +17,11 @@ on:
         type: boolean
 
 env:
-  NODE_VERSION: '18'
   APP_DIR: '/opt/skilltree/repa-maks'
 
 jobs:
-  build:
-    name: Build & Test
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        # Version is auto-detected from package.json "packageManager" field
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'pnpm'
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Generate Prisma client
-        run: pnpm --filter @skilltree/database exec prisma generate
-
-      - name: Build all packages
-        run: pnpm build
-
-      - name: Type-check bot
-        run: pnpm --filter @skilltree/bot exec tsc --noEmit
-
   deploy:
     name: Deploy to VDS
-    needs: build
     runs-on: ubuntu-latest
     timeout-minutes: 10
     environment: production
@@ -83,6 +50,7 @@ jobs:
             # Pull latest changes
             echo "Pulling latest changes..."
             git fetch origin main
+            git checkout -- .
             git reset --hard origin/main
 
             NEW_COMMIT=$(git rev-parse HEAD)
@@ -98,8 +66,7 @@ jobs:
 
             # Build packages
             echo "Building packages..."
-            pnpm --filter @skilltree/shared build
-            pnpm --filter @skilltree/bot build
+            pnpm build
 
             # Restart bot with PM2
             echo "Restarting bot..."
@@ -111,15 +78,13 @@ jobs:
             # Health check
             echo "Checking bot status..."
             if pm2 show skilltree-bot | grep -q "online"; then
-              echo "✅ Bot is running!"
+              echo "Bot is running!"
               pm2 logs skilltree-bot --lines 10 --nostream
             else
-              echo "❌ Bot failed to start!"
-              echo "Rolling back to $PREV_COMMIT..."
+              echo "Bot failed to start! Rolling back..."
               git reset --hard $PREV_COMMIT
               pnpm install --frozen-lockfile
-              pnpm --filter @skilltree/shared build
-              pnpm --filter @skilltree/bot build
+              pnpm build
               pm2 restart skilltree-bot
               exit 1
             fi
