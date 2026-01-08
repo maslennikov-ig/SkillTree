@@ -45,11 +45,18 @@ model User {
 // Student and Parent Profiles
 // ============================================================================
 
+enum Gender {
+  MALE
+  FEMALE
+  NOT_SPECIFIED
+}
+
 model Student {
   id        String   @id @default(cuid())
   userId    String   @unique
   age       Int
   grade     Int
+  gender    Gender   @default(NOT_SPECIFIED)
   phone     String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

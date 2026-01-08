@@ -39,6 +39,7 @@ const CALLBACK = {
   ROLE_PARENT: "role_parent",
   AGE_PREFIX: "age_",
   GRADE_PREFIX: "grade_",
+  GENDER_PREFIX: "gender_",
 } as const;
 
 // ============================================================================
@@ -300,60 +301,118 @@ startHandler.callbackQuery(/^age_\d+$/, async (ctx) => {
 startHandler.callbackQuery(/^grade_\d+_\d+$/, async (ctx) => {
   await ctx.answerCallbackQuery();
 
-  if (!ctx.from) {
+  // Parse grade_X_age format and show gender selection
+  const parts = ctx.callbackQuery.data
+    .substring(CALLBACK.GRADE_PREFIX.length)
+    .split("_");
+  const gradeStr = parts[0];
+  const ageStr = parts[1];
+
+  if (!gradeStr || !ageStr) {
+    await ctx.editMessageText(
+      "Ошибка: неверный формат данных. Отправьте /start",
+    );
     return;
   }
 
-  try {
-    // Parse grade_X_age format
-    const parts = ctx.callbackQuery.data
-      .substring(CALLBACK.GRADE_PREFIX.length)
-      .split("_");
-    const gradeStr = parts[0];
-    const ageStr = parts[1];
-
-    if (!gradeStr || !ageStr) {
-      await ctx.editMessageText(
-        "Ошибка: неверный формат данных. Отправьте /start",
-      );
-      return;
-    }
-
-    const grade = parseInt(gradeStr, 10);
-    const age = parseInt(ageStr, 10);
-
-    const telegramId = BigInt(ctx.from.id);
-    const user = await findByTelegramId(ctx.prisma, telegramId);
-
-    if (!user) {
-      await ctx.editMessageText(
-        "Ошибка: пользователь не найден. Отправьте /start",
-      );
-      return;
-    }
-
-    // Create student profile
-    await createStudent(ctx.prisma, {
-      userId: user.id,
-      age,
-      grade,
-    });
-
-    logger.info({ userId: user.id, age, grade }, "Student profile created");
-
-    const keyboard = getMainMenu("student", false);
-
-    await ctx.editMessageText(
-      `Отлично! Ты зарегистрирован как ученик ${grade} класса.\n\nТеперь можешь начать тест на профориентацию!`,
-      { reply_markup: undefined },
+  // Show gender selection
+  const keyboard = new InlineKeyboard()
+    .text("👦 Я парень", `${CALLBACK.GENDER_PREFIX}MALE_${gradeStr}_${ageStr}`)
+    .text(
+      "👧 Я девушка",
+      `${CALLBACK.GENDER_PREFIX}FEMALE_${gradeStr}_${ageStr}`,
+    )
+    .row()
+    .text(
+      "🤷 Не хочу указывать",
+      `${CALLBACK.GENDER_PREFIX}NOT_SPECIFIED_${gradeStr}_${ageStr}`,
     );
 
-    await ctx.reply("Главное меню:", { reply_markup: keyboard });
-  } catch (error) {
-    logger.error({ error }, "Error creating student profile");
-    await ctx.editMessageText("Произошла ошибка. Попробуйте /start");
-  }
+  await ctx.editMessageText(
+    "Последний вопрос! Укажи свой пол для персонализации:",
+    { reply_markup: keyboard },
+  );
 });
+
+// ============================================================================
+// Gender Selection Callbacks
+// ============================================================================
+
+startHandler.callbackQuery(
+  /^gender_(MALE|FEMALE|NOT_SPECIFIED)_\d+_\d+$/,
+  async (ctx) => {
+    await ctx.answerCallbackQuery();
+
+    if (!ctx.from) {
+      return;
+    }
+
+    try {
+      // Parse gender_GENDER_grade_age format
+      const data = ctx.callbackQuery.data.substring(
+        CALLBACK.GENDER_PREFIX.length,
+      );
+      const parts = data.split("_");
+      const genderStr = parts[0];
+      const gradeStr = parts[1];
+      const ageStr = parts[2];
+
+      if (!genderStr || !gradeStr || !ageStr) {
+        await ctx.editMessageText(
+          "Ошибка: неверный формат данных. Отправьте /start",
+        );
+        return;
+      }
+
+      const grade = parseInt(gradeStr, 10);
+      const age = parseInt(ageStr, 10);
+      const gender = genderStr as "MALE" | "FEMALE" | "NOT_SPECIFIED";
+
+      const telegramId = BigInt(ctx.from.id);
+      const user = await findByTelegramId(ctx.prisma, telegramId);
+
+      if (!user) {
+        await ctx.editMessageText(
+          "Ошибка: пользователь не найден. Отправьте /start",
+        );
+        return;
+      }
+
+      // Create student profile with gender
+      await createStudent(ctx.prisma, {
+        userId: user.id,
+        age,
+        grade,
+        gender,
+      });
+
+      logger.info(
+        { userId: user.id, age, grade, gender },
+        "Student profile created",
+      );
+
+      const keyboard = getMainMenu("student", false);
+
+      // Gender-specific greeting
+      const genderGreeting =
+        gender === "MALE"
+          ? "Отлично! Ты зарегистрирован"
+          : gender === "FEMALE"
+            ? "Отлично! Ты зарегистрирована"
+            : "Отлично! Регистрация завершена";
+
+      await ctx.editMessageText(
+        `${genderGreeting} как ученик ${grade} класса.\n\nТеперь можешь начать тест на профориентацию!`,
+        { reply_markup: undefined },
+      );
+
+      await ctx.reply("Главное меню:", { reply_markup: keyboard });
+    } catch (error) {
+      logger.error({ error }, "Error creating student profile");
+      await ctx.editMessageText("Произошла ошибка. Попробуйте /start");
+    }
+  },
+);
 
 // ============================================================================
 // Menu Button Handlers (text messages from ReplyKeyboard)

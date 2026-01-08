@@ -350,9 +350,10 @@ async function renderStep(
     }
 
     // Add rating scale labels if applicable
+    // Labels already include "1 = " and "5 = " prefix for clarity
     if (question.type === "RATING" && question.ratingRange?.labels) {
-      messageText += `\n\n1️⃣ = _${question.ratingRange.labels.min}_`;
-      messageText += `\n5️⃣ = _${question.ratingRange.labels.max}_`;
+      messageText += `\n\n_${question.ratingRange.labels.min}_`;
+      messageText += `\n_${question.ratingRange.labels.max}_`;
     }
 
     // Add hint for OPEN_TEXT questions
@@ -458,6 +459,7 @@ quizHandler.callbackQuery(/^answer_/, async (ctx) => {
         {
           questionNumber: session.currentStep + 1,
           answeredAt: new Date(),
+          answerValue: parsed.value, // Pass answer for correct answer validation
         },
       );
 
@@ -920,8 +922,9 @@ async function getCareerName(
 
 /**
  * Letter labels for multiple choice options (must match keyboards/question.ts)
+ * Using Russian alphabet: А, Б, В, Г, Д, Е
  */
-const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"];
+const OPTION_LETTERS = ["А", "Б", "В", "Г", "Д", "Е"];
 
 /**
  * Get display text for answer confirmation
@@ -934,7 +937,8 @@ function getAnswerDisplayText(
   switch (type) {
     case "mc": {
       // Find option index and show letter
-      const optionIndex = question.options?.findIndex((o) => o.value === value) ?? -1;
+      const optionIndex =
+        question.options?.findIndex((o) => o.value === value) ?? -1;
       if (optionIndex >= 0) {
         const letter = OPTION_LETTERS[optionIndex] || String(optionIndex + 1);
         return letter;

@@ -881,6 +881,10 @@ async function sendEmailReportToParent(
       "Sending email report to parent",
     );
 
+    const parentName = parent.user.firstName
+      ? `${parent.user.firstName}${parent.user.lastName ? " " + parent.user.lastName : ""}`
+      : "Родитель";
+
     const response = await fetchWithTimeout(
       `${API_URL}/results/${sessionId}/email-report`,
       {
@@ -889,7 +893,8 @@ async function sendEmailReportToParent(
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          parentId: parent.id,
+          parentEmail: parent.email,
+          parentName,
         }),
       },
     );

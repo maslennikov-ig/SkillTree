@@ -31,6 +31,7 @@ export interface BadgeCheckResult {
 export interface EasterEggContext {
   questionNumber?: number;
   answeredAt: Date;
+  answerValue?: string; // For checking correct answers on easter egg questions
 }
 
 // Progress milestones for badge checks (percentage)
@@ -287,13 +288,19 @@ export async function checkEasterEggBadge(
     }
   }
 
-  // Check DETECTIVE (answered question #33)
-  if (context.questionNumber === 33) {
+  // Check DETECTIVE (answered question #33 CORRECTLY)
+  // Only award if answer is "correct" or "also_correct"
+  if (
+    context.questionNumber === 33 &&
+    (context.answerValue === "correct" ||
+      context.answerValue === "also_correct")
+  ) {
     const result = await tryAwardBadge(prisma, student.userId, "DETECTIVE", {
       questionNumber: 33,
+      answerValue: context.answerValue,
     });
     if (result.unlocked) {
-      log.info("DETECTIVE badge unlocked");
+      log.info("DETECTIVE badge unlocked for correct answer");
       results.push(result);
     }
   }

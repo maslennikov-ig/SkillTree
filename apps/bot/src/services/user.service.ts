@@ -5,7 +5,13 @@
  * using Prisma for database operations.
  */
 
-import type { PrismaClient, User, Student, Parent } from "@skilltree/database";
+import type {
+  PrismaClient,
+  User,
+  Student,
+  Parent,
+  Gender,
+} from "@skilltree/database";
 
 // ============================================================================
 // Types
@@ -22,6 +28,7 @@ export interface CreateStudentData {
   userId: string;
   age: number;
   grade: number;
+  gender?: Gender;
 }
 
 export interface CreateParentData {
@@ -110,6 +117,7 @@ export async function createStudent(
       userId: data.userId,
       age: data.age,
       grade: data.grade,
+      gender: data.gender,
     },
   });
 }

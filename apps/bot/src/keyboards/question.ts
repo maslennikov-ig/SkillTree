@@ -30,13 +30,13 @@ export const CALLBACK_PREFIX = {
 // ============================================================================
 
 /**
- * Letter labels for multiple choice options
+ * Letter labels for multiple choice options (Russian alphabet)
  */
-const OPTION_LETTERS = ["A", "B", "C", "D", "E", "F"];
+const OPTION_LETTERS = ["А", "Б", "В", "Г", "Д", "Е"];
 
 /**
  * Build keyboard for MULTIPLE_CHOICE questions
- * Short letter buttons (A, B, C, D) in a horizontal row
+ * Short letter buttons (А, Б, В, Г) in a horizontal row
  * Full option text is shown in the message body
  */
 export function buildMultipleChoiceKeyboard(
@@ -48,7 +48,10 @@ export function buildMultipleChoiceKeyboard(
     const letter = OPTION_LETTERS[i] || String(i + 1);
     const option = options[i];
     if (option) {
-      keyboard.text(letter, `${CALLBACK_PREFIX.MULTIPLE_CHOICE}${option.value}`);
+      keyboard.text(
+        letter,
+        `${CALLBACK_PREFIX.MULTIPLE_CHOICE}${option.value}`,
+      );
     }
   }
 
@@ -58,8 +61,8 @@ export function buildMultipleChoiceKeyboard(
 /**
  * Format options as text for message body
  * Returns string like:
- * A) 🔧 Option text one
- * B) 📚 Option text two
+ * А) 🔧 Option text one
+ * Б) 📚 Option text two
  */
 export function formatOptionsAsText(options: QuestionOption[]): string {
   return options
@@ -116,8 +119,7 @@ export function buildBinaryKeyboard(): InlineKeyboard {
  * User can type their answer and press skip if they want to skip
  */
 export function buildOpenTextKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text("Пропустить ⏭️", CALLBACK_PREFIX.SKIP);
+  return new InlineKeyboard().text("Пропустить ⏭️", CALLBACK_PREFIX.SKIP);
 }
 
 // ============================================================================
