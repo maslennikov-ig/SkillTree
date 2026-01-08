@@ -8,6 +8,7 @@
  * - normalizeScores: Z-score normalization against teen norms
  */
 
+import crypto from "crypto";
 import type { PrismaClient } from "@skilltree/database";
 import type { RIASECScores, RIASECType, CareerMatch } from "@skilltree/shared";
 import { RIASEC_NORMS, ARCHETYPES } from "@skilltree/shared";
@@ -35,6 +36,14 @@ export interface TestResults {
   profile: RIASECProfile;
   careerMatches: CareerMatch[];
   completedAt: Date;
+  shareToken?: string | null;
+}
+
+/**
+ * Generate a URL-safe share token (12 chars)
+ */
+function generateShareToken(): string {
+  return crypto.randomBytes(9).toString("base64url");
 }
 
 // ============================================================================
@@ -354,17 +363,21 @@ export function getMatchCategory(
 /**
  * Save test results to database
  * Uses actual TestResult schema: sessionId, riasecProfile, topCareers, personalityType, hollandCode
+ * Returns the shareToken for sharing results
  */
 export async function saveTestResults(
   prisma: PrismaClient,
   sessionId: string,
   profile: RIASECProfile,
   careerMatches: CareerMatch[],
-): Promise<void> {
+): Promise<{ shareToken: string }> {
   const log = logger.child({ fn: "saveTestResults", sessionId });
 
   // Build Holland code from top 3 dimensions (e.g., "RIC")
   const hollandCode = profile.topDimensions.join("");
+
+  // Generate unique share token for public results page
+  const shareToken = generateShareToken();
 
   // Create TestResult record matching actual schema
   await prisma.testResult.create({
@@ -382,6 +395,7 @@ export async function saveTestResults(
       })),
       personalityType: profile.archetype.name,
       hollandCode,
+      shareToken,
     },
   });
 
@@ -390,9 +404,12 @@ export async function saveTestResults(
       hollandCode,
       personalityType: profile.archetype.name,
       topCareer: careerMatches[0]?.careerId,
+      shareToken,
     },
     "Test results saved",
   );
+
+  return { shareToken };
 }
 
 /**
@@ -432,5 +449,55 @@ export async function getTestResults(
     },
     careerMatches: (result.topCareers as unknown as CareerMatch[]) || [],
     completedAt: result.session.completedAt || result.createdAt,
+    shareToken: result.shareToken,
+  };
+}
+
+/**
+ * Get results by share token (for public sharing)
+ */
+export async function getResultsByShareToken(
+  prisma: PrismaClient,
+  shareToken: string,
+): Promise<TestResults | null> {
+  const result = await prisma.testResult.findUnique({
+    where: { shareToken },
+    include: {
+      session: {
+        include: {
+          student: {
+            include: {
+              user: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  if (!result) {
+    return null;
+  }
+
+  const riasecProfile = result.riasecProfile as unknown as RIASECScores;
+
+  // Parse Holland code to get dimensions
+  const hollandCode = result.hollandCode;
+  const dim1 = (hollandCode[0] || "R") as RIASECType;
+  const dim2 = (hollandCode[1] || "I") as RIASECType;
+  const dim3 = (hollandCode[2] || "A") as RIASECType;
+
+  return {
+    sessionId: result.sessionId,
+    studentId: result.session.studentId,
+    profile: {
+      rawScores: riasecProfile,
+      normalizedScores: riasecProfile,
+      topDimensions: [dim1, dim2, dim3],
+      archetype: getArchetype(dim1, dim2),
+    },
+    careerMatches: (result.topCareers as unknown as CareerMatch[]) || [],
+    completedAt: result.session.completedAt || result.createdAt,
+    shareToken: result.shareToken,
   };
 }

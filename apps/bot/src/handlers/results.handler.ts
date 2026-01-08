@@ -499,6 +499,87 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SHARE, async (ctx) => {
 });
 
 // ============================================================================
+// Share Forward Callback - Send formatted message for forwarding
+// ============================================================================
+
+resultsHandler.callbackQuery(RESULTS_CALLBACK.SHARE_FORWARD, async (ctx) => {
+  await ctx.answerCallbackQuery("Теперь перешли это сообщение!");
+
+  if (!isStudent(ctx)) return;
+
+  const log = logger.child({
+    callback: "shareForward",
+    telegramId: ctx.from?.id,
+  });
+
+  try {
+    // Get the latest completed session with results
+    const session = await ctx.prisma.testSession.findFirst({
+      where: {
+        studentId: ctx.user.studentId,
+        status: "COMPLETED",
+      },
+      orderBy: { completedAt: "desc" },
+      include: {
+        testResult: true,
+      },
+    });
+
+    if (!session || !session.testResult) {
+      await ctx.reply("Результаты не найдены. Пройди тест командой /test");
+      return;
+    }
+
+    const result = session.testResult;
+    const shareToken = result.shareToken;
+    const hollandCode = result.hollandCode;
+    const personalityType = result.personalityType;
+
+    // Get top careers names
+    const topCareers = result.topCareers as Array<{
+      careerId: string;
+      matchPercentage: number;
+    }>;
+    const careerIds = topCareers.slice(0, 3).map((c) => c.careerId);
+
+    const careers = await ctx.prisma.career.findMany({
+      where: { id: { in: careerIds } },
+      select: { id: true, titleRu: true },
+    });
+
+    const careerMap = new Map(careers.map((c) => [c.id, c.titleRu]));
+    const careerList = topCareers
+      .slice(0, 3)
+      .map((c, i) => {
+        const name = careerMap.get(c.careerId) || "Профессия";
+        return `${i + 1}. ${name} (${c.matchPercentage}%)`;
+      })
+      .join("\n");
+
+    // Build share link if available
+    const shareLink = shareToken
+      ? `\n\n🔗 Подробнее: skilltree.ru/r/${shareToken}`
+      : "";
+
+    // Send formatted message that can be forwarded
+    await ctx.reply(
+      `🌳 *Результаты теста SkillTree*\n\n` +
+        `📊 *Код Голланда:* ${hollandCode}\n` +
+        `✨ *Тип личности:* ${personalityType}\n\n` +
+        `🎯 *Топ-3 профессии:*\n${careerList}` +
+        shareLink +
+        `\n\n💡 _Пройди тест и узнай свои сильные стороны:_\n@SkillTreeBot`,
+      { parse_mode: "Markdown" },
+    );
+
+    log.info({ sessionId: session.id, shareToken }, "Forward message sent");
+  } catch (error) {
+    log.error({ error }, "Error in share forward handler");
+    await ctx.reply("Произошла ошибка. Попробуй позже.");
+  }
+});
+
+// ============================================================================
 // /share Command and "Поделиться" Button
 // ============================================================================
 

@@ -814,9 +814,14 @@ async function handleQuizComplete(
     log.info("Matching careers");
     const careerMatches = await matchCareers(ctx.prisma, profile);
 
-    // Save results
+    // Save results (returns shareToken for sharing)
     log.info("Saving test results");
-    await saveTestResults(ctx.prisma, sessionId, profile, careerMatches);
+    const { shareToken } = await saveTestResults(
+      ctx.prisma,
+      sessionId,
+      profile,
+      careerMatches,
+    );
 
     // Get session points for PDF unlock check
     const session = await ctx.prisma.testSession.findUnique({
@@ -831,7 +836,7 @@ async function handleQuizComplete(
       ? await getCareerName(ctx, topCareer.careerId)
       : "загружается...";
 
-    // Show results with inline keyboard
+    // Show results with inline keyboard (includes share buttons)
     await ctx.reply(
       `📊 **Результаты готовы!**\n\n` +
         `${profile.archetype.emoji} **${profile.archetype.name}**\n` +
@@ -842,6 +847,7 @@ async function handleQuizComplete(
       {
         reply_markup: buildResultsKeyboard({
           pdfUnlocked: totalPoints >= 1000,
+          shareToken,
         }),
         parse_mode: "Markdown",
       },

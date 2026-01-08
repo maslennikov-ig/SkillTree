@@ -339,10 +339,13 @@ model TestResult {
   hollandCode     String // Top-3 code (e.g., "RIC")
   radarChartUrl   String?
   shareCardUrl    String?
+  shareToken      String?  @unique // URL-safe token for public sharing
   createdAt       DateTime @default(now())
 
   // Relations
   session TestSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@index([shareToken])
 }
 
 // ============================================================================

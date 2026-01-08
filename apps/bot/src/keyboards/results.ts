@@ -18,11 +18,15 @@ export const RESULTS_CALLBACK = {
   FULL_REPORT: "results_full",
   VIEW_CAREERS: "results_careers",
   SHARE: "results_share",
+  SHARE_FORWARD: "results_share_forward",
   SEND_TO_PARENT: "results_parent",
   PDF_ROADMAP: "results_pdf",
   CAREER_DETAIL: "career_detail_",
   BACK_TO_RESULTS: "results_back",
 } as const;
+
+// Base URL for public results page (configurable via env)
+const RESULTS_BASE_URL = process.env.RESULTS_URL || "https://skilltree.ru/r";
 
 // ============================================================================
 // Main Results Keyboard
@@ -34,6 +38,8 @@ export const RESULTS_CALLBACK = {
 export interface ResultsKeyboardOptions {
   /** Whether PDF roadmap feature is unlocked (requires 1000+ points) */
   pdfUnlocked?: boolean;
+  /** Share token for public results link */
+  shareToken?: string;
 }
 
 /**
@@ -43,18 +49,37 @@ export function buildResultsKeyboard(
   options?: ResultsKeyboardOptions,
 ): InlineKeyboard {
   const keyboard = new InlineKeyboard()
-    .text("Все профессии", RESULTS_CALLBACK.VIEW_CAREERS)
-    .text("Поделиться", RESULTS_CALLBACK.SHARE)
+    .text("📊 Все профессии", RESULTS_CALLBACK.VIEW_CAREERS)
+    .row();
+
+  // Add share buttons with link if shareToken is available
+  if (options?.shareToken) {
+    const shareUrl = `${RESULTS_BASE_URL}/${options.shareToken}`;
+    const shareText = encodeURIComponent(
+      "Мои результаты теста на профориентацию SkillTree:",
+    );
+    keyboard
+      .url(
+        "📤 Поделиться ссылкой",
+        `tg://msg_url?url=${encodeURIComponent(shareUrl)}&text=${shareText}`,
+      )
+      .row()
+      .text("📨 Переслать результат", RESULTS_CALLBACK.SHARE_FORWARD);
+  } else {
+    keyboard.text("📤 Поделиться", RESULTS_CALLBACK.SHARE);
+  }
+
+  keyboard
     .row()
-    .text("Отправить родителям", RESULTS_CALLBACK.SEND_TO_PARENT);
+    .text("👨‍👩‍👧 Отправить родителям", RESULTS_CALLBACK.SEND_TO_PARENT);
 
   // Add PDF button if unlocked or with lock emoji
   if (options?.pdfUnlocked) {
-    keyboard.row().text("PDF Roadmap", RESULTS_CALLBACK.PDF_ROADMAP);
+    keyboard.row().text("📄 PDF Roadmap", RESULTS_CALLBACK.PDF_ROADMAP);
   } else {
     keyboard
       .row()
-      .text("PDF Roadmap (1000 очков)", RESULTS_CALLBACK.PDF_ROADMAP);
+      .text("🔒 PDF Roadmap (1000 очков)", RESULTS_CALLBACK.PDF_ROADMAP);
   }
 
   return keyboard;
