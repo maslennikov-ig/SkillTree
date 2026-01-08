@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-01-08
+
+### Added
+- **api**: add public share endpoints for results (98d2506)
+- **bot**: add shareable results with tg://msg_url and forward (6186554)
+- **bot**: implement tester feedback improvements (565a7fe)
+
+### Changed
+- **bot**: code review improvements (c9e6d4a)
+
+### Fixed
+- **bot**: add ratingRange field for rating scale labels (aa226df)
+- **ci**: simplify workflow - build only on VDS (924d8b4)
+- **ci**: add Prisma generate step before build (f4f58ff)
+- **ci**: build all packages before type-check (b6d0b51)
+- **ci**: let pnpm auto-detect version from packageManager (98beb63)
+- **ci**: correct pnpm version and app directory path (8891966)
+
+### Other
+- add GitHub Actions auto-deploy for bot to VDS (f6ac78f)
+
 ## [0.1.12] - 2026-01-06
 
 ### Added

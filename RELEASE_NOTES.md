@@ -2,6 +2,33 @@
 
 User-facing release notes for all versions.
 
+## v0.2.0
+
+_Released on 2026-01-08_
+
+### ✨ New Features
+
+- **API**: Add public share endpoints for results
+- **bot**: Add shareable results with tg://msg_url and forward
+- **bot**: Implement tester feedback improvements
+
+### 🔧 Improvements
+
+- **bot**: Code review improvements
+
+### 🐛 Bug Fixes
+
+- **bot**: Add ratingRange field for rating scale labels
+- **CI/CD**: Simplify workflow - build only on VDS
+- **CI/CD**: Add Prisma generate step before build
+- **CI/CD**: Build all packages before type-check
+- **CI/CD**: Let pnpm auto-detect version from packageManager
+- **CI/CD**: Correct pnpm version and app directory path
+
+---
+
+_This release was automatically generated from 11 commits._
+
 ## v0.1.12
 
 _Released on 2026-01-06_
