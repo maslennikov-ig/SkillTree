@@ -39,6 +39,9 @@ jobs:
       - name: Generate Prisma Client
         run: pnpm --filter @skilltree/database db:generate
 
+      - name: Clean TypeScript build cache
+        run: find . -name "*.tsbuildinfo" -type f -delete
+
       - name: Build packages
         run: pnpm build
 
