@@ -29,6 +29,51 @@ export class ResultsController {
     private readonly prisma: PrismaService,
   ) {}
 
+  // =========================================================================
+  // PUBLIC SHARE ENDPOINTS (must be before :sessionId routes)
+  // =========================================================================
+
+  /**
+   * GET /results/share/:token
+   * Get test results by public share token
+   * Public endpoint - no authentication required
+   */
+  @Get("share/:token")
+  async getResultsByShareToken(@Param("token") token: string) {
+    return this.resultsService.getResultsByShareToken(token);
+  }
+
+  /**
+   * GET /results/share/:token/careers
+   * Get career matches by public share token
+   */
+  @Get("share/:token/careers")
+  async getCareersByShareToken(@Param("token") token: string) {
+    return this.resultsService.getCareersByShareToken(token);
+  }
+
+  /**
+   * GET /results/share/:token/summary
+   * Get summary by public share token
+   */
+  @Get("share/:token/summary")
+  async getSummaryByShareToken(@Param("token") token: string) {
+    const results = await this.resultsService.getResultsByShareToken(token);
+    const careersData = await this.resultsService.getCareersByShareToken(token);
+
+    return {
+      hollandCode: results.hollandCode,
+      personalityType: results.personalityType,
+      profile: results.riasecProfile,
+      topCareer: careersData.careers[0] || null,
+      completedAt: results.completedAt,
+    };
+  }
+
+  // =========================================================================
+  // SESSION-BASED ENDPOINTS
+  // =========================================================================
+
   /**
    * GET /results/:sessionId
    * Get test results for a session
