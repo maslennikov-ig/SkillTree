@@ -11,6 +11,7 @@
  */
 
 import { Composer } from "grammy";
+import { OPTION_LETTERS } from "@skilltree/shared";
 import type { MyContext } from "../types/context";
 import { isStudent, hasActiveQuiz } from "../types/context";
 import {
@@ -61,6 +62,7 @@ import { sendReferralSuccessNotification } from "../services/notification.servic
 import { buildResultsKeyboard } from "../keyboards/results";
 import { studentActiveQuizMenu, studentMainMenu } from "../keyboards/main-menu";
 import { logger } from "../utils/logger";
+import { genderPhrases } from "../utils/gender";
 
 // ============================================================================
 // Composer
@@ -510,6 +512,20 @@ async function handleSectionComplete(
     return;
   }
 
+  // Get student gender for personalized messages
+  let studentGender: "MALE" | "FEMALE" | "NOT_SPECIFIED" | null = null;
+  if (isStudent(ctx)) {
+    try {
+      const student = await ctx.prisma.student.findUnique({
+        where: { id: ctx.user.studentId },
+        select: { gender: true },
+      });
+      studentGender = student?.gender ?? null;
+    } catch (error) {
+      logger.warn({ error }, "Failed to fetch student gender");
+    }
+  }
+
   // Award section completion points
   if (isStudent(ctx)) {
     try {
@@ -547,17 +563,19 @@ async function handleSectionComplete(
     }
   }
 
-  // Show section celebration
+  // Show section celebration with gender-specific text
   const nextSection = section + 1;
   const sectionsRemaining = 5 - section;
+  const completedVerb = genderPhrases.completed(studentGender);
+  const readyText = genderPhrases.ready(studentGender);
 
   await ctx.reply(
     `🎉 ${celebration}\n\n` +
-      `Ты прошёл секцию ${section}/5!\n` +
+      `Ты ${completedVerb} секцию ${section}/5!\n` +
       `✨ +100 очков за секцию!` +
       insightText +
       `\n\nОсталось: ${sectionsRemaining} ${getSectionWord(sectionsRemaining)}\n\n` +
-      `Готов к секции ${nextSection}?`,
+      `${readyText} к секции ${nextSection}?`,
     { reply_markup: buildSectionCompleteKeyboard() },
   );
 }
@@ -919,12 +937,6 @@ async function getCareerName(
 // ============================================================================
 // Helper Functions
 // ============================================================================
-
-/**
- * Letter labels for multiple choice options (must match keyboards/question.ts)
- * Using Russian alphabet: А, Б, В, Г, Д, Е
- */
-const OPTION_LETTERS = ["А", "Б", "В", "Г", "Д", "Е"];
 
 /**
  * Get display text for answer confirmation

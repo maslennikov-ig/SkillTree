@@ -8,6 +8,7 @@
  */
 
 import { InlineKeyboard } from "grammy";
+import { OPTION_LETTERS } from "@skilltree/shared";
 import type { Question, QuestionOption } from "../content/questions";
 
 // ============================================================================
@@ -28,11 +29,6 @@ export const CALLBACK_PREFIX = {
 // ============================================================================
 // Multiple Choice Keyboard
 // ============================================================================
-
-/**
- * Letter labels for multiple choice options (Russian alphabet)
- */
-const OPTION_LETTERS = ["А", "Б", "В", "Г", "Д", "Е"];
 
 /**
  * Build keyboard for MULTIPLE_CHOICE questions
