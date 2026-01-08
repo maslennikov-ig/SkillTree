@@ -45,6 +45,9 @@ async function main() {
         riasecWeights: Prisma.JsonNull, // Will be calculated from options
         isEasterEgg: q.isEasterEgg ?? false,
         hint: q.hint ?? null,
+        ratingRange: q.ratingRange
+          ? (q.ratingRange as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
       },
       create: {
         id: q.id,
@@ -58,6 +61,9 @@ async function main() {
         riasecWeights: Prisma.JsonNull,
         isEasterEgg: q.isEasterEgg ?? false,
         hint: q.hint ?? null,
+        ratingRange: q.ratingRange
+          ? (q.ratingRange as unknown as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
       },
     });
     questionCount++;

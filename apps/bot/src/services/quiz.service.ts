@@ -455,6 +455,13 @@ function mapPrismaQuestionToQuestion(
     }>;
   },
 ): Question {
+  // Parse ratingRange from JSON if present
+  const ratingRange = q.ratingRange as {
+    min: number;
+    max: number;
+    labels: { min: string; max: string };
+  } | null;
+
   return {
     id: q.id,
     text: q.text,
@@ -470,6 +477,7 @@ function mapPrismaQuestionToQuestion(
     })),
     isEasterEgg: q.isEasterEgg,
     hint: q.hint ?? undefined,
+    ratingRange: ratingRange ?? undefined,
   };
 }
 
