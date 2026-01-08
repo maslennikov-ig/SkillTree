@@ -197,6 +197,7 @@ import { streakHandler } from "./handlers/streak.handler";
 import { parentHandler } from "./handlers/parent.handler";
 import { referralHandler } from "./handlers/referral.handler";
 import { privacyHandler } from "./handlers/privacy.handler";
+import { inlineHandler } from "./handlers/inline.handler";
 
 bot.use(startHandler);
 bot.use(quizHandler);
@@ -205,6 +206,7 @@ bot.use(streakHandler);
 bot.use(parentHandler);
 bot.use(referralHandler);
 bot.use(privacyHandler);
+bot.use(inlineHandler);
 
 // ============================================================================
 // Graceful Shutdown
