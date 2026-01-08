@@ -45,16 +45,28 @@ jobs:
       - name: Verify build completion
         run: |
           echo "Build completed successfully"
-          if [ -d "packages/course-gen-platform/dist" ]; then
-            echo "✓ course-gen-platform built"
+          if [ -d "packages/database/dist" ]; then
+            echo "✓ database built"
           else
-            echo "✗ course-gen-platform build failed"
+            echo "✗ database build failed"
             exit 1
           fi
-          if [ -d "packages/shared-types/dist" ]; then
-            echo "✓ shared-types built"
+          if [ -d "packages/shared/dist" ]; then
+            echo "✓ shared built"
           else
-            echo "✗ shared-types build failed"
+            echo "✗ shared build failed"
+            exit 1
+          fi
+          if [ -d "apps/api/dist" ]; then
+            echo "✓ api built"
+          else
+            echo "✗ api build failed"
+            exit 1
+          fi
+          if [ -d "apps/bot/dist" ]; then
+            echo "✓ bot built"
+          else
+            echo "✗ bot build failed"
             exit 1
           fi
 
@@ -63,8 +75,10 @@ jobs:
         with:
           name: build-artifacts
           path: |
-            packages/**/dist/
-            **/dist/
+            packages/database/dist/
+            packages/shared/dist/
+            apps/api/dist/
+            apps/bot/dist/
           retention-days: 7
 
       - name: Check build time

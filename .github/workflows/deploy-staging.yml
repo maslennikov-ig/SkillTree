@@ -46,8 +46,8 @@ jobs:
         run: |
           echo "Preparing deployment package..."
           mkdir -p deploy
-          cp -r packages/course-gen-platform/dist deploy/
-          cp packages/course-gen-platform/package.json deploy/
+          cp -r apps/api/dist deploy/api/
+          cp -r apps/bot/dist deploy/bot/
           echo "Deployment package prepared"
 
       - name: Deploy to staging (placeholder)
