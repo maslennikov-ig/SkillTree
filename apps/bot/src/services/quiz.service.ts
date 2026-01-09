@@ -49,6 +49,12 @@ export interface AnswerData {
 const RETAKE_COOLDOWN_DAYS = 7;
 const MAX_COMPLETED_TESTS = 3;
 
+/**
+ * Testers with unlimited test attempts (bypass retake policy)
+ * Add telegram usernames (without @) here
+ */
+const UNLIMITED_TESTERS = new Set(["maxvarntg"]);
+
 // ============================================================================
 // Types for Retake Policy
 // ============================================================================
@@ -78,11 +84,24 @@ export interface StartSessionError {
  * Validate retake policy for student
  * - At least 7 days since last COMPLETED test
  * - Maximum 3 COMPLETED tests total
+ * - Testers in UNLIMITED_TESTERS list bypass all limits
  */
 export async function validateRetakePolicy(
   prisma: PrismaClient,
   studentId: string,
+  telegramUsername?: string,
 ): Promise<RetakePolicyError | null> {
+  // Bypass for testers with unlimited attempts
+  if (
+    telegramUsername &&
+    UNLIMITED_TESTERS.has(telegramUsername.toLowerCase())
+  ) {
+    logger.info(
+      { studentId, telegramUsername },
+      "Retake policy bypassed for tester",
+    );
+    return null;
+  }
   // Count total completed tests
   const completedTestsCount = await prisma.testSession.count({
     where: {
@@ -135,9 +154,14 @@ export async function validateRetakePolicy(
 export async function startSession(
   prisma: PrismaClient,
   studentId: string,
+  telegramUsername?: string,
 ): Promise<StartSessionResult | StartSessionError> {
   // Validate retake policy
-  const policyError = await validateRetakePolicy(prisma, studentId);
+  const policyError = await validateRetakePolicy(
+    prisma,
+    studentId,
+    telegramUsername,
+  );
   if (policyError) {
     logger.info(
       { studentId, errorType: policyError.type },

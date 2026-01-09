@@ -7,11 +7,25 @@
 
 import { Composer, InlineQueryResultBuilder, InlineKeyboard } from "grammy";
 import type { MyContext } from "../types/context";
-import { getTestResults } from "../services/results.service";
+import { getTestResultsForInline } from "../services/results.service";
 import { logger } from "../utils/logger";
 
-// Base URL for public results page
-const RESULTS_BASE_URL = process.env.RESULTS_URL || "https://skilltree.ru/r";
+// ============================================================================
+// Configuration Constants
+// ============================================================================
+
+const INLINE_CONFIG = {
+  CACHE: {
+    ERROR: 10, // 10 seconds for errors
+    NO_DATA: 60, // 1 minute for missing user/results
+    SUCCESS: 300, // 5 minutes for successful results
+  },
+  URLS: {
+    RESULTS_BASE: process.env.RESULTS_URL || "https://skilltree.ru/r",
+    THUMBNAIL: "https://skilltree.ru/logo.png",
+    BOT: "https://t.me/SkillTreeBot",
+  },
+} as const;
 
 export const inlineHandler = new Composer<MyContext>();
 
@@ -19,7 +33,8 @@ export const inlineHandler = new Composer<MyContext>();
 // Inline Query: @skilltree_bot results
 // ============================================================================
 
-inlineHandler.inlineQuery(/results?/i, async (ctx) => {
+// Use strict regex pattern to match only "result" or "results" exactly
+inlineHandler.inlineQuery(/^results?$/i, async (ctx) => {
   const log = logger.child({ handler: "inline", telegramId: ctx.from.id });
 
   try {
@@ -40,7 +55,7 @@ inlineHandler.inlineQuery(/results?/i, async (ctx) => {
         "🌳 Пройди тест SkillTree",
         {
           description: "Узнай свои профессии по тесту RIASEC",
-          thumbnail_url: "https://skilltree.ru/logo.png",
+          thumbnail_url: INLINE_CONFIG.URLS.THUMBNAIL,
         },
       ).text(
         "🌳 *SkillTree — тест на профориентацию*\n\n" +
@@ -49,7 +64,9 @@ inlineHandler.inlineQuery(/results?/i, async (ctx) => {
         { parse_mode: "Markdown" },
       );
 
-      await ctx.answerInlineQuery([noUserResult], { cache_time: 60 });
+      await ctx.answerInlineQuery([noUserResult], {
+        cache_time: INLINE_CONFIG.CACHE.NO_DATA,
+      });
       return;
     }
 
@@ -71,7 +88,7 @@ inlineHandler.inlineQuery(/results?/i, async (ctx) => {
         "🌳 Пройди тест SkillTree",
         {
           description: "У тебя пока нет результатов",
-          thumbnail_url: "https://skilltree.ru/logo.png",
+          thumbnail_url: INLINE_CONFIG.URLS.THUMBNAIL,
         },
       ).text(
         "🌳 *SkillTree — тест на профориентацию*\n\n" +
@@ -80,29 +97,52 @@ inlineHandler.inlineQuery(/results?/i, async (ctx) => {
         { parse_mode: "Markdown" },
       );
 
-      await ctx.answerInlineQuery([noResultsResult], { cache_time: 60 });
+      await ctx.answerInlineQuery([noResultsResult], {
+        cache_time: INLINE_CONFIG.CACHE.NO_DATA,
+      });
       return;
     }
 
-    // Get test results
-    const results = await getTestResults(ctx.prisma, session.id);
+    // Get test results with career details (optimized - single query for careers)
+    const results = await getTestResultsForInline(ctx.prisma, session.id);
 
-    if (!results) {
-      log.warn({ sessionId: session.id }, "Results not found for session");
-      await ctx.answerInlineQuery([], { cache_time: 10 });
+    // Null safety for race condition handling
+    if (
+      !results ||
+      !results.careerMatches ||
+      results.careerMatches.length === 0
+    ) {
+      log.warn({ sessionId: session.id }, "Results not found or empty");
+
+      const errorResult = InlineQueryResultBuilder.article(
+        "results-error",
+        "🌳 Результаты недоступны",
+        {
+          description: "Попробуй позже",
+          thumbnail_url: INLINE_CONFIG.URLS.THUMBNAIL,
+        },
+      ).text(
+        "🌳 *SkillTree*\n\n" +
+          "Результаты временно недоступны. Попробуй снова через минуту.",
+        { parse_mode: "Markdown" },
+      );
+
+      await ctx.answerInlineQuery([errorResult], {
+        cache_time: INLINE_CONFIG.CACHE.ERROR,
+      });
       return;
     }
 
-    // Get careers with details
-    const careerIds = results.careerMatches.slice(0, 3).map((m) => m.careerId);
-    const careers = await ctx.prisma.career.findMany({
-      where: { id: { in: careerIds } },
-    });
-
-    // Build career list with match percentages
+    // Build career list with match percentages (using pre-fetched career data)
     const careerLines = results.careerMatches.slice(0, 3).map((match, i) => {
-      const career = careers.find((c) => c.id === match.careerId);
-      const title = career?.titleRu || career?.title || "Неизвестно";
+      const career = results.careers.find((c) => c.id === match.careerId);
+
+      if (!career) {
+        log.warn({ careerId: match.careerId }, "Career not found in database");
+        return `${i + 1}. Профессия недоступна (${match.matchPercentage}%)`;
+      }
+
+      const title = career.titleRu || career.title || "Неизвестно";
       return `${i + 1}. ${title} (${match.matchPercentage}%)`;
     });
 
@@ -125,9 +165,12 @@ inlineHandler.inlineQuery(/results?/i, async (ctx) => {
     // Build keyboard with share link if available
     const keyboard = new InlineKeyboard();
     if (results.shareToken) {
-      keyboard.url("📊 Подробнее", `${RESULTS_BASE_URL}/${results.shareToken}`);
+      keyboard.url(
+        "📊 Подробнее",
+        `${INLINE_CONFIG.URLS.RESULTS_BASE}/${results.shareToken}`,
+      );
     }
-    keyboard.url("🌳 Пройти тест", "https://t.me/SkillTreeBot");
+    keyboard.url("🌳 Пройти тест", INLINE_CONFIG.URLS.BOT);
 
     // Build inline result
     const resultArticle = InlineQueryResultBuilder.article(
@@ -136,30 +179,30 @@ inlineHandler.inlineQuery(/results?/i, async (ctx) => {
       {
         description: `${archetype.emoji} ${archetype.name} | ${careerLines[0]}`,
         reply_markup: keyboard,
-        thumbnail_url: "https://skilltree.ru/logo.png",
+        thumbnail_url: INLINE_CONFIG.URLS.THUMBNAIL,
       },
     ).text(messageText, { parse_mode: "Markdown" });
 
     await ctx.answerInlineQuery([resultArticle], {
-      cache_time: 300, // Cache for 5 minutes
+      cache_time: INLINE_CONFIG.CACHE.SUCCESS,
       is_personal: true, // Results are personal to user
     });
 
     log.info({ sessionId: session.id }, "Inline results sent");
   } catch (error) {
     log.error({ error }, "Error handling inline query");
-    await ctx.answerInlineQuery([], { cache_time: 10 });
+    await ctx.answerInlineQuery([], { cache_time: INLINE_CONFIG.CACHE.ERROR });
   }
 });
 
 // ============================================================================
-// Fallback: Empty query or other queries
+// Fallback: Empty query or partial "res..." queries
 // ============================================================================
 
 inlineHandler.on("inline_query", async (ctx) => {
   const query = ctx.inlineQuery.query.trim().toLowerCase();
 
-  // Only handle empty queries or "result" variations
+  // Only handle empty queries or "res" prefix (hint for typing "results")
   if (query === "" || query.startsWith("res")) {
     // Show hint to type "results"
     const hintResult = InlineQueryResultBuilder.article(
@@ -167,7 +210,7 @@ inlineHandler.on("inline_query", async (ctx) => {
       '🔍 Введи "results" чтобы поделиться',
       {
         description: "Поделись своими результатами теста",
-        thumbnail_url: "https://skilltree.ru/logo.png",
+        thumbnail_url: INLINE_CONFIG.URLS.THUMBNAIL,
       },
     ).text(
       "🌳 *SkillTree — тест на профориентацию*\n\n" +
@@ -176,9 +219,13 @@ inlineHandler.on("inline_query", async (ctx) => {
       { parse_mode: "Markdown" },
     );
 
-    await ctx.answerInlineQuery([hintResult], { cache_time: 60 });
+    await ctx.answerInlineQuery([hintResult], {
+      cache_time: INLINE_CONFIG.CACHE.NO_DATA,
+    });
   } else {
     // Unknown query - return empty
-    await ctx.answerInlineQuery([], { cache_time: 60 });
+    await ctx.answerInlineQuery([], {
+      cache_time: INLINE_CONFIG.CACHE.NO_DATA,
+    });
   }
 });

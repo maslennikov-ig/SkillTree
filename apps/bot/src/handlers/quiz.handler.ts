@@ -101,7 +101,11 @@ async function handleStartTest(ctx: MyContext) {
     }
 
     // Start new session (validates retake policy)
-    const result = await startSession(ctx.prisma, ctx.user.studentId);
+    const result = await startSession(
+      ctx.prisma,
+      ctx.user.studentId,
+      ctx.from.username,
+    );
 
     // Handle retake policy errors
     if (!result.success) {
@@ -647,7 +651,11 @@ quizHandler.callbackQuery(CALLBACK_PREFIX.NEW, async (ctx) => {
     }
 
     // Start new session (validates retake policy)
-    const result = await startSession(ctx.prisma, ctx.user.studentId);
+    const result = await startSession(
+      ctx.prisma,
+      ctx.user.studentId,
+      ctx.from.username,
+    );
 
     // Handle retake policy errors
     if (!result.success) {

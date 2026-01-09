@@ -454,6 +454,68 @@ export async function getTestResults(
 }
 
 /**
+ * Extended results interface with career details for inline queries
+ */
+export interface TestResultsWithCareers extends TestResults {
+  careers: Array<{
+    id: string;
+    title: string;
+    titleRu: string | null;
+  }>;
+}
+
+/**
+ * Get results optimized for inline queries (includes top 3 career details)
+ * Reduces N+1 queries by including career data in single response
+ */
+export async function getTestResultsForInline(
+  prisma: PrismaClient,
+  sessionId: string,
+): Promise<TestResultsWithCareers | null> {
+  const result = await prisma.testResult.findUnique({
+    where: { sessionId },
+    include: {
+      session: true,
+    },
+  });
+
+  if (!result) {
+    return null;
+  }
+
+  const riasecProfile = result.riasecProfile as unknown as RIASECScores;
+  const careerMatches = (result.topCareers as unknown as CareerMatch[]) || [];
+
+  // Fetch top 3 careers in single query (optimization)
+  const careerIds = careerMatches.slice(0, 3).map((m) => m.careerId);
+  const careers = await prisma.career.findMany({
+    where: { id: { in: careerIds } },
+    select: { id: true, title: true, titleRu: true },
+  });
+
+  // Parse Holland code to get dimensions
+  const hollandCode = result.hollandCode;
+  const dim1 = (hollandCode[0] || "R") as RIASECType;
+  const dim2 = (hollandCode[1] || "I") as RIASECType;
+  const dim3 = (hollandCode[2] || "A") as RIASECType;
+
+  return {
+    sessionId: result.sessionId,
+    studentId: result.session.studentId,
+    profile: {
+      rawScores: riasecProfile,
+      normalizedScores: riasecProfile,
+      topDimensions: [dim1, dim2, dim3],
+      archetype: getArchetype(dim1, dim2),
+    },
+    careerMatches,
+    completedAt: result.session.completedAt || result.createdAt,
+    shareToken: result.shareToken,
+    careers,
+  };
+}
+
+/**
  * Get results by share token (for public sharing)
  */
 export async function getResultsByShareToken(
