@@ -2,6 +2,25 @@
 
 User-facing release notes for all versions.
 
+## v0.2.1
+
+_Released on 2026-01-09_
+
+### ✨ New Features
+
+- **bot**: Add inline query handler for sharing results
+
+### 🐛 Bug Fixes
+
+- **apps/bot/src/services/results.service.ts**: Update 4 source file(s)
+- **CI/CD**: Add TypeScript cache cleanup to deploy-staging
+- **CI/CD**: Update workflows for SkillTree project structure
+- **CI/CD**: Add Prisma generate step before build/type-check
+
+---
+
+_This release was automatically generated from 6 commits._
+
 ## v0.2.0
 
 _Released on 2026-01-08_

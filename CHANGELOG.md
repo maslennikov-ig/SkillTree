@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-01-09
+
+### Added
+- **bot**: add inline query handler for sharing results (0d1038c)
+
+### Fixed
+- **apps/bot/src/services/results.service.ts**: update 4 source file(s) (b2b81b8)
+- **ci**: add TypeScript cache cleanup to deploy-staging (1796d4b)
+- **ci**: update workflows for SkillTree project structure (6a8adf1)
+- **ci**: add Prisma generate step before build/type-check (46db3e2)
+
+### Other
+- add scientific methodology documentation (1962bc2)
+
 ## [0.2.0] - 2026-01-08
 
 ### Added
