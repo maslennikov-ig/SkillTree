@@ -57,17 +57,54 @@ export class PdfService {
   constructor(private readonly chartService: ChartService) {}
 
   /**
+   * Validate input data for PDF generation
+   * @throws Error if required fields are missing or invalid
+   */
+  private validateRoadmapData(data: RoadmapData): void {
+    if (!data.studentName || !data.hollandCode) {
+      throw new Error("Invalid roadmap data: missing required fields");
+    }
+
+    if (!data.riasecScores) {
+      throw new Error("Invalid roadmap data: missing RIASEC scores");
+    }
+
+    // Validate RIASEC scores structure
+    const requiredKeys: Array<keyof RIASECScores> = [
+      "R",
+      "I",
+      "A",
+      "S",
+      "E",
+      "C",
+    ];
+    for (const key of requiredKeys) {
+      if (typeof data.riasecScores[key] !== "number") {
+        throw new Error(`Invalid RIASEC score: ${key} must be a number`);
+      }
+    }
+
+    if (!Array.isArray(data.topCareers)) {
+      throw new Error("Invalid roadmap data: topCareers must be an array");
+    }
+  }
+
+  /**
    * Generate a career roadmap PDF document
    * @param data - Roadmap data including student info, RIASEC scores, and career matches
    * @returns PDF document as Buffer
    */
   async generateCareerRoadmap(data: RoadmapData): Promise<Buffer> {
+    // Validate input data before PDF generation
+    this.validateRoadmapData(data);
+
     return new Promise((resolve, reject) => {
       const generatePdf = async () => {
         try {
           const doc = new PDFDocument({
             size: "A4",
             margin: this.MARGIN,
+            bufferPages: false, // Flush pages immediately to reduce memory usage
             info: {
               Title: "SkillTree - Карьерный план",
               Author: "SkillTree",
@@ -316,8 +353,23 @@ export class PdfService {
     const careersToShow = data.topCareers.slice(0, 5);
 
     careersToShow.forEach((career, index) => {
-      // Check if we need a new page
-      if (y > this.PAGE_HEIGHT - 200) {
+      // Estimate required height for this career item
+      const descHeight = doc.heightOfString(career.description || "", {
+        width: this.CONTENT_WIDTH - 100,
+        lineGap: 3,
+      });
+
+      const skillsText = career.requiredSkills?.slice(0, 5).join(" | ") || "";
+      const skillsHeight = skillsText
+        ? 40 +
+          doc.heightOfString(skillsText, { width: this.CONTENT_WIDTH - 20 })
+        : 0;
+
+      // Total height: title(25) + desc + skills + separator(30) + padding(20)
+      const requiredHeight = 75 + descHeight + skillsHeight;
+
+      // Check if we need a new page (use calculated height instead of hardcoded 200)
+      if (y + requiredHeight > this.PAGE_HEIGHT - this.MARGIN) {
         doc.addPage();
         y = this.MARGIN;
       }

@@ -355,6 +355,90 @@ async function tryAwardBadge(
 }
 
 /**
+ * Check if student guessed their RIASEC pattern correctly in Q33
+ * Awards DETECTIVE badge if correct (exact or reversed match)
+ *
+ * @param prisma - Prisma client
+ * @param studentId - Student ID
+ * @param selectedPattern - Pattern selected by student (e.g., "IA")
+ * @param actualPattern - Actual pattern from analysis (e.g., "AI")
+ * @returns Badge check result with isNew flag
+ */
+export async function checkMirrorBadge(
+  prisma: PrismaClient,
+  studentId: string,
+  selectedPattern: string,
+  actualPattern: string,
+): Promise<BadgeCheckResult> {
+  const log = logger.child({
+    fn: "checkMirrorBadge",
+    studentId,
+    selectedPattern,
+    actualPattern,
+  });
+
+  // Get the student's user ID
+  const student = await prisma.student.findUnique({
+    where: { id: studentId },
+    select: { userId: true },
+  });
+
+  if (!student) {
+    log.warn("Student not found");
+    return { unlocked: false, isNew: false };
+  }
+
+  // Normalize patterns to uppercase
+  const selected = selectedPattern.toUpperCase();
+  const actual = actualPattern.toUpperCase();
+
+  // Check for exact or reversed match (IA === AI)
+  const isExactMatch = selected === actual;
+  const isReversedMatch =
+    selected.split("").sort().join("") === actual.split("").sort().join("");
+
+  if (isExactMatch || isReversedMatch) {
+    log.info(
+      { selected, actual, isExactMatch, isReversedMatch },
+      "Pattern match detected",
+    );
+
+    // Award DETECTIVE badge
+    const result = await tryAwardBadge(prisma, student.userId, "DETECTIVE", {
+      selectedPattern: selected,
+      actualPattern: actual,
+      matchType: isExactMatch ? "exact" : "reversed",
+    });
+
+    // Award bonus points if this is a new badge
+    if (result.isNew) {
+      await awardPoints(
+        prisma,
+        studentId,
+        POINTS_CONFIG.EASTER_EGG_FOUND,
+        "detective_badge_earned",
+      );
+      log.info(
+        { points: POINTS_CONFIG.EASTER_EGG_FOUND },
+        "DETECTIVE badge unlocked with points",
+      );
+    } else if (result.unlocked) {
+      // Badge was already owned - no points awarded
+      log.info("DETECTIVE badge already owned - no points awarded");
+    }
+
+    return result;
+  }
+
+  // No match - student guessed incorrectly
+  log.info(
+    { selected, actual },
+    "No pattern match - DETECTIVE badge not awarded",
+  );
+  return { unlocked: false, isNew: false };
+}
+
+/**
  * Award streak badges (STREAK_3_DAYS, STREAK_7_DAYS)
  */
 export async function checkStreakBadge(
@@ -466,7 +550,7 @@ const BADGE_INFO: Record<
   DETECTIVE: {
     emoji: "\u{1F50D}",
     name: "Детектив",
-    description: "Нашёл секретный вопрос #33!",
+    description: "Угадал свой RIASEC-профиль в вопросе #33!",
   },
 };
 

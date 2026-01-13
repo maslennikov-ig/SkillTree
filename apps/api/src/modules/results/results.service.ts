@@ -232,4 +232,115 @@ export class ResultsService {
 
     return { careers: enrichedCareers };
   }
+
+  /**
+   * Get all data needed for PDF roadmap generation in optimized queries
+   * Reduces 4 database round-trips to 2
+   */
+  async getFullRoadmapData(sessionId: string): Promise<{
+    result: TestResultData;
+    studentName: string;
+    careers: Array<{
+      id: string;
+      title: string;
+      titleRu: string;
+      description: string;
+      correlation: number;
+      matchPercentage: number;
+      matchCategory: string;
+      category: string;
+      salaryMin: number;
+      salaryMax: number;
+      demandLevel: string;
+      requiredSkills: string[];
+      educationPath: string[];
+      universities: string[];
+    }>;
+  }> {
+    // Query 1: Get TestResult with full Session -> Student -> User data
+    const result = await this.prisma.testResult.findUnique({
+      where: { sessionId },
+      include: {
+        session: {
+          include: {
+            student: {
+              include: {
+                user: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!result) {
+      throw new NotFoundException(
+        `Results not found for session: ${sessionId}`,
+      );
+    }
+
+    // Format student name
+    const user = result.session.student.user;
+    const studentName = user.firstName
+      ? `${user.firstName}${user.lastName ? " " + user.lastName : ""}`
+      : user.telegramUsername || "Учащийся";
+
+    // Get career IDs from results
+    const topCareers = (result.topCareers as unknown as CareerMatch[]) || [];
+    const careerIds = topCareers.map((c) => c.careerId);
+
+    // Query 2: Get full Career data with all fields needed for PDF
+    const careersData = await this.prisma.career.findMany({
+      where: { id: { in: careerIds } },
+    });
+
+    // Helper to safely convert Prisma JSON to string array
+    const ensureStringArray = (value: unknown): string[] => {
+      if (Array.isArray(value) && value.every((v) => typeof v === "string")) {
+        return value;
+      }
+      return [];
+    };
+
+    // Combine career data with match data, preserving order from topCareers
+    const enrichedCareers = topCareers
+      .map((match) => {
+        const career = careersData.find((c) => c.id === match.careerId);
+        if (!career) return null;
+
+        return {
+          id: career.id,
+          title: career.title,
+          titleRu: career.titleRu,
+          description: career.description,
+          correlation: match.correlation,
+          matchPercentage: match.matchPercentage,
+          matchCategory: match.matchCategory,
+          category: career.category,
+          salaryMin: career.salaryMin,
+          salaryMax: career.salaryMax,
+          demandLevel: career.demandLevel,
+          requiredSkills: ensureStringArray(career.requiredSkills),
+          educationPath: ensureStringArray(career.educationPath),
+          universities: ensureStringArray(career.universities),
+        };
+      })
+      .filter((c): c is NonNullable<typeof c> => c !== null);
+
+    return {
+      result: {
+        sessionId: result.sessionId,
+        studentId: result.session.studentId,
+        riasecProfile: result.riasecProfile as unknown as RIASECScores,
+        hollandCode: result.hollandCode,
+        personalityType: result.personalityType,
+        topCareers: topCareers,
+        radarChartUrl: result.radarChartUrl,
+        shareCardUrl: result.shareCardUrl,
+        completedAt: result.session.completedAt || result.createdAt,
+      },
+      studentName,
+      careers: enrichedCareers,
+    };
+  }
 }

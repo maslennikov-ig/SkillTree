@@ -19,6 +19,7 @@ export const CALLBACK_PREFIX = {
   MULTIPLE_CHOICE: "answer_mc_",
   RATING: "answer_rating_",
   BINARY: "answer_binary_",
+  MIRROR: "mirror_",
   HINT: "hint_",
   CONTINUE: "flow_continue",
   RESUME: "flow_resume",
@@ -131,6 +132,31 @@ export function buildBinaryKeyboard(
  */
 export function buildOpenTextKeyboard(): InlineKeyboard {
   return new InlineKeyboard().text("Пропустить ⏭️", CALLBACK_PREFIX.SKIP);
+}
+
+// ============================================================================
+// Mirror Keyboard
+// ============================================================================
+
+/**
+ * Build inline keyboard for Mirror question (Q33)
+ * Shows 5 RIASEC pattern options
+ */
+export function buildMirrorKeyboard(
+  options: Array<{
+    text: string;
+    value: string;
+    patternCode: string;
+  }>,
+): InlineKeyboard {
+  const keyboard = new InlineKeyboard();
+
+  for (const option of options) {
+    keyboard.text(option.text, `${CALLBACK_PREFIX.MIRROR}${option.value}`);
+    keyboard.row();
+  }
+
+  return keyboard;
 }
 
 // ============================================================================

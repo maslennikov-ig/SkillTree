@@ -27,6 +27,7 @@ import {
   buildQuestionKeyboard,
   buildSectionCompleteKeyboard,
   buildResumePromptKeyboard,
+  buildMirrorKeyboard,
   parseAnswerCallback,
   formatOptionsAsText,
   CALLBACK_PREFIX,
@@ -52,7 +53,14 @@ import {
   checkBadgeUnlock,
   checkEasterEggBadge,
   getBadgeNotification,
+  checkMirrorBadge,
 } from "../services/gamification.service";
+import {
+  analyzeAnswerPattern,
+  generateMirrorQuestion,
+  getPatternName,
+  MIRROR_QUESTION_STEP,
+} from "../services/mirror.service";
 import {
   completeReferral,
   claimReferralRewards,
@@ -331,6 +339,62 @@ async function renderStep(
     log.info("Quiz complete, triggering results");
     await handleQuizComplete(ctx, sessionId);
     return;
+  }
+
+  // Special handling for Mirror question (Q33)
+  if (step === MIRROR_QUESTION_STEP) {
+    try {
+      log.info("Rendering Mirror question (Q33)");
+
+      // Analyze previous 32 answers
+      const pattern = await analyzeAnswerPattern(ctx.prisma, sessionId);
+      const mirrorQ = generateMirrorQuestion(pattern);
+
+      // Store correct pattern in answeredJSON for later verification.
+      // Using $transaction for atomic read-modify-write to prevent race conditions.
+      // Key "_mirrorCorrectPattern" uses underscore prefix to indicate internal metadata
+      // (not a question answer). This avoids collision with question IDs like "q33".
+      await ctx.prisma.$transaction(async (tx) => {
+        const session = await tx.testSession.findUnique({
+          where: { id: sessionId },
+          select: { answeredJSON: true },
+        });
+        const answers = (session?.answeredJSON as Record<string, string>) || {};
+        await tx.testSession.update({
+          where: { id: sessionId },
+          data: {
+            answeredJSON: {
+              ...answers,
+              _mirrorCorrectPattern: pattern.patternCode,
+            },
+          },
+        });
+      });
+
+      // Build progress info
+      const { text: progressText } = getProgress(step);
+
+      // Send mirror question with custom keyboard
+      await ctx.reply(`${progressText}\n\n${mirrorQ.text}`, {
+        reply_markup: buildMirrorKeyboard(mirrorQ.options),
+        parse_mode: "Markdown",
+      });
+
+      log.info(
+        {
+          patternCode: pattern.patternCode,
+          answeredCount: pattern.answeredCount,
+        },
+        "Mirror question rendered",
+      );
+      return;
+    } catch (error) {
+      log.error(
+        { error },
+        "Error rendering Mirror question, falling back to static",
+      );
+      // Fall through to regular question rendering as fallback
+    }
   }
 
   try {
@@ -762,6 +826,121 @@ quizHandler.callbackQuery(CALLBACK_PREFIX.SKIP, async (ctx) => {
     }
   } catch (error) {
     logger.error({ error }, "Error skipping OPEN_TEXT question");
+    await ctx.reply("Произошла ошибка. Попробуй /resume чтобы продолжить.");
+  }
+});
+
+// ============================================================================
+// Mirror Question Callback (Q33)
+// ============================================================================
+
+/**
+ * Handle Mirror question (Q33) answer
+ * Awards DETECTIVE badge if student correctly guesses their pattern
+ */
+quizHandler.callbackQuery(/^mirror_/, async (ctx) => {
+  await ctx.answerCallbackQuery();
+
+  if (!ctx.from) return;
+
+  const log = logger.child({ fn: "mirrorCallback", telegramId: ctx.from.id });
+
+  if (!isStudent(ctx)) {
+    await ctx.reply("Сначала зарегистрируйся. Отправь /start");
+    return;
+  }
+
+  const session =
+    ctx.quizSession ?? (await getActiveSession(ctx.prisma, ctx.user.studentId));
+
+  if (!session) {
+    await ctx.reply("У тебя нет активного теста. Отправь /test");
+    return;
+  }
+
+  try {
+    // Parse selected pattern from callback data (mirror_ai -> AI)
+    const selectedPattern = ctx.callbackQuery.data
+      .replace(CALLBACK_PREFIX.MIRROR, "")
+      .toUpperCase();
+
+    // Validate pattern is a valid 2-letter RIASEC code
+    const validChars = ["R", "I", "A", "S", "E", "C"];
+    const patternChars = selectedPattern.split("");
+    const isValidPattern =
+      selectedPattern.length === 2 &&
+      patternChars.every((c) => validChars.includes(c));
+
+    if (!isValidPattern) {
+      log.warn({ selectedPattern }, "Invalid pattern code received");
+      await ctx.reply("❌ Неверный ответ. Попробуй снова.");
+      return;
+    }
+
+    // Get correct pattern from stored answeredJSON
+    const sessionData = await ctx.prisma.testSession.findUnique({
+      where: { id: session.id },
+      select: { answeredJSON: true },
+    });
+    const answers = (sessionData?.answeredJSON as Record<string, string>) || {};
+    const correctPattern = answers._mirrorCorrectPattern || "";
+
+    log.info({ selectedPattern, correctPattern }, "Mirror answer received");
+
+    // Save answer
+    const nextStep = await saveAnswer(ctx.prisma, session.id, {
+      questionId: "q33",
+      value: selectedPattern,
+    });
+
+    // Award points for answering
+    await awardQuestionPoints(ctx.prisma, ctx.user.studentId);
+
+    // Check for Detective badge
+    const badgeResult = await checkMirrorBadge(
+      ctx.prisma,
+      ctx.user.studentId,
+      selectedPattern,
+      correctPattern,
+    );
+
+    // Edit message to show answer was recorded
+    await ctx.editMessageText(
+      `✅ Ответ записан: ${getPatternName(selectedPattern)}`,
+    );
+
+    // Show reveal message
+    if (badgeResult.isNew) {
+      await ctx.reply(
+        `🕵️ **Браво!** Ты угадал свой паттерн: **${correctPattern}**\n\n` +
+          `${getPatternName(correctPattern)}\n\n` +
+          `🏆 +30 очков и значок «Детектив»!`,
+        { parse_mode: "Markdown" },
+      );
+    } else if (badgeResult.unlocked) {
+      // Already had the badge
+      await ctx.reply(
+        `🕵️ Ты снова угадал свой паттерн: **${correctPattern}**\n\n` +
+          `${getPatternName(correctPattern)}`,
+        { parse_mode: "Markdown" },
+      );
+    } else {
+      await ctx.reply(
+        `💡 Интересно! Ты выбрал **${selectedPattern}**, а твой паттерн — **${correctPattern}**\n\n` +
+          `${getPatternName(correctPattern)}\n\n` +
+          `Это тоже ценный инсайт о том, как ты себя видишь!`,
+        { parse_mode: "Markdown" },
+      );
+    }
+
+    // Check for section completion (Q33 is last in Section 3)
+    if (isEndOfSection(session.currentStep)) {
+      await handleSectionComplete(ctx, session.currentStep, session.id);
+    } else {
+      await renderStep(ctx, nextStep, session.id);
+    }
+  } catch (error) {
+    log.error({ error }, "Error processing mirror answer");
     await ctx.reply("Произошла ошибка. Попробуй /resume чтобы продолжить.");
   }
 });

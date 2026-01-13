@@ -999,30 +999,34 @@ export const questions: Question[] = [
 
   {
     id: "q33",
-    text: "🔍 Последний вопрос секции! Найди скрытое послание: В каждом ответе первая буква важна. Какое слово получится из Р-И-А-С-Е-К?",
+    // DYNAMIC QUESTION - Content generated at runtime by mirror.service.ts
+    // This is a placeholder for the database; actual question is personalized
+    // based on student's Q1-Q32 answers
+    text: "[DYNAMIC] Секретный вопрос — угадай свой RIASEC паттерн",
     type: "MULTIPLE_CHOICE",
     section: 3,
     orderIndex: 33,
-    difficulty: 3,
-    primaryDimension: "I",
+    difficulty: 2,
+    primaryDimension: "I", // Fallback if dynamic generation fails
     isEasterEgg: true,
-    hint: "🎯 Если ответишь правильно — получишь значок ДЕТЕКТИВ!",
-    // Easter egg question - tests attention and pattern recognition
+    hint: "Этот вопрос анализирует твои предыдущие ответы и предлагает угадать свой паттерн",
+    // Empty options - generated dynamically based on student's pattern
+    // Fallback options in case dynamic generation fails
     options: [
       {
-        text: "🔤 RIASEC — это модель профориентации!",
-        value: "correct",
-        scores: { R: 0.1, I: 1.0, A: 0.1, S: 0, E: 0.1, C: 0.2 },
+        text: "🧠 Исследовать и создавать новое",
+        value: "AI",
+        scores: { R: 0, I: 0.7, A: 0.3, S: 0, E: 0, C: 0 },
       },
       {
-        text: "🤔 Не знаю, просто угадаю",
-        value: "guess",
-        scores: { R: 0, I: 0.1, A: 0.1, S: 0.1, E: 0.1, C: 0.1 },
+        text: "🤝 Общаться и вести за собой",
+        value: "ES",
+        scores: { R: 0, I: 0, A: 0, S: 0.7, E: 0.3, C: 0 },
       },
       {
-        text: "🎯 Это аббревиатура типов личности Голланда",
-        value: "also_correct",
-        scores: { R: 0.1, I: 1.0, A: 0, S: 0.1, E: 0.1, C: 0.2 },
+        text: "🔬 Разбираться в сложном и делать руками",
+        value: "IR",
+        scores: { R: 0.3, I: 0.7, A: 0, S: 0, E: 0, C: 0 },
       },
     ],
   },
