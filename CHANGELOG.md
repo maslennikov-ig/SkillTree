@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.4] - 2026-01-13
+
+### Fixed
+- **pdf**: resolve achievement grid overflow and improve stability (5069fce)
+
 ## [0.2.3] - 2026-01-13
 
 ### Fixed
