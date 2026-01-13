@@ -576,34 +576,14 @@ export class PdfService {
       y += stepHeight;
     });
 
-    // Footer only on the last page
-    this.renderFooter(doc);
-  }
-
-  /**
-   * Render page footer with branding
-   * Uses lineBreak: false to prevent PDFKit from creating a new page
-   */
-  private renderFooter(doc: PDFKit.PDFDocument): void {
-    const footerY = this.PAGE_HEIGHT - 40;
-
+    // Add subtle branding line at the bottom (no text to avoid page overflow)
+    const footerY = this.PAGE_HEIGHT - 30;
     doc
       .strokeColor("#E0E0E0")
       .lineWidth(1)
-      .moveTo(this.MARGIN, footerY - 10)
-      .lineTo(this.PAGE_WIDTH - this.MARGIN, footerY - 10)
+      .moveTo(this.MARGIN, footerY)
+      .lineTo(this.PAGE_WIDTH - this.MARGIN, footerY)
       .stroke();
-
-    doc
-      .font("Inter-Regular")
-      .fontSize(10)
-      .fillColor(this.MUTED_COLOR)
-      .text(
-        "SkillTree | Помогаем подросткам найти своё призвание",
-        this.MARGIN,
-        footerY,
-        { width: this.CONTENT_WIDTH, align: "center", lineBreak: false },
-      );
   }
 
   /**
