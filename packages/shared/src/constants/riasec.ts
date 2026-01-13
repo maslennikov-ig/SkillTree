@@ -203,7 +203,9 @@ export function calculatePercentile(type: RIASECType, score: number): number {
   const zScore = (score - norm.mean) / norm.sd;
   // Approximate CDF using error function approximation
   const percentile = (1 + erf(zScore / Math.sqrt(2))) / 2;
-  return Math.round(percentile * 100);
+  const rounded = Math.round(percentile * 100);
+  // Clamp to [0, 100] to handle floating-point edge cases (Issue #2 fix)
+  return Math.max(0, Math.min(100, rounded));
 }
 
 /**
