@@ -3,8 +3,17 @@ import PDFDocument from "pdfkit";
 import * as path from "path";
 import * as fs from "fs";
 import type { RIASECScores } from "@skilltree/shared";
-import { RIASEC_LABELS } from "@skilltree/shared";
 import { ChartService } from "../results/chart.service";
+
+// Short Russian labels for PDF table (fits in narrow columns)
+const RIASEC_SHORT_LABELS: Record<string, string> = {
+  R: "Практик",
+  I: "Исследов.",
+  A: "Артистич.",
+  S: "Социальн.",
+  E: "Предприим.",
+  C: "Конвенц.",
+};
 
 /**
  * Roadmap data structure for PDF generation
@@ -229,15 +238,12 @@ export class PdfService {
       .roundedRect(this.MARGIN, y, this.CONTENT_WIDTH, 80, 10)
       .fillAndStroke("#F8F9FA", this.PRIMARY_COLOR);
 
+    // Note: Emojis are not supported by Inter font, so we skip them
     doc
       .font("Inter-Bold")
       .fontSize(18)
       .fillColor(this.TEXT_COLOR)
-      .text(
-        `${data.archetype.emoji} ${data.archetype.name}`,
-        this.MARGIN + 20,
-        y + 20,
-      );
+      .text(data.archetype.name, this.MARGIN + 20, y + 20);
 
     doc
       .font("Inter-Regular")
@@ -279,12 +285,12 @@ export class PdfService {
           align: "center",
         });
 
-      // Russian label
+      // Russian label (short version to fit in column)
       doc
         .font("Inter-Regular")
         .fontSize(10)
         .fillColor(this.MUTED_COLOR)
-        .text(RIASEC_LABELS[type].ru, x, startY + 45, {
+        .text(RIASEC_SHORT_LABELS[type] || type, x, startY + 45, {
           width: cellWidth,
           align: "center",
         });
@@ -541,7 +547,22 @@ export class PdfService {
       "Рассмотрите возможности стажировок и волонтёрства",
     ];
 
+    // Reserve space for footer (40px) when checking page overflow
+    const FOOTER_RESERVE = 60;
+
     nextSteps.forEach((step) => {
+      const stepHeight = Math.max(
+        25,
+        doc.heightOfString(step, { width: this.CONTENT_WIDTH - 35 }) + 10,
+      );
+
+      // Check if we need a new page (leave room for footer)
+      if (y + stepHeight > this.PAGE_HEIGHT - this.MARGIN - FOOTER_RESERVE) {
+        this.renderFooter(doc);
+        doc.addPage();
+        y = this.MARGIN;
+      }
+
       // Checkbox
       doc
         .rect(this.MARGIN, y, 14, 14)
@@ -555,13 +576,10 @@ export class PdfService {
         .fillColor(this.TEXT_COLOR)
         .text(step, this.MARGIN + 25, y, { width: this.CONTENT_WIDTH - 35 });
 
-      y += Math.max(
-        25,
-        doc.heightOfString(step, { width: this.CONTENT_WIDTH - 35 }) + 10,
-      );
+      y += stepHeight;
     });
 
-    // Footer
+    // Footer on last page
     this.renderFooter(doc);
   }
 
