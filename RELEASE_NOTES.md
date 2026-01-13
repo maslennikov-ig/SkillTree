@@ -2,6 +2,29 @@
 
 User-facing release notes for all versions.
 
+## v0.2.2
+
+_Released on 2026-01-13_
+
+### ✨ New Features
+
+- **Database**: Add 1 source file(s), update 7 source file(s), +1 more
+
+### 🐛 Bug Fixes
+
+- **API**: Remove footer text to prevent page 4 creation
+- **API**: Reduce next steps to fit on page 3
+- **API**: Prevent footer from creating new page in PDF
+- **API**: Fix page 4 empty footer issue in PDF
+- **API**: Improve PDF generation quality
+- **shared**: Add reverse RIASEC archetype pairs (AR, IR, AI, etc.)
+- **API**: Replace corrupted Inter font files with valid TTF
+- **bot**: Show actual option texts for BINARY questions, remove rainbow emoji from Q44
+
+---
+
+_This release was automatically generated from 9 commits._
+
 ## v0.2.1
 
 _Released on 2026-01-09_

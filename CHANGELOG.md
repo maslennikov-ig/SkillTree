@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-01-13
+
+### Added
+- **database**: add 1 source file(s), update 7 source file(s), +1 more (3d6a3e4)
+
+### Fixed
+- **api**: remove footer text to prevent page 4 creation (6fc619f)
+- **api**: reduce next steps to fit on page 3 (a87667b)
+- **api**: prevent footer from creating new page in PDF (94a8eaa)
+- **api**: fix page 4 empty footer issue in PDF (0e3524c)
+- **api**: improve PDF generation quality (7391b70)
+- **shared**: add reverse RIASEC archetype pairs (AR, IR, AI, etc.) (5b73fd6)
+- **api**: replace corrupted Inter font files with valid TTF (229b0d0)
+- **bot**: show actual option texts for BINARY questions, remove rainbow emoji from Q44 (040093d)
+
 ## [0.2.1] - 2026-01-09
 
 ### Added
