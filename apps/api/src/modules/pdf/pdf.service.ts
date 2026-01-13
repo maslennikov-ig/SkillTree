@@ -94,7 +94,7 @@ export class PdfService {
   private readonly BADGE_SIZE = 80;
   private readonly BADGES_PER_ROW = 3;
   private readonly BADGE_GAP = 40;
-  private readonly BADGE_ROW_HEIGHT = 140; // BADGE_SIZE + 60 for text
+  private readonly BADGE_ROW_HEIGHT = 170; // BADGE_SIZE + space for 2-line name + 2-line description
 
   constructor(private readonly chartService: ChartService) {}
 
@@ -232,18 +232,25 @@ export class PdfService {
         align: "center",
       });
 
-    y += 45;
+    y +=
+      doc.heightOfString("СТРАТЕГИЯ", {
+        width: this.CONTENT_WIDTH,
+      }) + 15;
 
+    const subtitleText = "ПРОФЕССИОНАЛЬНОГО РАЗВИТИЯ";
     doc
       .font("Inter-Bold")
       .fontSize(28)
       .fillColor(this.TEXT_COLOR)
-      .text("ПРОФЕССИОНАЛЬНОГО РАЗВИТИЯ", this.MARGIN, y, {
+      .text(subtitleText, this.MARGIN, y, {
         width: this.CONTENT_WIDTH,
         align: "center",
       });
 
-    y += 50;
+    y +=
+      doc.heightOfString(subtitleText, {
+        width: this.CONTENT_WIDTH,
+      }) + 20;
 
     doc
       .font("Inter-Medium")
@@ -254,7 +261,7 @@ export class PdfService {
         align: "center",
       });
 
-    y += 80;
+    y += 40;
 
     // Decorative line
     doc
@@ -400,7 +407,7 @@ export class PdfService {
       .fillColor(this.PRIMARY_COLOR)
       .text("Профиль интересов RIASEC", this.MARGIN, y);
 
-    y += 40;
+    y += 35; // Proper spacing for 24pt header
 
     // Radar chart
     const chartBuffer = await this.chartService.generateRadarChart(
@@ -523,7 +530,7 @@ export class PdfService {
       .fillColor(this.PRIMARY_COLOR)
       .text("Зоны развития", this.MARGIN, y);
 
-    y += 15;
+    y += 35; // Proper spacing for 24pt header
 
     doc
       .font("Inter-Regular")
@@ -536,7 +543,7 @@ export class PdfService {
         { width: this.CONTENT_WIDTH },
       );
 
-    y += 40;
+    y += 30; // Space after subtitle
 
     // Get lowest 2 dimensions
     const lowestTypes = getLowestDimensions(data.riasecScores, 2);
@@ -578,7 +585,10 @@ export class PdfService {
           width: this.CONTENT_WIDTH,
         });
 
-      y += 25;
+      y +=
+        doc.heightOfString(recommendation.energyDescription, {
+          width: this.CONTENT_WIDTH,
+        }) + 15;
 
       // Positive framing
       doc
@@ -812,7 +822,7 @@ export class PdfService {
       .fillColor(this.PRIMARY_COLOR)
       .text("Ваши достижения", this.MARGIN, y);
 
-    y += 15;
+    y += 35; // Proper spacing for 24pt header
 
     doc
       .font("Inter-Regular")
@@ -824,7 +834,7 @@ export class PdfService {
         y,
       );
 
-    y += 40;
+    y += 30; // Space after subtitle
 
     const achievements = data.achievements || [];
 
@@ -867,21 +877,27 @@ export class PdfService {
         .stroke();
 
       // Badge name
+      const nameY = y + this.BADGE_SIZE + 10;
       doc
         .font("Inter-Bold")
         .fontSize(10)
         .fillColor(this.TEXT_COLOR)
-        .text(badgeInfo.nameRu, x - 10, y + this.BADGE_SIZE + 10, {
+        .text(badgeInfo.nameRu, x - 10, nameY, {
           width: this.BADGE_SIZE + 20,
           align: "center",
         });
 
-      // Badge description
+      // Calculate name height for description positioning
+      const nameHeight = doc.heightOfString(badgeInfo.nameRu, {
+        width: this.BADGE_SIZE + 20,
+      });
+
+      // Badge description - positioned after name
       doc
         .font("Inter-Regular")
         .fontSize(9)
         .fillColor(this.MUTED_COLOR)
-        .text(badgeInfo.descriptionRu, x - 10, y + this.BADGE_SIZE + 25, {
+        .text(badgeInfo.descriptionRu, x - 10, nameY + nameHeight + 3, {
           width: this.BADGE_SIZE + 20,
           align: "center",
         });
