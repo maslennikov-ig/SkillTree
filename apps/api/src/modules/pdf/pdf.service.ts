@@ -547,18 +547,17 @@ export class PdfService {
       "Рассмотрите возможности стажировок и волонтёрства",
     ];
 
-    // Reserve space for footer (40px) when checking page overflow
-    const FOOTER_RESERVE = 60;
+    // Reserve space for footer when checking page overflow
+    const FOOTER_RESERVE = 70;
 
     nextSteps.forEach((step) => {
       const stepHeight = Math.max(
-        25,
-        doc.heightOfString(step, { width: this.CONTENT_WIDTH - 35 }) + 10,
+        30,
+        doc.heightOfString(step, { width: this.CONTENT_WIDTH - 35 }) + 15,
       );
 
       // Check if we need a new page (leave room for footer)
       if (y + stepHeight > this.PAGE_HEIGHT - this.MARGIN - FOOTER_RESERVE) {
-        this.renderFooter(doc);
         doc.addPage();
         y = this.MARGIN;
       }
@@ -579,7 +578,7 @@ export class PdfService {
       y += stepHeight;
     });
 
-    // Footer on last page
+    // Footer only on the last page
     this.renderFooter(doc);
   }
 
