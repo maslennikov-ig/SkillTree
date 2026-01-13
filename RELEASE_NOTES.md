@@ -2,6 +2,18 @@
 
 User-facing release notes for all versions.
 
+## v0.2.5
+
+_Released on 2026-01-13_
+
+### 🐛 Bug Fixes
+
+- **pdf**: Resolve text overlap issues in cover page and badges
+
+---
+
+_This release was automatically generated from 1 commits._
+
 ## v0.2.4
 
 _Released on 2026-01-13_

@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.5] - 2026-01-13
+
+### Fixed
+- **pdf**: resolve text overlap issues in cover page and badges (aa8ba2c)
+
 ## [0.2.4] - 2026-01-13
 
 ### Fixed
