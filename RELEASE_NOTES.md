@@ -2,6 +2,18 @@
 
 User-facing release notes for all versions.
 
+## v0.2.3
+
+_Released on 2026-01-13_
+
+### 🐛 Bug Fixes
+
+- **Database**: Update BINARY question options with meaningful text
+
+---
+
+_This release was automatically generated from 1 commits._
+
 ## v0.2.2
 
 _Released on 2026-01-13_
