@@ -98,12 +98,27 @@ export function buildRatingKeyboard(min = 1, max = 5): InlineKeyboard {
 // ============================================================================
 
 /**
- * Build keyboard for BINARY questions (Yes/No)
+ * Build keyboard for BINARY questions
+ * If options are provided, uses their text; otherwise defaults to "Да/Нет"
  */
-export function buildBinaryKeyboard(): InlineKeyboard {
-  return new InlineKeyboard()
-    .text("Да", `${CALLBACK_PREFIX.BINARY}yes`)
-    .text("Нет", `${CALLBACK_PREFIX.BINARY}no`);
+export function buildBinaryKeyboard(
+  options?: QuestionOption[],
+): InlineKeyboard {
+  const keyboard = new InlineKeyboard();
+
+  if (options && options.length >= 2 && options[0] && options[1]) {
+    // Use actual option texts from database
+    keyboard
+      .text(options[0].text, `${CALLBACK_PREFIX.BINARY}yes`)
+      .text(options[1].text, `${CALLBACK_PREFIX.BINARY}no`);
+  } else {
+    // Fallback to default Да/Нет
+    keyboard
+      .text("Да", `${CALLBACK_PREFIX.BINARY}yes`)
+      .text("Нет", `${CALLBACK_PREFIX.BINARY}no`);
+  }
+
+  return keyboard;
 }
 
 // ============================================================================
@@ -140,7 +155,7 @@ export function buildQuestionKeyboard(question: Question): InlineKeyboard {
     }
 
     case "BINARY":
-      return buildBinaryKeyboard();
+      return buildBinaryKeyboard(question.options);
 
     case "OPEN_TEXT":
       return buildOpenTextKeyboard();
