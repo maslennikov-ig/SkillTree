@@ -584,6 +584,7 @@ export class PdfService {
 
   /**
    * Render page footer with branding
+   * Uses lineBreak: false to prevent PDFKit from creating a new page
    */
   private renderFooter(doc: PDFKit.PDFDocument): void {
     const footerY = this.PAGE_HEIGHT - 40;
@@ -603,7 +604,7 @@ export class PdfService {
         "SkillTree | Помогаем подросткам найти своё призвание",
         this.MARGIN,
         footerY,
-        { width: this.CONTENT_WIDTH, align: "center" },
+        { width: this.CONTENT_WIDTH, align: "center", lineBreak: false },
       );
   }
 
