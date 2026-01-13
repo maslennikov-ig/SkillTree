@@ -3,6 +3,7 @@ import PDFDocument from "pdfkit";
 import * as path from "path";
 import * as fs from "fs";
 import type { RIASECScores } from "@skilltree/shared";
+import { calculateAllPercentiles } from "@skilltree/shared";
 import { ChartService } from "../results/chart.service";
 
 // Short Russian labels for PDF table (fits in narrow columns)
@@ -16,6 +17,32 @@ const RIASEC_SHORT_LABELS: Record<string, string> = {
 };
 
 /**
+ * Enhanced career data with market information
+ */
+export interface EnhancedCareer {
+  title: string;
+  titleRu?: string;
+  matchPercentage: number;
+  description: string;
+  requiredSkills: string[];
+  educationPath: string[];
+  universities: string[];
+  salaryMin?: number;
+  salaryMax?: number;
+  demandLevel?: string;
+  category?: string;
+}
+
+/**
+ * Achievement data for PDF display
+ */
+export interface AchievementData {
+  badgeType: string;
+  earnedAt: Date;
+  metadata?: unknown;
+}
+
+/**
  * Roadmap data structure for PDF generation
  */
 export interface RoadmapData {
@@ -24,14 +51,8 @@ export interface RoadmapData {
   riasecScores: RIASECScores;
   hollandCode: string;
   archetype: { name: string; emoji: string; description: string };
-  topCareers: Array<{
-    title: string;
-    matchPercentage: number;
-    description: string;
-    requiredSkills: string[];
-    educationPath: string[];
-    universities: string[];
-  }>;
+  topCareers: EnhancedCareer[];
+  achievements?: AchievementData[];
 }
 
 /**
@@ -90,7 +111,7 @@ export class PdfService {
   }
 
   /**
-   * Generate a career roadmap PDF document
+   * Generate a career roadmap PDF document (10-12 pages)
    * @param data - Roadmap data including student info, RIASEC scores, and career matches
    * @returns PDF document as Buffer
    */
@@ -106,7 +127,7 @@ export class PdfService {
             margin: this.MARGIN,
             bufferPages: false, // Flush pages immediately to reduce memory usage
             info: {
-              Title: "SkillTree - Карьерный план",
+              Title: "SkillTree - Стратегия профессионального развития",
               Author: "SkillTree",
               Subject: `Карьерный план для ${data.studentName}`,
               Creator: "SkillTree Career Assessment",
@@ -121,16 +142,33 @@ export class PdfService {
           // Register fonts
           this.registerFonts(doc);
 
-          // Page 1: Title + Profile Summary
-          await this.renderPage1(doc, data);
+          // Calculate percentiles for all dimensions
+          const percentiles = calculateAllPercentiles(data.riasecScores);
 
-          // Page 2: Top 5 Careers
-          doc.addPage();
-          this.renderPage2(doc, data);
+          // Page 1: Cover Page + Executive Summary
+          this.renderCoverPage(doc, data);
 
-          // Page 3: Development Roadmap
+          // Page 2-3: RIASEC Profile with percentile bars
           doc.addPage();
-          this.renderPage3(doc, data);
+          await this.renderRiasecProfile(doc, data, percentiles);
+
+          // Page 4-5: Growth Areas (lowest 2 dimensions)
+          doc.addPage();
+          this.renderGrowthAreas(doc, data, percentiles);
+
+          // Page 6-8: Enhanced Careers with salary data
+          doc.addPage();
+          this.renderEnhancedCareers(doc, data);
+
+          // Page 9: Achievements (if any)
+          if (data.achievements && data.achievements.length > 0) {
+            doc.addPage();
+            this.renderAchievements(doc, data);
+          }
+
+          // Page 10-11: Development Roadmap
+          doc.addPage();
+          this.renderDevelopmentRoadmap(doc, data);
 
           doc.end();
         } catch (error) {

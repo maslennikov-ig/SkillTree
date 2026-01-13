@@ -190,3 +190,179 @@ export const ARCHETYPES: Record<
     description: "Управляет ресурсами и бюджетами",
   },
 };
+
+/**
+ * Calculate percentile rank from raw RIASEC score
+ * Uses cumulative normal distribution based on RIASEC_NORMS
+ * @param type RIASEC dimension type
+ * @param score Raw score for the dimension
+ * @returns Percentile rank (0-100)
+ */
+export function calculatePercentile(type: RIASECType, score: number): number {
+  const norm = RIASEC_NORMS[type];
+  const zScore = (score - norm.mean) / norm.sd;
+  // Approximate CDF using error function approximation
+  const percentile = (1 + erf(zScore / Math.sqrt(2))) / 2;
+  return Math.round(percentile * 100);
+}
+
+/**
+ * Error function approximation for percentile calculation
+ * Abramowitz and Stegun approximation
+ */
+function erf(x: number): number {
+  const sign = x >= 0 ? 1 : -1;
+  x = Math.abs(x);
+
+  const a1 = 0.254829592;
+  const a2 = -0.284496736;
+  const a3 = 1.421413741;
+  const a4 = -1.453152027;
+  const a5 = 1.061405429;
+  const p = 0.3275911;
+
+  const t = 1.0 / (1.0 + p * x);
+  const y =
+    1.0 - ((((a5 * t + a4) * t + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+
+  return sign * y;
+}
+
+/**
+ * Calculate percentiles for all RIASEC dimensions
+ * @param scores RIASEC scores object
+ * @returns Object with percentile for each dimension
+ */
+export function calculateAllPercentiles(
+  scores: Record<RIASECType, number>,
+): Record<RIASECType, number> {
+  const types: RIASECType[] = ["R", "I", "A", "S", "E", "C"];
+  const percentiles: Record<string, number> = {};
+
+  for (const type of types) {
+    percentiles[type] = calculatePercentile(type, scores[type]);
+  }
+
+  return percentiles as Record<RIASECType, number>;
+}
+
+/**
+ * Identify lowest scoring dimensions (for growth areas)
+ * @param scores RIASEC scores object
+ * @param count Number of lowest dimensions to return (default: 2)
+ * @returns Array of lowest dimension types sorted by score ascending
+ */
+export function getLowestDimensions(
+  scores: Record<RIASECType, number>,
+  count: number = 2,
+): RIASECType[] {
+  const types: RIASECType[] = ["R", "I", "A", "S", "E", "C"];
+
+  return types
+    .map((type) => ({ type, score: scores[type] }))
+    .sort((a, b) => a.score - b.score)
+    .slice(0, count)
+    .map((item) => item.type);
+}
+
+/**
+ * Identify highest scoring dimensions (for strengths)
+ * @param scores RIASEC scores object
+ * @param count Number of highest dimensions to return (default: 3)
+ * @returns Array of highest dimension types sorted by score descending
+ */
+export function getHighestDimensions(
+  scores: Record<RIASECType, number>,
+  count: number = 3,
+): RIASECType[] {
+  const types: RIASECType[] = ["R", "I", "A", "S", "E", "C"];
+
+  return types
+    .map((type) => ({ type, score: scores[type] }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, count)
+    .map((item) => item.type);
+}
+
+/**
+ * Detailed dimension descriptions for PDF report (Russian)
+ */
+export const RIASEC_DESCRIPTIONS: Record<
+  RIASECType,
+  {
+    fullName: string;
+    shortDescription: string;
+    longDescription: string;
+    energyGives: string;
+    energyDrains: string;
+    workStyle: string;
+  }
+> = {
+  R: {
+    fullName: "Практический (Realistic)",
+    shortDescription: "Любит работать руками и решать практические задачи",
+    longDescription:
+      "Практический тип предпочитает конкретную, физическую работу. " +
+      "Им нравится создавать, чинить и работать с инструментами. " +
+      "Они ценят практические результаты и реальные достижения.",
+    energyGives: "Работа с инструментами, создание вещей своими руками, спорт",
+    energyDrains: "Долгие теоретические обсуждения, работа с документами",
+    workStyle: "Предпочитает чёткие задачи с понятным результатом",
+  },
+  I: {
+    fullName: "Исследовательский (Investigative)",
+    shortDescription:
+      "Любит анализировать, исследовать и решать сложные задачи",
+    longDescription:
+      "Исследовательский тип увлечён поиском ответов на сложные вопросы. " +
+      "Им нравится анализировать информацию, проводить эксперименты и разбираться в причинах явлений. " +
+      "Они ценят знания и интеллектуальные достижения.",
+    energyGives: "Решение головоломок, исследования, обучение новому",
+    energyDrains: "Рутинная работа без интеллектуального вызова, продажи",
+    workStyle: "Предпочитает автономию и время для глубокого погружения в тему",
+  },
+  A: {
+    fullName: "Артистический (Artistic)",
+    shortDescription: "Любит творчество, самовыражение и нестандартные решения",
+    longDescription:
+      "Артистический тип ценит оригинальность и свободу самовыражения. " +
+      "Им нравится создавать новое — будь то искусство, музыка, дизайн или нестандартные идеи. " +
+      "Они избегают строгих правил и ценят эстетику.",
+    energyGives: "Творческие проекты, дизайн, музыка, свобода в работе",
+    energyDrains: "Строгие правила, однообразная рутина, бюрократия",
+    workStyle: "Предпочитает гибкий график и свободу в выборе методов",
+  },
+  S: {
+    fullName: "Социальный (Social)",
+    shortDescription: "Любит помогать людям, обучать и работать в команде",
+    longDescription:
+      "Социальный тип получает энергию от помощи другим людям. " +
+      "Им нравится обучать, консультировать, поддерживать и вдохновлять. " +
+      "Они ценят командную работу и человеческие отношения.",
+    energyGives: "Помощь другим, командная работа, обучение, общение",
+    energyDrains: "Работа в одиночестве, технические задачи без общения",
+    workStyle: "Предпочитает командную работу и прямое взаимодействие с людьми",
+  },
+  E: {
+    fullName: "Предприимчивый (Enterprising)",
+    shortDescription: "Любит руководить, убеждать и достигать целей",
+    longDescription:
+      "Предприимчивый тип — прирождённый лидер и организатор. " +
+      "Им нравится ставить амбициозные цели, убеждать людей и создавать новые возможности. " +
+      "Они ценят влияние, признание и материальный успех.",
+    energyGives: "Лидерство, переговоры, предпринимательство, конкуренция",
+    energyDrains: "Рутинная работа, следование чужим правилам, пассивная роль",
+    workStyle: "Предпочитает быть у руля и принимать ключевые решения",
+  },
+  C: {
+    fullName: "Конвенциональный (Conventional)",
+    shortDescription: "Любит порядок, точность и работу с данными",
+    longDescription:
+      "Конвенциональный тип ценит организованность и надёжность. " +
+      "Им нравится работать с числами, данными и документами. " +
+      "Они внимательны к деталям и предпочитают чёткие процедуры.",
+    energyGives: "Систематизация, работа с данными, чёткие процедуры",
+    energyDrains: "Хаос, неопределённость, отсутствие структуры",
+    workStyle: "Предпочитает стабильность и чёткую структуру задач",
+  },
+};

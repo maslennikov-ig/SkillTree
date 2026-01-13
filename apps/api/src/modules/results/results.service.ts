@@ -235,7 +235,7 @@ export class ResultsService {
 
   /**
    * Get all data needed for PDF roadmap generation in optimized queries
-   * Reduces 4 database round-trips to 2
+   * Fetches test results, careers, and achievements in parallel
    */
   async getFullRoadmapData(sessionId: string): Promise<{
     result: TestResultData;
@@ -255,6 +255,11 @@ export class ResultsService {
       requiredSkills: string[];
       educationPath: string[];
       universities: string[];
+    }>;
+    achievements: Array<{
+      badgeType: string;
+      earnedAt: Date;
+      metadata: unknown;
     }>;
   }> {
     // Query 1: Get TestResult with full Session -> Student -> User data
@@ -289,10 +294,16 @@ export class ResultsService {
     const topCareers = (result.topCareers as unknown as CareerMatch[]) || [];
     const careerIds = topCareers.map((c) => c.careerId);
 
-    // Query 2: Get full Career data with all fields needed for PDF
-    const careersData = await this.prisma.career.findMany({
-      where: { id: { in: careerIds } },
-    });
+    // Query 2 & 3: Get Career data and Achievements in parallel
+    const [careersData, achievementsData] = await Promise.all([
+      this.prisma.career.findMany({
+        where: { id: { in: careerIds } },
+      }),
+      this.prisma.achievement.findMany({
+        where: { userId: result.session.student.userId },
+        orderBy: { earnedAt: "desc" },
+      }),
+    ]);
 
     // Helper to safely convert Prisma JSON to string array
     const ensureStringArray = (value: unknown): string[] => {
@@ -327,6 +338,13 @@ export class ResultsService {
       })
       .filter((c): c is NonNullable<typeof c> => c !== null);
 
+    // Format achievements for PDF
+    const achievements = achievementsData.map((a) => ({
+      badgeType: a.badgeType,
+      earnedAt: a.earnedAt,
+      metadata: a.metadata,
+    }));
+
     return {
       result: {
         sessionId: result.sessionId,
@@ -341,6 +359,7 @@ export class ResultsService {
       },
       studentName,
       careers: enrichedCareers,
+      achievements,
     };
   }
 }
