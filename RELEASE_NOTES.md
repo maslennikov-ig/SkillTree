@@ -2,6 +2,18 @@
 
 User-facing release notes for all versions.
 
+## v0.2.6
+
+_Released on 2026-02-03_
+
+### 🐛 Bug Fixes
+
+- **bot**: исправление UI и алгоритма RIASEC профориентации
+
+---
+
+_This release was automatically generated from 1 commits._
+
 ## v0.2.5
 
 _Released on 2026-01-13_
