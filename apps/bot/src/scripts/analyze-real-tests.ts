@@ -515,7 +515,7 @@ function generateReport(test: RealTestData): string {
   }
 
   // Personality assessment
-  const topDim = analysis.topDimensions[0];
+  const topDim = analysis.topDimensions[0]!;
   const topLabel = RIASEC_LABELS[topDim].ru;
   report += `### Оценка личности\n\n`;
   report += `Доминирующее измерение: **${topDim} (${topLabel})** — ${analysis.calculatedNormalized[topDim]}%\n\n`;

@@ -167,10 +167,12 @@ function simulateMultipleChoice(
     };
   }
 
-  let bestOption = question.options[0];
+  // We already checked options exists and has length > 0 above
+  const options = question.options;
+  let bestOption = options[0]!;
   let bestScore = -Infinity;
 
-  for (const option of question.options) {
+  for (const option of options) {
     let optionScore = 0;
     for (const dim of ["R", "I", "A", "S", "E", "C"] as RIASECType[]) {
       optionScore += option.scores[dim] * prefs[dim];
@@ -263,9 +265,9 @@ function generateReport(
   report += `
 ### Топ-3 измерения
 
-1. **${topDimensions[0]}** - ${normalizedScores[topDimensions[0]]}%
-2. **${topDimensions[1]}** - ${normalizedScores[topDimensions[1]]}%
-3. **${topDimensions[2]}** - ${normalizedScores[topDimensions[2]]}%
+1. **${topDimensions[0]}** - ${normalizedScores[topDimensions[0]!]}%
+2. **${topDimensions[1]}** - ${normalizedScores[topDimensions[1]!]}%
+3. **${topDimensions[2]}** - ${normalizedScores[topDimensions[2]!]}%
 
 ## Ответы на вопросы
 
