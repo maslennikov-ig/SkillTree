@@ -2,8 +2,8 @@
  * Prisma Seed Script for SkillTree Database
  *
  * Seeds:
- * - 55 RIASEC questions with options
- * - 43 careers with RIASEC profiles
+ * - 60 RIASEC questions with options (O*NET standard)
+ * - 42 careers with RIASEC profiles
  *
  * Run with: pnpm db:seed
  */

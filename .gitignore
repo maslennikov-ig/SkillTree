@@ -43,6 +43,9 @@ temp/
 *.sqlite
 *.sqlite3
 
+# Prisma seed compiled files (prevent ts-node caching issues)
+packages/database/prisma/seed-data/*.js
+
 # Cache
 .cache/
 .parcel-cache/
