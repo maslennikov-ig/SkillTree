@@ -11,7 +11,7 @@
 import crypto from "crypto";
 import type { PrismaClient } from "@skilltree/database";
 import type { RIASECScores, RIASECType, CareerMatch } from "@skilltree/shared";
-import { RIASEC_NORMS, ARCHETYPES } from "@skilltree/shared";
+import { ARCHETYPES, calculateAllPercentiles } from "@skilltree/shared";
 import { logger } from "../utils/logger";
 
 // ============================================================================
@@ -133,25 +133,13 @@ export async function calculateRIASECProfile(
 }
 
 /**
- * Normalize raw scores using Z-score normalization
- * Converts to percentile-like scale (0-100)
+ * Normalize raw scores using Z-score normalization with proper CDF
+ * Uses erf() function for accurate normal distribution percentiles
+ * Converts to percentile scale (0-100)
  */
 export function normalizeScores(rawScores: RIASECScores): RIASECScores {
-  const normalized: RIASECScores = { R: 0, I: 0, A: 0, S: 0, E: 0, C: 0 };
-
-  const dimensions: RIASECType[] = ["R", "I", "A", "S", "E", "C"];
-
-  for (const dim of dimensions) {
-    const norms = RIASEC_NORMS[dim];
-    // Z-score calculation
-    const zScore = (rawScores[dim] - norms.mean) / norms.sd;
-    // Convert to 0-100 scale (assuming normal distribution)
-    // Z-score of -3 to +3 maps to ~0 to ~100
-    const percentile = Math.round(50 + zScore * 16.67);
-    normalized[dim] = Math.max(0, Math.min(100, percentile));
-  }
-
-  return normalized;
+  // Use the shared calculateAllPercentiles which properly uses erf() for CDF
+  return calculateAllPercentiles(rawScores);
 }
 
 /**

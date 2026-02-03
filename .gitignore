@@ -58,3 +58,7 @@ coverage/
 *.pem
 .vercel
 *.tsbuildinfo
+
+# MCP configuration (contains env var references)
+.mcp.json
+.mcp.local.json

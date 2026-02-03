@@ -419,6 +419,11 @@ async function renderStep(
       messageText += `\n\n${formatOptionsAsText(question.options)}`;
     }
 
+    // Add options as text for BINARY questions
+    if (question.type === "BINARY" && question.options) {
+      messageText += `\n\n${formatOptionsAsText(question.options)}`;
+    }
+
     // Add rating scale labels if applicable
     // Labels already include "1 = " and "5 = " prefix for clarity
     if (question.type === "RATING" && question.ratingRange?.labels) {
@@ -912,7 +917,7 @@ quizHandler.callbackQuery(/^mirror_/, async (ctx) => {
     // Show reveal message
     if (badgeResult.isNew) {
       await ctx.reply(
-        `🕵️ **Браво!** Ты угадал свой паттерн: **${correctPattern}**\n\n` +
+        `🕵️ **Браво!** Ты угадал свой профиль!\n\n` +
           `${getPatternName(correctPattern)}\n\n` +
           `🏆 +30 очков и значок «Детектив»!`,
         { parse_mode: "Markdown" },
@@ -920,13 +925,13 @@ quizHandler.callbackQuery(/^mirror_/, async (ctx) => {
     } else if (badgeResult.unlocked) {
       // Already had the badge
       await ctx.reply(
-        `🕵️ Ты снова угадал свой паттерн: **${correctPattern}**\n\n` +
+        `🕵️ Ты снова угадал свой профиль!\n\n` +
           `${getPatternName(correctPattern)}`,
         { parse_mode: "Markdown" },
       );
     } else {
       await ctx.reply(
-        `💡 Интересно! Ты выбрал **${selectedPattern}**, а твой паттерн — **${correctPattern}**\n\n` +
+        `💡 Интересно! Ты выбрал ${getPatternName(selectedPattern)}, а твой профиль —\n\n` +
           `${getPatternName(correctPattern)}\n\n` +
           `Это тоже ценный инсайт о том, как ты себя видишь!`,
         { parse_mode: "Markdown" },
