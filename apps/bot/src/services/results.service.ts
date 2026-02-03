@@ -384,6 +384,7 @@ export async function saveTestResults(
       personalityType: profile.archetype.name,
       hollandCode,
       shareToken,
+      testVersion: 2, // v2 = 60-question O*NET standard
     },
   });
 

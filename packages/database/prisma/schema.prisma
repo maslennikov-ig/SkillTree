@@ -340,6 +340,7 @@ model TestResult {
   radarChartUrl   String?
   shareCardUrl    String?
   shareToken      String?  @unique // URL-safe token for public sharing
+  testVersion     Int      @default(1) // Test version for tracking algorithm changes (1=55q, 2=60q O*NET)
   createdAt       DateTime @default(now())
 
   // Relations

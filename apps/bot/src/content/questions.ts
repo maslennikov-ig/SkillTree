@@ -1,7 +1,7 @@
 /**
  * Quiz Question Content for SkillTree Bot
  *
- * Provides constants and helpers for 55-question RIASEC assessment.
+ * Provides constants and helpers for 60-question RIASEC assessment (O*NET standard).
  * Questions are loaded from database at runtime via quiz.service.
  */
 
@@ -17,8 +17,8 @@ import type {
 // Constants
 // ============================================================================
 
-export const TOTAL_QUESTIONS = 55;
-export const QUESTIONS_PER_SECTION = 11;
+export const TOTAL_QUESTIONS = 60;
+export const QUESTIONS_PER_SECTION = 12;
 export const TOTAL_SECTIONS = 5;
 
 // ============================================================================
@@ -27,7 +27,7 @@ export const TOTAL_SECTIONS = 5;
 
 /**
  * Ordered array of question IDs for FSM instruction pointer.
- * currentStep (0-54) maps directly to QUIZ_FLOW[currentStep]
+ * currentStep (0-59) maps directly to QUIZ_FLOW[currentStep]
  */
 export const QUIZ_FLOW: string[] = [
   // Section 1 (Q1-11): Warm-up, interests, hobbies
@@ -78,7 +78,7 @@ export const QUIZ_FLOW: string[] = [
   "q42",
   "q43",
   "q44",
-  // Section 5 (Q45-55): Future and goals
+  // Section 5 (Q45-60): Future and goals
   "q45",
   "q46",
   "q47",
@@ -90,6 +90,11 @@ export const QUIZ_FLOW: string[] = [
   "q53",
   "q54",
   "q55",
+  "q56",
+  "q57",
+  "q58",
+  "q59",
+  "q60",
 ];
 
 // ============================================================================
@@ -97,7 +102,7 @@ export const QUIZ_FLOW: string[] = [
 // ============================================================================
 
 /**
- * Get question ID for a given step (0-54)
+ * Get question ID for a given step (0-59)
  */
 export function getQuestionIdByStep(step: number): string | undefined {
   if (step < 0 || step >= TOTAL_QUESTIONS) {
@@ -107,7 +112,7 @@ export function getQuestionIdByStep(step: number): string | undefined {
 }
 
 /**
- * Get section number for a given step (0-54)
+ * Get section number for a given step (0-59)
  * Returns 1-5
  */
 export function getSectionForStep(step: number): number {
@@ -145,7 +150,7 @@ export function getProgressInfo(step: number): {
 
 /**
  * Format progress string for display
- * Example: "Вопрос 12/55 | Секция 2/5 | 22%"
+ * Example: "Вопрос 12/60 | Секция 2/5 | 20%"
  */
 export function formatProgressString(step: number): string {
   const {
