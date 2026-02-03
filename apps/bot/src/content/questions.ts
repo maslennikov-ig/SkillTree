@@ -30,7 +30,7 @@ export const TOTAL_SECTIONS = 5;
  * currentStep (0-59) maps directly to QUIZ_FLOW[currentStep]
  */
 export const QUIZ_FLOW: string[] = [
-  // Section 1 (Q1-11): Warm-up, interests, hobbies
+  // Section 1 (Q1-12): Warm-up, interests, hobbies
   "q1",
   "q2",
   "q3",
@@ -42,8 +42,8 @@ export const QUIZ_FLOW: string[] = [
   "q9",
   "q10",
   "q11",
-  // Section 2 (Q12-22): School and learning
   "q12",
+  // Section 2 (Q13-24): School and learning
   "q13",
   "q14",
   "q15",
@@ -54,9 +54,9 @@ export const QUIZ_FLOW: string[] = [
   "q20",
   "q21",
   "q22",
-  // Section 3 (Q23-33): Work preferences
   "q23",
   "q24",
+  // Section 3 (Q25-36): Work preferences
   "q25",
   "q26",
   "q27",
@@ -66,10 +66,10 @@ export const QUIZ_FLOW: string[] = [
   "q31",
   "q32",
   "q33",
-  // Section 4 (Q34-44): Skills and abilities
   "q34",
   "q35",
   "q36",
+  // Section 4 (Q37-48): Skills and abilities
   "q37",
   "q38",
   "q39",
@@ -78,11 +78,11 @@ export const QUIZ_FLOW: string[] = [
   "q42",
   "q43",
   "q44",
-  // Section 5 (Q45-60): Future and goals
   "q45",
   "q46",
   "q47",
   "q48",
+  // Section 5 (Q49-60): Future and goals
   "q49",
   "q50",
   "q51",

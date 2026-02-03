@@ -44,7 +44,7 @@ export interface Question {
   text: string;
   type: QuestionType;
   section: number; // 1-5
-  orderIndex: number; // 1-55
+  orderIndex: number; // 1-60
   difficulty: number; // 1-3
   primaryDimension: RIASECType;
   options?: QuestionOption[];
@@ -100,11 +100,11 @@ const createScores = (
 };
 
 // ═══════════════════════════════════════════════════════════════
-// DELIVERABLE 1: 55-QUESTION BANK (RUSSIAN)
+// DELIVERABLE 1: 60-QUESTION BANK (O*NET STANDARD)
 // ═══════════════════════════════════════════════════════════════
 /**
  * Question Design Principles:
- * - 9 questions per RIASEC dimension (54 total) + 1 engagement buffer
+ * - 10 questions per RIASEC dimension (60 total, O*NET standard)
  * - Interleaved dimensions (never same dimension consecutively)
  * - Strategic pacing: easy→medium→hard→medium→easy
  * - Format mix: 70% multiple choice, 20% rating, 10% binary
@@ -122,7 +122,7 @@ const createScores = (
 
 export const questions: Question[] = [
   // ═══════════════════════════════════════════════════════════════
-  // SECTION 1 (Q1-11): Warm-up, interests, hobbies — EASY
+  // SECTION 1 (Q1-12): Warm-up, interests, hobbies — EASY
   // ═══════════════════════════════════════════════════════════════
 
   {
@@ -432,14 +432,14 @@ export const questions: Question[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // SECTION 2 (Q12-22): School subjects, activities — MEDIUM
+  // SECTION 1 continued (Q12): Last question of Section 1
   // ═══════════════════════════════════════════════════════════════
 
   {
     id: "q12",
     text: "📐 Насколько тебе нравятся геометрия и черчение?",
     type: "RATING",
-    section: 2,
+    section: 1,
     orderIndex: 12,
     difficulty: 2,
     primaryDimension: "R",
@@ -453,6 +453,10 @@ export const questions: Question[] = [
       },
     },
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECTION 2 (Q13-24): School subjects, activities — MEDIUM
+  // ═══════════════════════════════════════════════════════════════
 
   {
     id: "q13",
@@ -757,14 +761,14 @@ export const questions: Question[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // SECTION 3 (Q23-33): Work preferences, values — MEDIUM-HARD
+  // SECTION 2 continued (Q23-24): Last questions of Section 2
   // ═══════════════════════════════════════════════════════════════
 
   {
     id: "q23",
     text: "💭 Что для тебя важнее в будущей работе?",
     type: "MULTIPLE_CHOICE",
-    section: 3,
+    section: 2,
     orderIndex: 23,
     difficulty: 3,
     primaryDimension: "E",
@@ -797,7 +801,7 @@ export const questions: Question[] = [
     id: "q24",
     text: "🏢 Где бы ты хотел/а работать?",
     type: "MULTIPLE_CHOICE",
-    section: 3,
+    section: 2,
     orderIndex: 24,
     difficulty: 3,
     primaryDimension: "R",
@@ -825,6 +829,10 @@ export const questions: Question[] = [
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECTION 3 (Q25-36): Work preferences, values — MEDIUM-HARD
+  // ═══════════════════════════════════════════════════════════════
 
   {
     id: "q25",
@@ -1053,14 +1061,14 @@ export const questions: Question[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // SECTION 4 (Q34-44): Social vs solo, structure vs freedom — MEDIUM
+  // SECTION 3 continued (Q34-36): Last questions of Section 3
   // ═══════════════════════════════════════════════════════════════
 
   {
     id: "q34",
     text: "🗣️ Оцени: насколько тебе комфортно выступать перед аудиторией?",
     type: "RATING",
-    section: 4,
+    section: 3,
     orderIndex: 34,
     difficulty: 2,
     primaryDimension: "E",
@@ -1079,7 +1087,7 @@ export const questions: Question[] = [
     id: "q35",
     text: "📊 Насколько тебе нравится работать с цифрами и таблицами?",
     type: "RATING",
-    section: 4,
+    section: 3,
     orderIndex: 35,
     difficulty: 2,
     primaryDimension: "C",
@@ -1098,7 +1106,7 @@ export const questions: Question[] = [
     id: "q36",
     text: "🧩 Как ты решаешь сложные проблемы?",
     type: "MULTIPLE_CHOICE",
-    section: 4,
+    section: 3,
     orderIndex: 36,
     difficulty: 2,
     primaryDimension: "I",
@@ -1126,6 +1134,10 @@ export const questions: Question[] = [
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECTION 4 (Q37-48): Social vs solo, structure vs freedom — MEDIUM
+  // ═══════════════════════════════════════════════════════════════
 
   {
     id: "q37",
@@ -1335,14 +1347,14 @@ export const questions: Question[] = [
   },
 
   // ═══════════════════════════════════════════════════════════════
-  // SECTION 5 (Q45-55): Quick confirmations, closure — EASY
+  // SECTION 4 continued (Q45-48): Last questions of Section 4
   // ═══════════════════════════════════════════════════════════════
 
   {
     id: "q45",
     text: "📋 Тебе нравится чётко следовать инструкциям и планам?",
     type: "BINARY",
-    section: 5,
+    section: 4,
     orderIndex: 45,
     difficulty: 1,
     primaryDimension: "C",
@@ -1364,7 +1376,7 @@ export const questions: Question[] = [
     id: "q46",
     text: "🔬 Тебе интересно читать научные статьи в свободное время?",
     type: "BINARY",
-    section: 5,
+    section: 4,
     orderIndex: 46,
     difficulty: 1,
     primaryDimension: "I",
@@ -1386,7 +1398,7 @@ export const questions: Question[] = [
     id: "q47",
     text: "🎨 Тебе нравится рисовать, лепить или создавать что-то руками?",
     type: "BINARY",
-    section: 5,
+    section: 4,
     orderIndex: 47,
     difficulty: 1,
     primaryDimension: "A",
@@ -1408,7 +1420,7 @@ export const questions: Question[] = [
     id: "q48",
     text: "🤝 Тебе нравится работать с детьми или подростками?",
     type: "BINARY",
-    section: 5,
+    section: 4,
     orderIndex: 48,
     difficulty: 1,
     primaryDimension: "S",
@@ -1425,6 +1437,10 @@ export const questions: Question[] = [
       },
     ],
   },
+
+  // ═══════════════════════════════════════════════════════════════
+  // SECTION 5 (Q49-60): Quick confirmations, closure — EASY
+  // ═══════════════════════════════════════════════════════════════
 
   {
     id: "q49",
@@ -1595,10 +1611,6 @@ export const questions: Question[] = [
     ],
   },
 
-  // ═══════════════════════════════════════════════════════════════
-  // NEW QUESTIONS Q56-Q60 (for 60-question O*NET standard)
-  // ═══════════════════════════════════════════════════════════════
-
   {
     id: "q56",
     text: "🌲 Тебе нравится проводить время на природе — походы, рыбалка, работа в саду?",
@@ -1666,8 +1678,8 @@ export const questions: Question[] = [
     section: 5,
     orderIndex: 59,
     difficulty: 1,
-    primaryDimension: "E",
-    // Measures: E (persuasion/influence)
+    primaryDimension: "S", // Changed from E to S for balance (persuasion involves social interaction)
+    // Measures: S (social influence/communication)
     ratingRange: {
       min: 1,
       max: 5,
@@ -1685,22 +1697,22 @@ export const questions: Question[] = [
     section: 5,
     orderIndex: 60,
     difficulty: 1,
-    primaryDimension: "E", // Engagement question with E-bias
+    primaryDimension: "A", // Changed from E to A for balance (curiosity/creativity about self-discovery)
     options: [
       {
         text: "🚀 Да, покажите мне всё!",
         value: "excited",
-        scores: { R: 0, I: 0.1, A: 0.1, S: 0.1, E: 0.3, C: 0 },
+        scores: { R: 0, I: 0.1, A: 0.3, S: 0.1, E: 0.1, C: 0 },
       },
       {
         text: "🤔 Интересно, что там вышло",
         value: "curious",
-        scores: { R: 0, I: 0.3, A: 0.1, S: 0.1, E: 0.1, C: 0.1 },
+        scores: { R: 0, I: 0.2, A: 0.3, S: 0.1, E: 0.1, C: 0.1 },
       },
       {
         text: "😌 Посмотрю, но без особых ожиданий",
         value: "calm",
-        scores: { R: 0.1, I: 0.1, A: 0, S: 0.2, E: 0, C: 0.2 },
+        scores: { R: 0.1, I: 0.1, A: 0.2, S: 0.2, E: 0, C: 0.2 },
       },
     ],
   },

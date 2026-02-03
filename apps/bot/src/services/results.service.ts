@@ -101,10 +101,12 @@ export async function calculateRIASECProfile(
       rawScores.E += optionScores.E || 0;
       rawScores.C += optionScores.C || 0;
     } else if (question.questionType === "RATING_SCALE") {
-      // For rating questions, add score to primary dimension
+      // For rating questions, normalize to 0-1 scale to match multiple-choice weights
+      // Rating 1-5 becomes 0.2-1.0 (comparable to option scores ~0.1-1.0)
       const rating = parseInt(answer.answerText, 10) || 0;
+      const normalizedRating = rating / 5.0;
       const dimension = question.primaryDimension as RIASECType;
-      rawScores[dimension] += rating;
+      rawScores[dimension] += normalizedRating;
     }
   }
 
