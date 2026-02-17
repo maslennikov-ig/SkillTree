@@ -25,6 +25,7 @@ export const CALLBACK_PREFIX = {
   RESUME: "flow_resume",
   NEW: "flow_new",
   SKIP: "flow_skip",
+  BACK: "flow_back",
 } as const;
 
 // ============================================================================
@@ -166,33 +167,50 @@ export function buildMirrorKeyboard(
 /**
  * Build appropriate keyboard based on question type
  */
-export function buildQuestionKeyboard(question: Question): InlineKeyboard {
+export function buildQuestionKeyboard(
+  question: Question,
+  step?: number,
+): InlineKeyboard {
+  let keyboard: InlineKeyboard;
+
   switch (question.type) {
     case "MULTIPLE_CHOICE":
       if (!question.options || question.options.length === 0) {
         throw new Error(`Question ${question.id} has no options`);
       }
-      return buildMultipleChoiceKeyboard(question.options);
+      keyboard = buildMultipleChoiceKeyboard(question.options);
+      break;
 
     case "RATING": {
       const min = question.ratingRange?.min ?? 1;
       const max = question.ratingRange?.max ?? 5;
-      return buildRatingKeyboard(min, max);
+      keyboard = buildRatingKeyboard(min, max);
+      break;
     }
 
     case "BINARY":
-      return buildBinaryKeyboard(question.options);
+      keyboard = buildBinaryKeyboard(question.options);
+      break;
 
     case "OPEN_TEXT":
-      return buildOpenTextKeyboard();
+      keyboard = buildOpenTextKeyboard();
+      break;
 
     default:
       // Fallback to multiple choice if options exist
       if (question.options && question.options.length > 0) {
-        return buildMultipleChoiceKeyboard(question.options);
+        keyboard = buildMultipleChoiceKeyboard(question.options);
+      } else {
+        keyboard = new InlineKeyboard();
       }
-      return new InlineKeyboard();
   }
+
+  // Add back button for all questions except the first one (step 0)
+  if (step !== undefined && step > 0) {
+    keyboard.row().text("← Назад", CALLBACK_PREFIX.BACK);
+  }
+
+  return keyboard;
 }
 
 // ============================================================================

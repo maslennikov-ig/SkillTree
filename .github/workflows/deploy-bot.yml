@@ -68,6 +68,10 @@ jobs:
             echo "Building packages..."
             pnpm build
 
+            # Apply database migrations (production-safe command)
+            echo "Applying database migrations..."
+            pnpm --filter @skilltree/database exec prisma migrate deploy
+
             # Restart bot with PM2
             echo "Restarting bot..."
             pm2 restart skilltree-bot --update-env || pm2 start ecosystem.config.js --only skilltree-bot

@@ -1085,19 +1085,19 @@ export const questions: Question[] = [
 
   {
     id: "q35",
-    text: "📊 Насколько тебе нравится работать с цифрами и таблицами?",
+    text: "🔍 Насколько тебе важна точность и внимание к деталям в работе?",
     type: "RATING",
     section: 3,
     orderIndex: 35,
     difficulty: 2,
     primaryDimension: "C",
-    // Measures: C (data, organization)
+    // Measures: C (precision, attention to detail)
     ratingRange: {
       min: 1,
       max: 5,
       labels: {
-        min: "1 = Не моё 🤯",
-        max: "5 = Люблю! 📈",
+        min: "1 = Не парюсь об этом 🤷",
+        max: "5 = Каждая мелочь важна! 🎯",
       },
     },
   },

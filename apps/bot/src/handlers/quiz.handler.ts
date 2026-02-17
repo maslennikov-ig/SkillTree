@@ -22,6 +22,7 @@ import {
   isEndOfSection,
   isQuizComplete,
   getActiveSession,
+  updateSessionStep,
 } from "../services/quiz.service";
 import {
   buildQuestionKeyboard,
@@ -37,6 +38,7 @@ import {
   getSectionForStep,
   getSectionCelebration,
 } from "../content/questions";
+import { BUTTON_TO_COMMAND } from "../keyboards/main-menu";
 import {
   calculateRIASECProfile,
   matchCareers,
@@ -208,43 +210,38 @@ quizHandler.hears(/^Продолжить тест$/i, handleResumeTest);
  * Handle text messages during quiz (OPEN_TEXT questions)
  * This handler must come AFTER .hears() handlers to avoid conflicts
  */
-quizHandler.on("message:text", async (ctx) => {
-  if (!ctx.from || !ctx.message?.text) return;
+quizHandler.on("message:text", async (ctx, next) => {
+  if (!ctx.from || !ctx.message?.text) return next();
 
-  // Skip if text is a command or known button text
+  // Skip if text is a command or known menu button - pass to downstream handlers
   const text = ctx.message.text;
-  if (
-    text.startsWith("/") ||
-    text === "Начать тест" ||
-    text === "Продолжить тест" ||
-    text === "Помощь"
-  ) {
-    return; // Let other handlers process
+  if (text.startsWith("/") || text in BUTTON_TO_COMMAND) {
+    return next();
   }
 
   const log = logger.child({ fn: "textAnswer", telegramId: ctx.from.id });
 
-  // Check if user has active quiz
-  if (!isStudent(ctx)) return;
+  // Check if user has active quiz - if not, pass to other handlers
+  if (!isStudent(ctx)) return next();
 
   const session =
     ctx.quizSession ?? (await getActiveSession(ctx.prisma, ctx.user.studentId));
-  if (!session) return;
+  if (!session) return next();
 
   // Get current question
   const question = await getQuestionForStep(ctx.prisma, session.currentStep);
   if (!question) {
     log.warn({ step: session.currentStep }, "No question found for step");
-    return;
+    return next();
   }
 
-  // Only handle OPEN_TEXT questions
+  // Only handle OPEN_TEXT questions - pass others to downstream handlers
   if (question.type !== "OPEN_TEXT") {
     log.debug(
       { type: question.type },
       "Text received but question is not OPEN_TEXT",
     );
-    return;
+    return next();
   }
 
   try {
@@ -374,9 +371,13 @@ async function renderStep(
       // Build progress info
       const { text: progressText } = getProgress(step);
 
-      // Send mirror question with custom keyboard
+      // Send mirror question with custom keyboard (add back button if not first step)
+      const mirrorKeyboard = buildMirrorKeyboard(mirrorQ.options);
+      if (step > 0) {
+        mirrorKeyboard.row().text("← Назад", CALLBACK_PREFIX.BACK);
+      }
       await ctx.reply(`${progressText}\n\n${mirrorQ.text}`, {
-        reply_markup: buildMirrorKeyboard(mirrorQ.options),
+        reply_markup: mirrorKeyboard,
         parse_mode: "Markdown",
       });
 
@@ -439,8 +440,8 @@ async function renderStep(
       messageText += `\n\n✍️ _Напиши свой ответ (до 500 символов) или нажми «Пропустить»_`;
     }
 
-    // Build keyboard
-    const keyboard = buildQuestionKeyboard(question);
+    // Build keyboard (pass step for back button on step > 0)
+    const keyboard = buildQuestionKeyboard(question, step);
 
     // Add hint button for Easter egg questions
     if (question.isEasterEgg && question.hint) {
@@ -672,6 +673,44 @@ quizHandler.callbackQuery(CALLBACK_PREFIX.CONTINUE, async (ctx) => {
 
   await ctx.editMessageText("Продолжаем! 💪");
   await renderStep(ctx, session.currentStep, session.id);
+});
+
+// ============================================================================
+// Back Navigation Callback (go to previous question)
+// ============================================================================
+
+quizHandler.callbackQuery(CALLBACK_PREFIX.BACK, async (ctx) => {
+  await ctx.answerCallbackQuery();
+
+  if (!ctx.from) return;
+
+  const log = logger.child({ fn: "goBack", telegramId: ctx.from.id });
+
+  if (!isStudent(ctx)) return;
+
+  const session =
+    ctx.quizSession ?? (await getActiveSession(ctx.prisma, ctx.user.studentId));
+
+  if (!session) return;
+
+  const previousStep = session.currentStep - 1;
+  if (previousStep < 0) return;
+
+  // Update session step to previous
+  await updateSessionStep(ctx.prisma, session.id, previousStep);
+
+  // Update context session
+  if (ctx.quizSession) {
+    ctx.quizSession.currentStep = previousStep;
+  }
+
+  log.info(
+    { previousStep, sessionId: session.id },
+    "Going back to previous question",
+  );
+
+  // Render the previous question
+  await renderStep(ctx, previousStep, session.id);
 });
 
 // ============================================================================
