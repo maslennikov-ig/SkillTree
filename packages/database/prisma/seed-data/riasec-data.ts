@@ -245,7 +245,7 @@ export const questions: Question[] = [
 
   {
     id: "q5",
-    text: "💰 Представь: тебе дали 100К на стартап в школе. Что делаешь?",
+    text: "💰 Представь: тебе дали 100К на стартап в школе. Что сделаешь?",
     type: "MULTIPLE_CHOICE",
     section: 1,
     orderIndex: 5,
@@ -1510,7 +1510,7 @@ export const questions: Question[] = [
 
   {
     id: "q52",
-    text: "🎯 Что для тебя важнее в будущей работе?",
+    text: "🚀 Представь, что ты запускаешь свой проект. Какую роль выберешь?",
     type: "MULTIPLE_CHOICE",
     section: 5,
     orderIndex: 52,
@@ -1518,24 +1518,24 @@ export const questions: Question[] = [
     primaryDimension: "E",
     options: [
       {
-        text: "💰 Высокая зарплата и карьерный рост",
-        value: "money",
-        scores: { R: 0, I: 0, A: 0, S: 0, E: 1.0, C: 0.2 },
+        text: "👑 Лидер — буду всем управлять и принимать решения",
+        value: "leader",
+        scores: { R: 0, I: 0, A: 0, S: 0.1, E: 1.0, C: 0.2 },
       },
       {
-        text: "❤️ Чтобы работа нравилась и была интересной",
-        value: "passion",
-        scores: { R: 0.1, I: 0.2, A: 0.8, S: 0.1, E: 0, C: 0 },
+        text: "🎨 Креативщик — придумаю идею и дизайн",
+        value: "creative",
+        scores: { R: 0.1, I: 0.2, A: 1.0, S: 0, E: 0.1, C: 0 },
       },
       {
-        text: "🤝 Помогать людям и приносить пользу",
-        value: "helping",
-        scores: { R: 0, I: 0.1, A: 0, S: 1.0, E: 0.1, C: 0 },
+        text: "🔧 Технарь — сделаю всю техническую часть",
+        value: "tech",
+        scores: { R: 0.8, I: 0.5, A: 0, S: 0, E: 0, C: 0.2 },
       },
       {
-        text: "⚖️ Стабильность и баланс работы и жизни",
-        value: "balance",
-        scores: { R: 0.1, I: 0.1, A: 0, S: 0.1, E: 0.1, C: 0.8 },
+        text: "🤝 Коммуникатор — буду общаться с клиентами и партнёрами",
+        value: "communicator",
+        scores: { R: 0, I: 0, A: 0, S: 1.0, E: 0.3, C: 0 },
       },
     ],
   },

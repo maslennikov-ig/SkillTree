@@ -27,7 +27,6 @@ Chart.register(
 @Injectable()
 export class ChartService {
   private readonly CHART_SIZE = 600; // pixels
-  private readonly BACKGROUND_COLOR = "#ffffff";
 
   /**
    * Generate RIASEC radar chart as PNG buffer
@@ -40,15 +39,25 @@ export class ChartService {
     const config: ChartConfiguration<"radar"> = {
       type: "radar",
       data: {
-        labels: ["R", "I", "A", "S", "E", "C"],
+        labels: [
+          "Реалист (R)",
+          "Исследователь (I)",
+          "Артист (A)",
+          "Социальный (S)",
+          "Предприниматель (E)",
+          "Конвенциональный (C)",
+        ],
         datasets: [
           {
             label: "RIASEC Profile",
             data: [scores.R, scores.I, scores.A, scores.S, scores.E, scores.C],
-            backgroundColor: "rgba(75, 192, 192, 0.2)",
-            borderColor: "rgba(75, 192, 192, 1)",
-            borderWidth: 2,
-            pointBackgroundColor: "rgba(75, 192, 192, 1)",
+            backgroundColor: "rgba(75, 192, 192, 0.45)",
+            borderColor: "rgba(52, 152, 219, 1)",
+            borderWidth: 3,
+            pointBackgroundColor: "rgba(52, 152, 219, 1)",
+            pointBorderColor: "#ffffff",
+            pointBorderWidth: 2,
+            pointRadius: 6,
           },
         ],
       },
@@ -58,7 +67,21 @@ export class ChartService {
           r: {
             beginAtZero: true,
             max: 100,
-            ticks: { stepSize: 20 },
+            ticks: {
+              stepSize: 20,
+              font: { size: 14 },
+              backdropColor: "rgba(255, 255, 255, 0.8)",
+            },
+            pointLabels: {
+              font: { size: 16, weight: "bold" },
+              color: "#333333",
+            },
+            grid: {
+              color: "rgba(0, 0, 0, 0.1)",
+            },
+            angleLines: {
+              color: "rgba(0, 0, 0, 0.1)",
+            },
           },
         },
         plugins: {
