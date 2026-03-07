@@ -121,19 +121,36 @@ async function handleShowResults(ctx: MyContext) {
     // Build results message
     const message = formatResultsMessage(results);
 
-    // Send radar chart if available
-    if (results.profile.normalizedScores) {
-      // TODO: Fetch radar chart from API and send as photo
-      // For now, send text results
-    }
-
     // Check if user has 1000+ points for PDF unlock
     const totalPoints = session.points || 0;
+    const keyboard = buildResultsKeyboard({ pdfUnlocked: totalPoints >= 1000 });
 
-    await ctx.reply(message, {
-      reply_markup: buildResultsKeyboard({ pdfUnlocked: totalPoints >= 1000 }),
-      parse_mode: "Markdown",
-    });
+    // Try to send share card image with results
+    let imageSent = false;
+    try {
+      const response = await fetchWithTimeout(
+        `${API_URL}/results/${session.id}/share-card`,
+      );
+      if (response.ok) {
+        const buffer = Buffer.from(await response.arrayBuffer());
+        await ctx.replyWithPhoto(new InputFile(buffer, "profile.png"), {
+          caption: message,
+          reply_markup: keyboard,
+          parse_mode: "Markdown",
+        });
+        imageSent = true;
+      }
+    } catch (imgError) {
+      log.warn({ error: imgError }, "Failed to fetch share card for /results");
+    }
+
+    // Fallback to text-only if image failed
+    if (!imageSent) {
+      await ctx.reply(message, {
+        reply_markup: keyboard,
+        parse_mode: "Markdown",
+      });
+    }
 
     log.info({ sessionId: session.id }, "Results displayed");
   } catch (error) {
