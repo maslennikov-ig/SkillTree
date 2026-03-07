@@ -234,7 +234,7 @@ export const questions: Question[] = [
   
   {
     id: "q5",
-    text: "💰 Представь: тебе дали 100К на стартап в школе. Что делаешь?",
+    text: "💰 Представь: тебе дали 100К на стартап в школе. Что сделаешь?",
     type: "MULTIPLE_CHOICE",
     section: 1,
     orderIndex: 5,
