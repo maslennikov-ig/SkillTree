@@ -24,6 +24,10 @@ Chart.register(
   Tooltip,
 );
 
+interface ChartRenderOptions {
+  compact?: boolean;
+}
+
 @Injectable()
 export class ChartService {
   private readonly CHART_SIZE = 600; // pixels
@@ -31,8 +35,14 @@ export class ChartService {
   /**
    * Generate RIASEC radar chart as PNG buffer
    */
-  async generateRadarChart(scores: RIASECScores): Promise<Buffer> {
-    const canvas = createCanvas(this.CHART_SIZE, this.CHART_SIZE);
+  async generateRadarChart(
+    scores: RIASECScores,
+    options?: ChartRenderOptions,
+  ): Promise<Buffer> {
+    const compact = options?.compact ?? false;
+    const minScore = compact ? 15 : 0;
+    const chartSize = compact ? 800 : this.CHART_SIZE;
+    const canvas = createCanvas(chartSize, chartSize);
     const ctx = canvas.getContext("2d");
 
     // Chart configuration
@@ -50,14 +60,21 @@ export class ChartService {
         datasets: [
           {
             label: "RIASEC Profile",
-            data: [scores.R, scores.I, scores.A, scores.S, scores.E, scores.C],
+            data: [
+              scores.R,
+              scores.I,
+              scores.A,
+              scores.S,
+              scores.E,
+              scores.C,
+            ].map((v) => Math.max(v, minScore)),
             backgroundColor: "rgba(75, 192, 192, 0.45)",
             borderColor: "rgba(52, 152, 219, 1)",
-            borderWidth: 3,
+            borderWidth: compact ? 5 : 3,
             pointBackgroundColor: "rgba(52, 152, 219, 1)",
             pointBorderColor: "#ffffff",
-            pointBorderWidth: 2,
-            pointRadius: 6,
+            pointBorderWidth: compact ? 3 : 2,
+            pointRadius: compact ? 10 : 6,
           },
         ],
       },
@@ -71,16 +88,19 @@ export class ChartService {
               stepSize: 20,
               font: { size: 14 },
               backdropColor: "rgba(255, 255, 255, 0.8)",
+              ...(compact && { display: false }),
             },
             pointLabels: {
-              font: { size: 16, weight: "bold" },
-              color: "#333333",
+              font: { size: compact ? 36 : 16, weight: "bold" },
+              color: compact ? "#1a1a1a" : "#333333",
             },
             grid: {
-              color: "rgba(0, 0, 0, 0.1)",
+              color: compact ? "rgba(0, 0, 0, 0.18)" : "rgba(0, 0, 0, 0.1)",
+              ...(compact && { lineWidth: 2 }),
             },
             angleLines: {
-              color: "rgba(0, 0, 0, 0.1)",
+              color: compact ? "rgba(0, 0, 0, 0.15)" : "rgba(0, 0, 0, 0.1)",
+              ...(compact && { lineWidth: 1.5 }),
             },
           },
         },

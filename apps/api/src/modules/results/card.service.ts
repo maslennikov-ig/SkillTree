@@ -21,7 +21,7 @@ interface ShareCardData {
 @Injectable()
 export class CardService implements OnModuleInit {
   private readonly CARD_SIZE = 1080;
-  private readonly CHART_SIZE = 400;
+  private readonly CHART_SIZE = 540;
   private fontsRegistered = false;
 
   constructor(private readonly chartService: ChartService) {}
@@ -171,7 +171,7 @@ export class CardService implements OnModuleInit {
     }
 
     // === MAIN CONTENT CARD ===
-    const cardMargin = 60;
+    const cardMargin = 50;
     const cardWidth = this.CARD_SIZE - cardMargin * 2;
     const cardHeight = this.CARD_SIZE - cardMargin * 2;
 
@@ -187,10 +187,10 @@ export class CardService implements OnModuleInit {
     ctx.shadowOffsetY = 10;
 
     // === HEADER ===
-    const headerY = cardMargin + 60;
+    const headerY = cardMargin + 45;
 
     // Emoji (using Noto Color Emoji)
-    ctx.font = '64px "Noto Color Emoji"';
+    ctx.font = '56px "Noto Color Emoji"';
     ctx.textAlign = "center";
     ctx.fillStyle = "#333";
     ctx.fillText(archetype.emoji, this.CARD_SIZE / 2, headerY);
@@ -202,27 +202,30 @@ export class CardService implements OnModuleInit {
     ctx.shadowOffsetY = 0;
 
     // Archetype name
-    ctx.font = 'bold 42px "Inter Bold", Inter, sans-serif';
+    ctx.font = 'bold 38px "Inter Bold", Inter, sans-serif';
     ctx.fillStyle = "#1a1a1a";
-    ctx.fillText(archetype.name, this.CARD_SIZE / 2, headerY + 70);
+    ctx.fillText(archetype.name, this.CARD_SIZE / 2, headerY + 62);
 
     // Holland code badge
-    const hollandY = headerY + 110;
+    const hollandY = headerY + 95;
     const hollandWidth = 120;
-    const hollandHeight = 40;
+    const hollandHeight = 36;
     const hollandX = (this.CARD_SIZE - hollandWidth) / 2;
 
     ctx.fillStyle = colors.primary;
     this.roundRect(ctx, hollandX, hollandY, hollandWidth, hollandHeight, 20);
     ctx.fill();
 
-    ctx.font = 'bold 24px "Inter Bold", Inter, sans-serif';
+    ctx.font = 'bold 22px "Inter Bold", Inter, sans-serif';
     ctx.fillStyle = "#ffffff";
-    ctx.fillText(data.hollandCode, this.CARD_SIZE / 2, hollandY + 28);
+    ctx.fillText(data.hollandCode, this.CARD_SIZE / 2, hollandY + 26);
 
     // === RADAR CHART ===
     // Generate mini radar chart
-    const chartBuffer = await this.chartService.generateRadarChart(data.scores);
+    const chartBuffer = await this.chartService.generateRadarChart(
+      data.scores,
+      { compact: true },
+    );
     const { loadImage } = await import("@napi-rs/canvas");
 
     // Load chart image
@@ -230,7 +233,7 @@ export class CardService implements OnModuleInit {
 
     // Position chart in center
     const chartX = (this.CARD_SIZE - this.CHART_SIZE) / 2;
-    const chartY = hollandY + 80;
+    const chartY = hollandY + 60;
 
     // Draw chart with white background
     ctx.fillStyle = "#ffffff";
@@ -247,13 +250,13 @@ export class CardService implements OnModuleInit {
     ctx.drawImage(chartImage, chartX, chartY, this.CHART_SIZE, this.CHART_SIZE);
 
     // === TOP CAREER ===
-    const careerY = chartY + this.CHART_SIZE + 40;
+    const careerY = chartY + this.CHART_SIZE + 30;
 
-    ctx.font = '18px "Inter Medium", Inter, sans-serif';
+    ctx.font = '16px "Inter Medium", Inter, sans-serif';
     ctx.fillStyle = "#666666";
     ctx.fillText("Топ профессия для тебя:", this.CARD_SIZE / 2, careerY);
 
-    ctx.font = 'bold 28px "Inter Bold", Inter, sans-serif';
+    ctx.font = 'bold 26px "Inter Bold", Inter, sans-serif';
     ctx.fillStyle = "#1a1a1a";
 
     // Truncate career title if too long
@@ -264,23 +267,23 @@ export class CardService implements OnModuleInit {
       careerTitle = careerTitle.slice(0, -4) + "...";
       metrics = ctx.measureText(careerTitle);
     }
-    ctx.fillText(careerTitle, this.CARD_SIZE / 2, careerY + 40);
+    ctx.fillText(careerTitle, this.CARD_SIZE / 2, careerY + 35);
 
     // === BRANDING ===
-    const brandingY = this.CARD_SIZE - cardMargin - 50;
+    const brandingY = this.CARD_SIZE - cardMargin - 45;
 
     // SkillTree logo/text
-    ctx.font = 'bold 24px "Inter Bold", Inter, sans-serif';
+    ctx.font = 'bold 22px "Inter Bold", Inter, sans-serif';
     ctx.fillStyle = colors.primary;
     ctx.fillText("SkillTree", this.CARD_SIZE / 2, brandingY);
 
     // Tagline
-    ctx.font = '16px "Inter", sans-serif';
+    ctx.font = '14px "Inter", sans-serif';
     ctx.fillStyle = "#999999";
     ctx.fillText(
       "Узнай свой путь к успеху",
       this.CARD_SIZE / 2,
-      brandingY + 28,
+      brandingY + 24,
     );
 
     return canvas.toBuffer("image/png");
