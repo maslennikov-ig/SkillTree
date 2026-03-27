@@ -37,10 +37,10 @@ export class PdfController {
     @Param("sessionId") sessionId: string,
     @Res() res: Response,
   ) {
-    // Validate UUID format to prevent injection attempts
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    if (!uuidRegex.test(sessionId)) {
+    // Validate session ID format (CUID or UUID) to prevent injection
+    const sessionIdRegex =
+      /^[a-z0-9]{20,30}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!sessionIdRegex.test(sessionId)) {
       throw new BadRequestException("Invalid session ID format");
     }
 
