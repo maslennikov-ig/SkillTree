@@ -1,5 +1,6 @@
-import { Injectable } from "@nestjs/common";
-import { createCanvas } from "@napi-rs/canvas";
+import { Injectable, OnModuleInit } from "@nestjs/common";
+import { createCanvas, GlobalFonts } from "@napi-rs/canvas";
+import { join } from "path";
 import {
   Chart,
   ChartConfiguration,
@@ -29,8 +30,24 @@ interface ChartRenderOptions {
 }
 
 @Injectable()
-export class ChartService {
+export class ChartService implements OnModuleInit {
   private readonly CHART_SIZE = 600; // pixels
+  private fontsRegistered = false;
+
+  onModuleInit() {
+    this.registerFonts();
+  }
+
+  private registerFonts(): void {
+    if (this.fontsRegistered) return;
+    const fontsDir = join(__dirname, "../../../assets/fonts");
+    try {
+      GlobalFonts.registerFromPath(join(fontsDir, "Inter-Bold.ttf"), "Inter");
+      this.fontsRegistered = true;
+    } catch {
+      // Fonts may already be registered by CardService
+    }
+  }
 
   /**
    * Generate RIASEC radar chart as PNG buffer
@@ -39,6 +56,7 @@ export class ChartService {
     scores: RIASECScores,
     options?: ChartRenderOptions,
   ): Promise<Buffer> {
+    this.registerFonts();
     const compact = options?.compact ?? false;
     const chartSize = compact ? 800 : this.CHART_SIZE;
     const canvas = createCanvas(chartSize, chartSize);
@@ -111,7 +129,11 @@ export class ChartService {
               ...(compact && { display: false }),
             },
             pointLabels: {
-              font: { size: compact ? 36 : 16, weight: "bold" },
+              font: {
+                size: compact ? 36 : 16,
+                weight: "bold",
+                family: "Inter, sans-serif",
+              },
               color: compact ? "#1a1a1a" : "#333333",
             },
             grid: {
