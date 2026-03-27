@@ -97,6 +97,9 @@ export class ChartService {
       },
       options: {
         responsive: false,
+        layout: {
+          padding: compact ? 70 : 10,
+        },
         scales: {
           r: {
             beginAtZero: true,
