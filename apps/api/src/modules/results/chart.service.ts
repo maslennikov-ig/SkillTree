@@ -40,10 +40,34 @@ export class ChartService {
     options?: ChartRenderOptions,
   ): Promise<Buffer> {
     const compact = options?.compact ?? false;
-    const minScore = compact ? 15 : 0;
     const chartSize = compact ? 800 : this.CHART_SIZE;
     const canvas = createCanvas(chartSize, chartSize);
     const ctx = canvas.getContext("2d");
+
+    const rawData = [
+      scores.R,
+      scores.I,
+      scores.A,
+      scores.S,
+      scores.E,
+      scores.C,
+    ];
+
+    // For compact mode (share card), rescale so the polygon fills the chart
+    // Map scores to [20, 95] range preserving relative differences
+    let chartData: number[];
+    let chartMax: number;
+
+    if (compact) {
+      const maxVal = Math.max(...rawData);
+      const minVal = Math.min(...rawData);
+      const range = maxVal - minVal || 1;
+      chartData = rawData.map((v) => ((v - minVal) / range) * 65 + 25);
+      chartMax = 100;
+    } else {
+      chartData = rawData;
+      chartMax = 100;
+    }
 
     // Chart configuration
     const config: ChartConfiguration<"radar"> = {
@@ -60,14 +84,7 @@ export class ChartService {
         datasets: [
           {
             label: "RIASEC Profile",
-            data: [
-              scores.R,
-              scores.I,
-              scores.A,
-              scores.S,
-              scores.E,
-              scores.C,
-            ].map((v) => Math.max(v, minScore)),
+            data: chartData,
             backgroundColor: "rgba(75, 192, 192, 0.45)",
             borderColor: "rgba(52, 152, 219, 1)",
             borderWidth: compact ? 5 : 3,
@@ -83,7 +100,7 @@ export class ChartService {
         scales: {
           r: {
             beginAtZero: true,
-            max: 100,
+            max: chartMax,
             ticks: {
               stepSize: 20,
               font: { size: 14 },

@@ -36,7 +36,7 @@ export class CardService implements OnModuleInit {
   private registerFonts(): void {
     if (this.fontsRegistered) return;
 
-    const fontsDir = join(__dirname, "../../../../assets/fonts");
+    const fontsDir = join(__dirname, "../../../assets/fonts");
 
     try {
       GlobalFonts.registerFromPath(
