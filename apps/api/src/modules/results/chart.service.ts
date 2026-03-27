@@ -42,7 +42,10 @@ export class ChartService implements OnModuleInit {
     if (this.fontsRegistered) return;
     const fontsDir = join(__dirname, "../../../assets/fonts");
     try {
-      GlobalFonts.registerFromPath(join(fontsDir, "Inter-Bold.ttf"), "Inter");
+      GlobalFonts.registerFromPath(
+        join(fontsDir, "Inter-Bold.ttf"),
+        "Inter Bold",
+      );
       this.fontsRegistered = true;
     } catch {
       // Fonts may already be registered by CardService
@@ -72,15 +75,22 @@ export class ChartService implements OnModuleInit {
     ];
 
     // For compact mode (share card), rescale so the polygon fills the chart
-    // Map scores to [20, 95] range preserving relative differences
     let chartData: number[];
     let chartMax: number;
 
     if (compact) {
       const maxVal = Math.max(...rawData);
       const minVal = Math.min(...rawData);
-      const range = maxVal - minVal || 1;
-      chartData = rawData.map((v) => ((v - minVal) / range) * 65 + 25);
+      const range = maxVal - minVal;
+
+      if (range < 5) {
+        // Near-equal scores: scale proportionally so max maps to ~85%
+        const scale = maxVal > 0 ? 85 / maxVal : 1;
+        chartData = rawData.map((v) => Math.max(v * scale, 10));
+      } else {
+        // Normal case: rescale to [25, 90] range preserving relative differences
+        chartData = rawData.map((v) => ((v - minVal) / range) * 65 + 25);
+      }
       chartMax = 100;
     } else {
       chartData = rawData;
@@ -132,7 +142,7 @@ export class ChartService implements OnModuleInit {
               font: {
                 size: compact ? 36 : 16,
                 weight: "bold",
-                family: "Inter, sans-serif",
+                family: "Inter Bold, Inter, sans-serif",
               },
               color: compact ? "#1a1a1a" : "#333333",
             },
@@ -153,8 +163,10 @@ export class ChartService implements OnModuleInit {
     };
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    new Chart(ctx as any, config);
+    const chart = new Chart(ctx as any, config);
+    const buffer = canvas.toBuffer("image/png");
+    chart.destroy();
 
-    return canvas.toBuffer("image/png");
+    return buffer;
   }
 }

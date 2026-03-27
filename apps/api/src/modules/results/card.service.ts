@@ -1,5 +1,10 @@
 import { Injectable, OnModuleInit } from "@nestjs/common";
-import { createCanvas, GlobalFonts, SKRSContext2D } from "@napi-rs/canvas";
+import {
+  createCanvas,
+  GlobalFonts,
+  SKRSContext2D,
+  loadImage,
+} from "@napi-rs/canvas";
 import { join } from "path";
 import type { RIASECScores, RIASECType } from "@skilltree/shared";
 import { RIASEC_COLORS, ARCHETYPES } from "@skilltree/shared";
@@ -226,8 +231,6 @@ export class CardService implements OnModuleInit {
       data.scores,
       { compact: true },
     );
-    const { loadImage } = await import("@napi-rs/canvas");
-
     // Load chart image
     const chartImage = await loadImage(chartBuffer);
 
