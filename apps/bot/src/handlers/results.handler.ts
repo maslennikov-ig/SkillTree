@@ -60,6 +60,29 @@ async function fetchWithTimeout(
   }
 }
 
+/**
+ * Try to edit the message text; if the message is a photo (no text to edit),
+ * fall back to sending a new reply.
+ */
+async function safeEditOrReply(
+  ctx: MyContext,
+  text: string,
+  options?: Record<string, unknown>,
+): Promise<void> {
+  try {
+    await ctx.editMessageText(text, options);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("there is no text in the message to edit")
+    ) {
+      await ctx.reply(text, options);
+    } else {
+      throw error;
+    }
+  }
+}
+
 // ============================================================================
 // Composer
 // ============================================================================
@@ -184,7 +207,8 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.VIEW_CAREERS, async (ctx) => {
     });
 
     if (!session) {
-      await ctx.editMessageText(
+      await safeEditOrReply(
+        ctx,
         "Результаты не найдены. Пройди тест командой /test",
       );
       return;
@@ -193,7 +217,7 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.VIEW_CAREERS, async (ctx) => {
     const results = await getTestResults(ctx.prisma, session.id);
 
     if (!results || results.careerMatches.length === 0) {
-      await ctx.editMessageText("Профессии не найдены.");
+      await safeEditOrReply(ctx, "Профессии не найдены.");
       return;
     }
 
@@ -222,13 +246,13 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.VIEW_CAREERS, async (ctx) => {
       titleRu: c.titleRu,
     }));
 
-    await ctx.editMessageText(message, {
+    await safeEditOrReply(ctx, message, {
       reply_markup: buildCareersListKeyboard(careerButtons),
       parse_mode: "Markdown",
     });
   } catch (error) {
     logger.error({ error }, "Error displaying careers");
-    await ctx.editMessageText("Произошла ошибка.");
+    await safeEditOrReply(ctx, "Произошла ошибка.");
   }
 });
 
@@ -248,7 +272,7 @@ resultsHandler.callbackQuery(/^career_detail_/, async (ctx) => {
     });
 
     if (!career) {
-      await ctx.editMessageText("Профессия не найдена.");
+      await safeEditOrReply(ctx, "Профессия не найдена.");
       return;
     }
 
@@ -275,13 +299,13 @@ resultsHandler.callbackQuery(/^career_detail_/, async (ctx) => {
         .join("\n")}`;
     }
 
-    await ctx.editMessageText(message, {
+    await safeEditOrReply(ctx, message, {
       reply_markup: buildCareerDetailKeyboard(),
       parse_mode: "Markdown",
     });
   } catch (error) {
     logger.error({ error, careerId }, "Error displaying career detail");
-    await ctx.editMessageText("Произошла ошибка.");
+    await safeEditOrReply(ctx, "Произошла ошибка.");
   }
 });
 
@@ -304,27 +328,27 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.BACK_TO_RESULTS, async (ctx) => {
     });
 
     if (!session) {
-      await ctx.editMessageText("Результаты не найдены.");
+      await safeEditOrReply(ctx, "Результаты не найдены.");
       return;
     }
 
     const results = await getTestResults(ctx.prisma, session.id);
 
     if (!results) {
-      await ctx.editMessageText("Результаты не найдены.");
+      await safeEditOrReply(ctx, "Результаты не найдены.");
       return;
     }
 
     const message = formatResultsMessage(results);
     const totalPoints = session.points || 0;
 
-    await ctx.editMessageText(message, {
+    await safeEditOrReply(ctx, message, {
       reply_markup: buildResultsKeyboard({ pdfUnlocked: totalPoints >= 1000 }),
       parse_mode: "Markdown",
     });
   } catch (error) {
     logger.error({ error }, "Error returning to results");
-    await ctx.editMessageText("Произошла ошибка.");
+    await safeEditOrReply(ctx, "Произошла ошибка.");
   }
 });
 
@@ -353,7 +377,7 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.PDF_ROADMAP, async (ctx) => {
     });
 
     if (!session) {
-      await ctx.editMessageText("Результаты не найдены. Пройди тест /test");
+      await safeEditOrReply(ctx, "Результаты не найдены. Пройди тест /test");
       return;
     }
 
@@ -370,7 +394,7 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.PDF_ROADMAP, async (ctx) => {
     }
 
     // User has enough points - fetch PDF from API
-    await ctx.editMessageText("Генерируем PDF-отчёт...");
+    await safeEditOrReply(ctx, "Генерируем PDF-отчёт...");
 
     const response = await fetchWithTimeout(
       `${API_URL}/results/${session.id}/pdf-roadmap`,
@@ -422,7 +446,8 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SHARE, async (ctx) => {
     });
 
     if (!session) {
-      await ctx.editMessageText(
+      await safeEditOrReply(
+        ctx,
         "Результаты не найдены. Пройди тест командой /test",
         { reply_markup: buildResultsKeyboard() },
       );
@@ -749,7 +774,8 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SEND_TO_PARENT, async (ctx) => {
     });
 
     if (!session) {
-      await ctx.editMessageText(
+      await safeEditOrReply(
+        ctx,
         "Результаты не найдены. Пройди тест командой /test",
         { reply_markup: buildResultsKeyboard() },
       );
@@ -768,7 +794,8 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SEND_TO_PARENT, async (ctx) => {
 
     // No linked parents - show registration instructions
     if (parentLinks.length === 0) {
-      await ctx.editMessageText(
+      await safeEditOrReply(
+        ctx,
         "Чтобы отправить результаты родителям, попросите их:\n\n" +
           "1. Написать боту /start\n" +
           "2. Зарегистрироваться как родитель\n" +
@@ -792,7 +819,8 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SEND_TO_PARENT, async (ctx) => {
       );
 
       if (parentsWithUnverifiedEmail.length > 0) {
-        await ctx.editMessageText(
+        await safeEditOrReply(
+          ctx,
           "К сожалению, родитель ещё не подтвердил свой email.\n\n" +
             "Попросите родителя:\n" +
             "1. Написать боту /verifyemail\n" +
@@ -802,7 +830,8 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SEND_TO_PARENT, async (ctx) => {
           { reply_markup: buildResultsKeyboard() },
         );
       } else {
-        await ctx.editMessageText(
+        await safeEditOrReply(
+          ctx,
           "Родитель ещё не указал свой email.\n\n" +
             "Попросите родителя:\n" +
             "1. Написать боту /verifyemail\n" +
@@ -830,7 +859,7 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SEND_TO_PARENT, async (ctx) => {
 
       keyboard.text("Назад", PARENT_EMAIL_CALLBACK.BACK);
 
-      await ctx.editMessageText("Выберите, кому отправить отчёт:", {
+      await safeEditOrReply(ctx, "Выберите, кому отправить отчёт:", {
         reply_markup: keyboard,
       });
       return;
@@ -841,7 +870,7 @@ resultsHandler.callbackQuery(RESULTS_CALLBACK.SEND_TO_PARENT, async (ctx) => {
     await sendEmailReportToParent(ctx, session.id, parentLink.parent, log);
   } catch (error) {
     log.error({ error }, "Error in send to parent handler");
-    await ctx.editMessageText("Произошла ошибка. Попробуй позже.", {
+    await safeEditOrReply(ctx, "Произошла ошибка. Попробуй позже.", {
       reply_markup: buildResultsKeyboard(),
     });
   }
@@ -868,7 +897,7 @@ resultsHandler.callbackQuery(/^parent_email_select_/, async (ctx) => {
 
     if (!match) {
       log.warn({ data }, "Invalid parent selection callback data");
-      await ctx.editMessageText("Произошла ошибка.", {
+      await safeEditOrReply(ctx, "Произошла ошибка.", {
         reply_markup: buildResultsKeyboard(),
       });
       return;
@@ -894,7 +923,8 @@ resultsHandler.callbackQuery(/^parent_email_select_/, async (ctx) => {
       !parentLink.parent.email ||
       !parentLink.parent.emailVerified
     ) {
-      await ctx.editMessageText(
+      await safeEditOrReply(
+        ctx,
         "Родитель не найден или email не подтверждён.",
         { reply_markup: buildResultsKeyboard() },
       );
@@ -904,7 +934,7 @@ resultsHandler.callbackQuery(/^parent_email_select_/, async (ctx) => {
     await sendEmailReportToParent(ctx, sessionId!, parentLink.parent, log);
   } catch (error) {
     log.error({ error }, "Error in parent selection handler");
-    await ctx.editMessageText("Произошла ошибка. Попробуй позже.", {
+    await safeEditOrReply(ctx, "Произошла ошибка. Попробуй позже.", {
       reply_markup: buildResultsKeyboard(),
     });
   }
@@ -929,27 +959,27 @@ resultsHandler.callbackQuery(PARENT_EMAIL_CALLBACK.BACK, async (ctx) => {
     });
 
     if (!session) {
-      await ctx.editMessageText("Результаты не найдены.");
+      await safeEditOrReply(ctx, "Результаты не найдены.");
       return;
     }
 
     const results = await getTestResults(ctx.prisma, session.id);
 
     if (!results) {
-      await ctx.editMessageText("Результаты не найдены.");
+      await safeEditOrReply(ctx, "Результаты не найдены.");
       return;
     }
 
     const message = formatResultsMessage(results);
     const totalPoints = session.points || 0;
 
-    await ctx.editMessageText(message, {
+    await safeEditOrReply(ctx, message, {
       reply_markup: buildResultsKeyboard({ pdfUnlocked: totalPoints >= 1000 }),
       parse_mode: "Markdown",
     });
   } catch (error) {
     logger.error({ error }, "Error returning to results from parent selection");
-    await ctx.editMessageText("Произошла ошибка.");
+    await safeEditOrReply(ctx, "Произошла ошибка.");
   }
 });
 
@@ -999,7 +1029,8 @@ async function sendEmailReportToParent(
 
     if (response.ok) {
       const maskedEmail = maskEmail(parent.email!);
-      await ctx.editMessageText(
+      await safeEditOrReply(
+        ctx,
         `Отчёт успешно отправлен на email родителя: ${maskedEmail}\n\n` +
           "Родитель получит подробный отчёт о твоих результатах теста.",
         { reply_markup: buildResultsKeyboard() },
@@ -1016,13 +1047,18 @@ async function sendEmailReportToParent(
         "Failed to send email report",
       );
 
-      await ctx.editMessageText("Не удалось отправить отчёт. Попробуй позже.", {
-        reply_markup: buildResultsKeyboard(),
-      });
+      await safeEditOrReply(
+        ctx,
+        "Не удалось отправить отчёт. Попробуй позже.",
+        {
+          reply_markup: buildResultsKeyboard(),
+        },
+      );
     }
   } catch (error) {
     log.error({ error, sessionId }, "Error calling email report API");
-    await ctx.editMessageText(
+    await safeEditOrReply(
+      ctx,
       "Произошла ошибка при отправке. Попробуй позже.",
       { reply_markup: buildResultsKeyboard() },
     );
