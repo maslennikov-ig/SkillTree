@@ -1,88 +1,62 @@
-# Plan: Fix RIASEC Radar Chart Visibility on Share Card in Telegram
+# Plan: Fix editMessageText crash on photo messages in bot callbacks
 
 ## Context
 
-Share card (1080x1080) с радарной диаграммой RIASEC-профиля плохо читается в Telegram:
-- Подписи осей (~4px после сжатия) — невидимы
-- Сетка (opacity 0.1) — исчезает после сжатия
-- При низких баллах полигон сжимается в точку в центре
-- Цифры тиков (14px) — нечитаемый шум
+Кнопка "Результаты" отправляет share card как **фото** с inline keyboard. Когда тестер нажимает кнопки ("Все профессии", "PDF Roadmap", "Отправить родителям"), обработчики вызывают `ctx.editMessageText()`. Telegram API возвращает 400: "there is no text in the message to edit" — потому что нельзя заменить фото-сообщение на текст через `editMessageText`.
 
-**Цепочка масштабирования**: 600px chart → 400px на карточке → ~375px карточка в Telegram → **~139px итоговый размер диаграммы**
+До добавления share card (commit `ee45384`) результаты были текстовыми → `editMessageText` работал. После добавления фото → все 30 вызовов `editMessageText` в callback-обработчиках ломаются.
 
-## Approach: Compact Mode for Share Card
+## Approach
 
-Добавить режим `compact` в ChartService — увеличенные шрифты, жирные линии, скрытые тики, минимальные баллы. CardService передаёт `{ compact: true }` и увеличивает область диаграммы.
+Создать хелпер-функцию `safeEditOrReply(ctx, text, options)`:
+1. Пробует `ctx.editMessageText(text, options)` 
+2. Если ошибка "there is no text in the message to edit" → fallback на `ctx.reply(text, options)`
+3. Другие ошибки — пробрасывает дальше
+
+Заменить все 30 вызовов `ctx.editMessageText()` на `safeEditOrReply(ctx, ...)`.
 
 ## Changes
 
-### 1. `apps/api/src/modules/results/chart.service.ts`
+### `apps/bot/src/handlers/results.handler.ts`
 
-**Добавить интерфейс опций и изменить сигнатуру:**
+**1. Добавить хелпер** (в секцию Fetch Utilities, после `fetchWithTimeout`):
+
 ```typescript
-interface ChartRenderOptions {
-  compact?: boolean;  // Bold rendering for small display
+async function safeEditOrReply(
+  ctx: MyContext,
+  text: string,
+  options?: Parameters<MyContext["editMessageText"]>[1],
+): Promise<void> {
+  try {
+    await ctx.editMessageText(text, options);
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes("there is no text in the message to edit")
+    ) {
+      await ctx.reply(text, options as Parameters<MyContext["reply"]>[1]);
+    } else {
+      throw error;
+    }
+  }
 }
 ```
-`generateRadarChart(scores, options?: ChartRenderOptions)`
 
-**Логика compact mode:**
-- Canvas: 800x800 (вместо 600x600) — больше пикселей для выживания при сжатии
-- Min score clamping: `Math.max(score, 15)` — полигон всегда видимый, не точка
-- Подписи осей: **36px bold** (вместо 16px) → ~8.4px в Telegram — читаемо
-- Сетка: `rgba(0,0,0,0.18)`, lineWidth 2 (вместо 0.1/1px)
-- Angle lines: `rgba(0,0,0,0.15)`, lineWidth 1.5
-- Border width: 5 (вместо 3) → ~1.2px в Telegram
-- Point radius: 10 (вместо 6) → ~2.3px в Telegram
-- Тики (20, 40, 60, 80): **скрыть** — при 3px нечитаемы, только шум
-- Цвет подписей: `#1a1a1a` (вместо #333)
+**2. Replace** все 30 вызовов `ctx.editMessageText(...)` → `await safeEditOrReply(ctx, ...)`.
 
-**Default mode** (без опций) — не меняется. Controller и PDF продолжают работать как раньше.
-
-### 2. `apps/api/src/modules/results/card.service.ts`
-
-**Увеличить область диаграммы:**
-- `CHART_SIZE`: 400 → **540** (50% ширины карточки вместо 37%)
-
-**Передать compact mode:**
-```typescript
-this.chartService.generateRadarChart(data.scores, { compact: true })
-```
-
-**Сжать layout вертикально** чтобы вместить бОльшую диаграмму:
-- `cardMargin`: 60 → 50
-- Emoji: 64px → 56px
-- Archetype name: 42px → 38px
-- Holland badge: на 15px выше
-- Chart Y: на 20px выше
-- Career/branding: шрифты чуть мельче (18→16, 28→26, 24→22, 16→14)
+Список строк с `editMessageText`: 187, 196, 225, 231, 251, 278, 284, 307, 314, 321, 327, 356, 373, 425, 752, 771, 795, 805, 833, 844, 871, 897, 907, 932, 939, 946, 952, 1002, 1019, 1025.
 
 ## Files Modified
 
 | File | Change |
 |------|--------|
-| `apps/api/src/modules/results/chart.service.ts` | Add `ChartRenderOptions`, compact mode logic |
-| `apps/api/src/modules/results/card.service.ts` | CHART_SIZE 540, pass compact, compress layout |
-
-## Files NOT Modified (backward compatibility)
-
-- `apps/api/src/modules/results/results.controller.ts` — standalone endpoint, default mode
-- `apps/api/src/modules/pdf/pdf.service.ts` — PDF report, default mode
-- `apps/bot/src/handlers/results.handler.ts` — calls API, no chart logic
-
-## Expected Results
-
-| Metric | Before | After |
-|--------|--------|-------|
-| Chart area in Telegram | ~139px | ~188px |
-| Label size in Telegram | ~3.7px (invisible) | ~8.4px (readable) |
-| Grid visibility | invisible | faint but visible |
-| Polygon border | ~0.7px (sub-pixel) | ~1.2px (visible) |
-| Low scores | collapsed dot | visible hexagon (min 15%) |
+| `apps/bot/src/handlers/results.handler.ts` | Добавить `safeEditOrReply`, заменить 30 вызовов |
 
 ## Verification
 
-1. `cd apps/api && pnpm build` — TypeScript компиляция
-2. Запустить API локально, вызвать `GET /results/:sessionId/share-card`
-3. Открыть PNG, убедиться что подписи и полигон видны
-4. Отправить в Telegram бот, проверить читаемость в чате
+1. `npx tsc --noEmit -p apps/bot/tsconfig.json` — типы
+2. Deploy бота: push + pull + build + `pm2 restart skilltree-bot`
+3. Тестер нажимает "Результаты" → получает фото-карточку
+4. Нажимает "Все профессии" → видит список профессий (новое сообщение)
+5. Нажимает "PDF Roadmap" → получает PDF-файл
+6. Нажимает "Назад к результатам" → видит текстовые результаты
