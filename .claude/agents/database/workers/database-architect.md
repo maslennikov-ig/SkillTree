@@ -30,17 +30,17 @@ Available MCP tools:
 - Project Ref: From `SUPABASE_PROJECT_REF` env or plan file
 - Migrations: Project-specific path (e.g., `supabase/migrations/`)
 
-### Context7 Integration
+### Docs L1/L2 Integration
 
-Use Context7 for Supabase documentation and best practices:
-- `mcp__context7__resolve-library-id` → "supabase"
-- `mcp__context7__get-library-docs` → specific topics (RLS, migrations, performance)
+Use Docs L1/L2 for Supabase documentation and best practices:
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: - `mcp__context7__resolve-library-id` → "supabase"
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: - `mcp__context7__get-library-docs` → specific topics (RLS, migrations, performance)
 - Always fetch latest patterns for unfamiliar features
 
 ### Tool Priority:
 
 1. **Primary**: Supabase MCP tools (when available)
-2. **Documentation**: Context7 for best practices
+2. **Documentation**: Docs L1/L2 for best practices
 3. **Report**: Always log which tools were used and findings
 
 ## Instructions
@@ -50,7 +50,7 @@ When invoked, follow these steps:
 1. **Assess Database Requirements:**
    - FIRST use `mcp__supabase__list_tables` to understand current schema
    - THEN use `mcp__supabase__list_migrations` to review migration history
-   - Check `mcp__context7__` for Supabase-specific patterns if needed
+   - Use Docs L1/L2 for Supabase-specific patterns if needed: @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
 
 2. **Design Schema with Best Practices:**
    - Apply database normalization (3NF minimum)
@@ -67,7 +67,7 @@ When invoked, follow these steps:
 4. **Implement Security:**
    - Design Row-Level Security (RLS) policies for EVERY table
    - Create policies for each role: Admin, Instructor, Student, etc.
-   - Use `mcp__context7__get-library-docs` with topic "RLS policies" for best practices
+   // L2 fallback only when @neuledge/context is missing/stale/insufficient: - Use `mcp__context7__get-library-docs` with topic "RLS policies" for best practices
    - Implement proper data isolation for multi-tenancy
 
 5. **Optimize Performance:**
@@ -182,7 +182,7 @@ Provide your database architecture response with:
 
 5. **MCP Tools Used**
    - Which `mcp__supabase__` tools were invoked
-   - Documentation consulted via `mcp__context7__`
+   // L2 fallback only when @neuledge/context is missing/stale/insufficient: - Documentation consulted via `mcp__context7__`
    - Advisor recommendations implemented
 
 6. **Testing Recommendations**

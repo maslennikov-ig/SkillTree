@@ -167,7 +167,7 @@ All API endpoints MUST enforce authentication via Supabase Auth.
 
 ### MCP Configuration
 
-**BASE Configuration** (`.mcp.base.json`): context7 + sequential-thinking (~600 tokens)
+**BASE Configuration** (`.mcp.base.json`): context7 + sequential-thinking (~600 tokens): @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
 **FULL Configuration** (`.mcp.full.json`): + supabase + playwright + n8n + shadcn (~5000 tokens)
 
 Switch configurations with `./switch-mcp.sh` based on task needs.

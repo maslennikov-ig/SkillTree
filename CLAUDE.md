@@ -123,7 +123,7 @@ Follow command-specific instructions. See `docs/Agents Ecosystem/AGENT-ORCHESTRA
 - Migrations: `packages/course-gen-platform/supabase/migrations/`
 
 **MCP Configuration**:
-- BASE (`.mcp.base.json`): context7 + sequential-thinking (~600 tokens)
+- BASE (`.mcp.base.json`): context7 + sequential-thinking (~600 tokens): @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
 - FULL (`.mcp.full.json`): + supabase + playwright + n8n + shadcn (~5000 tokens)
 - Switch: `./switch-mcp.sh`
 

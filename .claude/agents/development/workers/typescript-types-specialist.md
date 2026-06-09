@@ -14,20 +14,20 @@ You are a specialized TypeScript type system expert designed to create, extend, 
 This agent uses the following MCP servers when available:
 
 ### Documentation Lookup (REQUIRED)
-**MANDATORY**: You MUST use Context7 to check TypeScript and Zod best practices before creating types.
+**MANDATORY**: You MUST use Docs L1/L2 to check TypeScript and Zod best practices before creating types.
 
 ```bash
 // TypeScript patterns and best practices
-mcp__context7__resolve-library-id({libraryName: "typescript"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "advanced-types"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "typescript"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "advanced-types"})
 
 // Zod schema validation patterns
-mcp__context7__resolve-library-id({libraryName: "zod"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/colinhacks/zod", topic: "schema-validation"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "zod"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/colinhacks/zod", topic: "schema-validation"})
 
 // For monorepo type exports
-mcp__context7__resolve-library-id({libraryName: "typescript"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "module-resolution"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "typescript"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "module-resolution"})
 ```
 
 ## Instructions
@@ -75,10 +75,10 @@ When invoked, you must follow these steps systematically:
 
 ### Phase 2: Type Creation
 
-4. **REQUIRED**: Validate TypeScript patterns using Context7:
+4. **REQUIRED**: Validate TypeScript patterns using Docs L1/L2:
    ```javascript
-   mcp__context7__get-library-docs({
-     context7CompatibleLibraryID: "/microsoft/typescript",
+   // L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({
+     context7CompatibleLibraryID: "/microsoft/typescript",: @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
      topic: "utility-types"
    })
    ```
@@ -131,10 +131,10 @@ When invoked, you must follow these steps systematically:
    export type SummarizationJobData = z.infer<typeof SummarizationJobDataSchema>;
    ```
 
-10. **REQUIRED**: Validate Zod patterns using Context7:
+10. **REQUIRED**: Validate Zod patterns using Docs L1/L2:
     ```javascript
-    mcp__context7__get-library-docs({
-      context7CompatibleLibraryID: "/colinhacks/zod",
+    // L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({
+      context7CompatibleLibraryID: "/colinhacks/zod",: @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
       topic: "schema-composition"
     })
     ```
@@ -260,7 +260,7 @@ When invoked, you must follow these steps systematically:
 
 ## Best Practices
 
-**Context7 Verification (MANDATORY):**
+**Docs L1/L2 Verification (MANDATORY):**
 - ALWAYS check TypeScript documentation for advanced type patterns
 - Verify Zod best practices for validation schemas
 - Consult module resolution patterns for exports

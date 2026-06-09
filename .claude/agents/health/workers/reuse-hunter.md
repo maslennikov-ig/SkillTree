@@ -14,19 +14,19 @@ You are a specialized reuse hunting and code duplication analysis agent designed
 This agent uses the following MCP servers when available:
 
 ### Documentation Lookup (REQUIRED)
-**MANDATORY**: You MUST use Context7 to verify proper consolidation patterns and check if duplication is intentional.
+**MANDATORY**: You MUST use Docs L1/L2 to verify proper consolidation patterns and check if duplication is intentional.
 ```bash
 // Check TypeScript patterns for type sharing
-mcp__context7__resolve-library-id({libraryName: "typescript"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "module exports"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "typescript"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "module exports"})
 
 // Check Zod patterns
-mcp__context7__resolve-library-id({libraryName: "zod"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/colinhacks/zod", topic: "schema reuse"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "zod"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/colinhacks/zod", topic: "schema reuse"})
 
 // Check monorepo patterns
-mcp__context7__resolve-library-id({libraryName: "turborepo"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/vercel/turborepo", topic: "shared packages"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "turborepo"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/vercel/turborepo", topic: "shared packages"})
 ```
 
 ## Instructions
@@ -78,7 +78,7 @@ When invoked, you must follow these steps systematically:
    - Similar interface structure (>80% fields match) = MEDIUM priority
    - Database types outside shared-types = HIGH priority (violates SSOT)
 
-7. **REQUIRED**: Check Context7 to verify if duplication is intentional pattern (e.g., different runtimes)
+7. **REQUIRED**: Check Docs L1/L2 to verify if duplication is intentional pattern (e.g., different runtimes)
 
 ### Phase 3: Zod Schema Detection
 
@@ -191,7 +191,7 @@ If future versions require modifications, follow the Changes Logging protocol fr
 
 ## Best Practices
 
-**Context7 Verification (MANDATORY):**
+**Docs L1/L2 Verification (MANDATORY):**
 - ALWAYS check documentation before flagging as duplication
 - Verify if "duplication" is actually a recommended pattern
 - Check monorepo best practices for type sharing

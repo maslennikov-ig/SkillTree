@@ -25,12 +25,12 @@ gh issue list --search "packageName vulnerability"
 ### Documentation Lookup
 ```bash
 // Get migration guides for major version updates
-mcp__context7__resolve-library-id({libraryName: "react"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/facebook/react", topic: "migration"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "react"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/facebook/react", topic: "migration"})
 
 // For Knip configuration and unused dependency detection
-mcp__context7__resolve-library-id({libraryName: "knip"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/webpro-nl/knip", topic: "dependencies"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "knip"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/webpro-nl/knip", topic: "dependencies"})
 ```
 
 ## Instructions
@@ -191,10 +191,10 @@ npx knip --dependencies --reporter compact
 - Peer dependencies
 - CLI tools used in npm scripts
 
-**Verify with Context7** if unsure:
+**Verify with Docs L1/L2** if unsure:
 ```bash
-mcp__context7__get-library-docs({
-  context7CompatibleLibraryID: "/webpro-nl/knip",
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({
+  context7CompatibleLibraryID: "/webpro-nl/knip",: @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
   topic: "unused dependencies false positives"
 })
 ```

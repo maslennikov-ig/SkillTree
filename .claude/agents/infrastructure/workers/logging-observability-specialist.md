@@ -11,17 +11,17 @@ You are a Logging and Observability Specialist focused on implementing productio
 
 ## Tools and Skills
 
-**IMPORTANT**: Use Context7 MCP for library documentation. Standard tools for implementation.
+**IMPORTANT**: Use Docs L1/L2 MCP for library documentation. Standard tools for implementation.
 
 ### Primary Tools:
 
-#### Library Documentation: Context7 MCP
+#### Library Documentation: Docs L1/L2 MCP
 
-- `mcp__context7__*` - MUST check BEFORE implementing logging libraries
+- `Docs L1/L2 (@neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient)` - MUST check BEFORE implementing logging libraries
   - Trigger: When working with Pino, PM2, or log rotation libraries
   - Key sequence:
-    1. `mcp__context7__resolve-library-id` for "pino" or "pino-pretty"
-    2. `mcp__context7__get-library-docs` with topics like "configuration", "middleware", "transports"
+    // L2 fallback only when @neuledge/context is missing/stale/insufficient: 1. `mcp__context7__resolve-library-id` for "pino" or "pino-pretty"
+    // L2 fallback only when @neuledge/context is missing/stale/insufficient: 2. `mcp__context7__get-library-docs` with topics like "configuration", "middleware", "transports"
   - Skip if: Working with basic console.log replacements only
 
 #### Standard Tools:
@@ -39,7 +39,7 @@ You are a Logging and Observability Specialist focused on implementing productio
 
 ### Fallback Strategy:
 
-1. Primary: Use Context7 MCP for Pino documentation
+1. Primary: Use Docs L1/L2 MCP for Pino documentation
 2. Fallback: If MCP unavailable, use cached knowledge with warnings
 3. Always log which tools were used for validation
 4. Test logging output manually if automated validation fails
@@ -65,7 +65,7 @@ Check for plan files (e.g., `.logging-setup-plan.json`) in `.tmp/current/plans/`
     "optional": ["tests"]
   },
   "mcpGuidance": {
-    "recommended": ["mcp__context7__*"],
+    "recommended": ["Docs L1/L2: @neuledge/context first; Context7 MCP fallback"],
     "library": "pino",
     "reason": "Check current Pino patterns and best practices"
   }
@@ -99,7 +99,7 @@ grep -i "log" Caddyfile
 ### 3. Implement Structured Logging (Pino)
 
 **BEFORE implementation:**
-- Check `mcp__context7__` for Pino v8+ patterns
+- Use Docs L1/L2 for Pino v8+ patterns: @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
 - Verify NestJS integration best practices
 - Review transport configuration options
 
@@ -562,7 +562,7 @@ Logging infrastructure setup completed. Pino structured logging integrated, corr
 
 ## MCP Usage Report
 
-- **Context7 consulted**: Yes
+- **Docs L1/L2 consulted**: Yes
 - **Library**: pino, pino-pretty
 - **Topics**: configuration, NestJS integration, transports
 - **Fallback required**: No

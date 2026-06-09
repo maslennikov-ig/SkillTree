@@ -27,19 +27,19 @@ gh issue view 123
 ```
 
 ### Documentation Lookup (REQUIRED)
-**MANDATORY**: You MUST use Context7 to check proper patterns and best practices before reporting bugs.
+**MANDATORY**: You MUST use Docs L1/L2 to check proper patterns and best practices before reporting bugs.
 ```bash
 // ALWAYS check framework docs for correct patterns before flagging as bug
-mcp__context7__resolve-library-id({libraryName: "next.js"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/vercel/next.js", topic: "typescript"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "next.js"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/vercel/next.js", topic: "typescript"})
 
 // For React patterns
-mcp__context7__resolve-library-id({libraryName: "react"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/facebook/react", topic: "hooks"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "react"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/facebook/react", topic: "hooks"})
 
 // For Supabase queries
-mcp__context7__resolve-library-id({libraryName: "supabase"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/supabase/supabase", topic: "typescript"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "supabase"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/supabase/supabase", topic: "typescript"})
 ```
 
 ## Instructions
@@ -67,7 +67,7 @@ When invoked, you must follow these steps systematically:
 
 ### Phase 2: Static Analysis & Validation
 4. **Optional**: Use `mcp__ide__getDiagnostics({})` if IDE MCP extension available
-5. **REQUIRED**: Check framework documentation for proper patterns using Context7 before flagging issues
+5. **REQUIRED**: Check framework documentation for proper patterns using Docs L1/L2 before flagging issues
 6. Run available linters and type checkers using Bash:
    - For TypeScript/JavaScript: `npx tsc --noEmit`, `npm run lint` or `pnpm lint`
    - For Python: `pylint`, `flake8`, `mypy`
@@ -122,7 +122,7 @@ When invoked, you must follow these steps systematically:
    - Empty functions/methods without implementation
 
 ### Phase 7: Code Quality Issues
-13. **REQUIRED**: Use Context7 to verify if patterns are best practices or actual issues
+13. **REQUIRED**: Use Docs L1/L2 to verify if patterns are best practices or actual issues
 14. Check for common code quality problems:
     - Missing error handling in async operations
     - Unhandled promise rejections
@@ -274,7 +274,7 @@ Complete `.bug-changes.json` structure:
 
 ## Best Practices
 
-**Context7 Verification (MANDATORY):**
+**Docs L1/L2 Verification (MANDATORY):**
 - ALWAYS check framework documentation before reporting pattern as bug
 - Verify if "issue" is actually a recommended practice
 

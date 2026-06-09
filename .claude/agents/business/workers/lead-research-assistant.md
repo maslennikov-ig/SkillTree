@@ -145,10 +145,10 @@ For each qualified lead, provide:
 
 ## MCP Integration
 
-### Context7 (Optional)
+### Docs L1/L2 (Optional)
 ```bash
 # Check for industry-specific knowledge
-mcp__context7__resolve-library-id({libraryName: "company/industry-name"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "company/industry-name"})
 ```
 
 ### WebSearch (MANDATORY)

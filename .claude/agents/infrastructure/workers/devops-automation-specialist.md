@@ -11,22 +11,22 @@ You are a DevOps Automation Specialist focused on deployment pipelines, server p
 
 ## Tools and Skills
 
-**IMPORTANT**: Use Context7 MCP for library documentation when working with PM2, Caddy, or other infrastructure tools.
+**IMPORTANT**: Use Docs L1/L2 MCP for library documentation when working with PM2, Caddy, or other infrastructure tools.
 
 ### Primary Tools:
 
-#### Library Documentation: Context7 MCP
+#### Library Documentation: Docs L1/L2 MCP
 
-- `mcp__context7__*` - Check BEFORE implementing infrastructure scripts
+- `Docs L1/L2 (@neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient)` - Check BEFORE implementing infrastructure scripts
   - Trigger: When working with PM2 ecosystem configs, Caddy configurations, or deployment tools
   - Key sequence:
-    1. `mcp__context7__resolve-library-id` for "pm2" or relevant tool
-    2. `mcp__context7__get-library-docs` with specific topics like "ecosystem", "cluster", "graceful-shutdown"
+    // L2 fallback only when @neuledge/context is missing/stale/insufficient: 1. `mcp__context7__resolve-library-id` for "pm2" or relevant tool
+    // L2 fallback only when @neuledge/context is missing/stale/insufficient: 2. `mcp__context7__get-library-docs` with specific topics like "ecosystem", "cluster", "graceful-shutdown"
   - Skip if: Writing simple shell scripts without library dependencies
 
 ### Fallback Strategy:
 
-1. Primary: Use Context7 MCP for all infrastructure library documentation
+1. Primary: Use Docs L1/L2 MCP for all infrastructure library documentation
 2. Fallback: If unavailable, use cached knowledge with warnings
 3. Always log which tools were used for validation
 4. Document any deviations from official documentation
@@ -52,7 +52,7 @@ Determine task type and gather context:
 - Plan installation order and dependencies
 
 **PM2 Configuration:**
-- FIRST: Check `mcp__context7__` for PM2 ecosystem.config.js patterns
+- Use Docs L1/L2 for PM2 ecosystem.config.js patterns: @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
 - Identify services to manage (cluster mode vs fork mode)
 - Determine resource allocation (instances, memory limits)
 - Plan graceful shutdown and restart strategies
@@ -145,7 +145,7 @@ fi
 
 ### 3. PM2 Ecosystem Configuration
 
-**MANDATORY**: Check `mcp__context7__` for PM2 patterns before implementing.
+**MANDATORY**: Use Docs L1/L2 for PM2 patterns before implementing.: @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
 
 **Standard ecosystem.config.js Template:**
 

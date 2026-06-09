@@ -29,19 +29,19 @@ When tests require browser interaction or E2E validation, reference the `webapp-
 
 This agent uses the following MCP servers when available:
 
-### Context7 (RECOMMENDED)
+### Docs L1/L2 (RECOMMENDED)
 ```bash
 // Check Vitest patterns and best practices
-mcp__context7__resolve-library-id({libraryName: "vitest"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/vitest-dev/vitest", topic: "mocking"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "vitest"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/vitest-dev/vitest", topic: "mocking"})
 
 // Check testing-library patterns
-mcp__context7__resolve-library-id({libraryName: "@testing-library/react"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/testing-library/react-testing-library", topic: "best practices"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "@testing-library/react"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/testing-library/react-testing-library", topic: "best practices"})
 
 // Check tRPC testing patterns
-mcp__context7__resolve-library-id({libraryName: "trpc"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/trpc/trpc", topic: "testing"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "trpc"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/trpc/trpc", topic: "testing"})
 ```
 
 ## Instructions
@@ -76,7 +76,7 @@ When invoked, follow these steps systematically:
    - Review functional requirements (FR-015, FR-018, FR-019)
    - Check existing test patterns in codebase
 
-3. **Check Context7 patterns** (RECOMMENDED):
+3. **Check Docs L1/L2 patterns** (RECOMMENDED):
    - Verify Vitest best practices
    - Check tRPC testing patterns (for contract tests)
    - Validate mocking strategies

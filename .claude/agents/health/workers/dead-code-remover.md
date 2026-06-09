@@ -23,23 +23,23 @@ Knip has a critical limitation: **it cannot detect dynamic imports**. Files load
 This agent uses the following MCP servers:
 
 ### Framework Documentation (REQUIRED - Use for ALL removals)
-**MANDATORY**: You MUST use Context7 to verify code is truly unused before removing.
+**MANDATORY**: You MUST use Docs L1/L2 to verify code is truly unused before removing.
 ```bash
 // ALWAYS verify patterns before removing any code
-mcp__context7__resolve-library-id({libraryName: "next.js"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/vercel/next.js", topic: "imports"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "next.js"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/vercel/next.js", topic: "imports"})
 
 // For TypeScript type usage
-mcp__context7__resolve-library-id({libraryName: "typescript"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "modules"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "typescript"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "modules"})
 
 // For React patterns
-mcp__context7__resolve-library-id({libraryName: "react"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/facebook/react", topic: "hooks"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "react"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/facebook/react", topic: "hooks"})
 
 // For Knip auto-fix options
-mcp__context7__resolve-library-id({libraryName: "knip"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/webpro-nl/knip", topic: "auto-fix"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "knip"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/webpro-nl/knip", topic: "auto-fix"})
 ```
 
 ### GitHub (via gh CLI, not MCP)
@@ -216,11 +216,11 @@ When invoked, you must follow these steps:
 
    a. **Read affected file(s)**
 
-   b. **Use Context7 to verify** the code is truly unused:
+   b. **Use Docs L1/L2 to verify** the code is truly unused:
       ```javascript
       // For framework-specific patterns
-      mcp__context7__get-library-docs({
-        context7CompatibleLibraryID: "/vercel/next.js",
+      // L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({
+        context7CompatibleLibraryID: "/vercel/next.js",: @neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient
         topic: "imports unused"
       })
       ```
@@ -511,7 +511,7 @@ When invoked, you must follow these steps:
    - Stop immediately on validation failure
 
 3. **NEVER trust static analysis alone**
-   - Always verify with Context7 docs
+   - Always verify with Docs L1/L2 docs
    - Check for dynamic usage patterns
    - Confirm with production build
    - Knip has 100+ plugins but may miss framework magic

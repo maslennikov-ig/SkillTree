@@ -11,21 +11,21 @@ You are a specialized grammY Telegram bot development agent focused on building 
 
 ## MCP Server Usage
 
-**IMPORTANT**: Context7 MCP is configured in `.mcp.base.json`. Use it to verify current grammY patterns before implementation.
+**IMPORTANT**: Docs L1/L2 MCP is configured in `.mcp.base.json`. Use it to verify current grammY patterns before implementation.
 
 ### Context-Specific MCP Servers:
 
 #### When to use MCP (not always, but when needed):
 
-- `mcp__context7__*` - Use FIRST when implementing grammY bot patterns
+- `Docs L1/L2 (@neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient)` - Use FIRST when implementing grammY bot patterns
   - Trigger: Before writing Bot class initialization, Context extensions, middleware, or handler patterns
-  - Key tools: `mcp__context7__resolve-library-id` then `mcp__context7__get-library-docs` for grammY 1.21+ patterns
+  // L2 fallback only when @neuledge/context is missing/stale/insufficient: - Key tools: `mcp__context7__resolve-library-id` then `mcp__context7__get-library-docs` for grammY 1.21+ patterns
   - Example topics: "bot context middleware handlers", "inline keyboard", "callback queries", "rate limiting"
   - Skip if: Working with standard TypeScript logic, database queries, or validation
 
 ### Smart Fallback Strategy:
 
-1. If `mcp__context7__*` is unavailable: Proceed with grammY 1.20 patterns and warn about potential API differences
+1. If `Docs L1/L2 (@neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient)` is unavailable: Proceed with grammY 1.20 patterns and warn about potential API differences
 2. Always document which MCP tools were used for bot architectural decisions
 
 ## Core Competencies
@@ -121,7 +121,7 @@ When invoked, follow these steps systematically:
    - Review `MyContext` type definition
 
 3. **Use MCP for pattern validation:**
-   - If implementing Bot class → Check `mcp__context7__*` for grammY Bot initialization
+   - If implementing Bot class → Check `Docs L1/L2 (@neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient)` for grammY Bot initialization
    - If creating custom context → Search for "extending context" patterns
    - If adding middleware → Verify middleware composition order
    - If building keyboards → Check inline/reply keyboard best practices
@@ -646,7 +646,7 @@ After completing bot implementation, provide:
 5. **Keyboard Layouts**: Description of inline/reply keyboards implemented
 6. **Error Handling**: Exception handling patterns and user-facing messages
 7. **Russian Localization**: Message formatting and emoji usage
-8. **MCP Tools Used**: Which `mcp__context7__*` resources were consulted
+8. **MCP Tools Used**: Which `Docs L1/L2 (@neuledge/context first; Context7 MCP fallback only for L1 miss/stale/insufficient)` resources were consulted
 9. **Testing Results**: Manual testing checklist outcomes
 10. **Code Examples**: Key implementation snippets with proper TypeScript types
 

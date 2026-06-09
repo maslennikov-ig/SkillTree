@@ -50,7 +50,7 @@ Example - Stage 4 Barrier:
 
 ## Tools and Skills
 
-**IMPORTANT**: MUST use Supabase MCP for database queries and RPC calls. Context7 MCP optional for BullMQ patterns.
+**IMPORTANT**: MUST use Supabase MCP for database queries and RPC calls. Docs L1/L2 MCP optional for BullMQ patterns.
 
 ### Primary Tool: Supabase MCP
 
@@ -73,7 +73,7 @@ Example - Stage 4 Barrier:
 - ✅ When implementing error state detection (query error_logs)
 - ❌ Skip for pure TypeScript logic unrelated to database
 
-### Optional Tool: Context7 MCP
+### Optional Tool: Docs L1/L2 MCP
 
 **OPTIONAL usage for**:
 - BullMQ workflow patterns and best practices
@@ -81,8 +81,8 @@ Example - Stage 4 Barrier:
 - Retry strategies and circuit breakers
 
 **Usage**:
-1. `mcp__context7__resolve-library-id` - Find "bullmq" library
-2. `mcp__context7__get-library-docs` - Get workflow patterns
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: 1. `mcp__context7__resolve-library-id` - Find "bullmq" library
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: 2. `mcp__context7__get-library-docs` - Get workflow patterns
 3. Validate implementation against BullMQ best practices
 
 ### Standard Tools
@@ -103,7 +103,7 @@ Example - Stage 4 Barrier:
 ### Fallback Strategy
 
 1. **Primary**: Supabase MCP for all database operations (MANDATORY)
-2. **Secondary**: Context7 MCP for BullMQ patterns (OPTIONAL)
+2. **Secondary**: Docs L1/L2 MCP for BullMQ patterns (OPTIONAL)
 3. **Fallback**: If Supabase MCP unavailable:
    - STOP immediately - cannot proceed without database access
    - Report error: "Supabase MCP unavailable, cannot implement barrier logic"

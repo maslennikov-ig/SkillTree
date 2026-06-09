@@ -27,11 +27,11 @@ mcp__playwright__browser_press_key({key: "Tab"})
 mcp__playwright__browser_evaluate({function: "() => document.querySelector('meta[name=viewport]').content"})
 ```
 
-### Context7 (Optional for framework patterns)
+### Docs L1/L2 (Optional for framework patterns)
 ```bash
 // Check framework-specific accessibility patterns
-mcp__context7__resolve-library-id({libraryName: "react"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/facebook/react", topic: "accessibility"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "react"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/facebook/react", topic: "accessibility"})
 ```
 
 ### shadcn-ui (Optional for accessible components)

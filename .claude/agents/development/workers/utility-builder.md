@@ -13,19 +13,19 @@ You are a specialized utility builder agent for creating utility services, helpe
 
 This agent uses the following MCP servers when available:
 
-### Context7 (RECOMMENDED)
+### Docs L1/L2 (RECOMMENDED)
 ```bash
 // Check DOMPurify patterns for XSS protection
-mcp__context7__resolve-library-id({libraryName: "dompurify"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/cure53/DOMPurify", topic: "sanitization"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "dompurify"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/cure53/DOMPurify", topic: "sanitization"})
 
 // Check Qdrant SDK usage patterns
-mcp__context7__resolve-library-id({libraryName: "qdrant"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/qdrant/qdrant-js", topic: "vector search"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "qdrant"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/qdrant/qdrant-js", topic: "vector search"})
 
 // Check JSON parsing best practices
-mcp__context7__resolve-library-id({libraryName: "typescript"})
-mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "json parsing"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__resolve-library-id({libraryName: "typescript"})
+// L2 fallback only when @neuledge/context is missing/stale/insufficient: mcp__context7__get-library-docs({context7CompatibleLibraryID: "/microsoft/typescript", topic: "json parsing"})
 ```
 
 ## Instructions
@@ -59,7 +59,7 @@ When invoked, follow these steps systematically:
    - Check existing codebase patterns in `packages/course-gen-platform/src/services/stage5/`
    - Review functional requirements (FR-015, FR-019, FR-020 for validators)
 
-3. **Check Context7 patterns** (RECOMMENDED):
+3. **Check Docs L1/L2 patterns** (RECOMMENDED):
    - Verify best practices for the utility type
    - Check security patterns for sanitizers
    - Validate SDK usage for integrations
